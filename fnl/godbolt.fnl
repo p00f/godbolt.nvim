@@ -1,4 +1,5 @@
 (local fun vim.fn)
+(local api vim.api)
 
 (fn get [cmd]
   "Get the response from godbolt.org as a lua table"
@@ -34,5 +35,17 @@
   (each [k v (pairs cfg)]
     (tset config k v)))
 
-(fn display [range]
-  (local text (fun.getline range)))
+(fn display []
+  "Display the assembly in a split"
+  (let [text (match (fun.mode)
+              :n (api.nvim_buf_get_lines 0 0 -1)
+              :v (let [begin (- (fun.getline "'<") 1)
+                       end (- (fun.getline ">'") 1)]
+                   (api.nvim_buf_get_lines 0 begin end)))
+        ft vim.bo.filetype
+        asm (get (build-cmd
+                   (. config ft :compiler) text (. config ft :options)))
+        winid (fun.win_getid)]
+    1))
+
+{: display}

@@ -1,4 +1,5 @@
 local fun = vim.fn
+local api = vim.api
 local function get(cmd)
   local output_arr = {}
   local jobid
@@ -28,8 +29,23 @@ local function setup(cfg)
   end
   return nil
 end
-local function display(range)
-  local text = fun.getline(range)
-  return nil
+local function display()
+  local text
+  do
+    local _2_ = fun.mode()
+    if (_2_ == "n") then
+      text = api.nvim_buf_get_lines(0, 0, -1)
+    elseif (_2_ == "v") then
+      local begin = (fun.getline("'<") - 1)
+      local _end = (fun.getline(">'") - 1)
+      text = api.nvim_buf_get_lines(0, begin, _end)
+    else
+      text = nil
+    end
+  end
+  local ft = vim.bo.filetype
+  local asm = get(build_cmd(config[ft].compiler, text, config[ft].options))
+  local winid = fun.win_getid()
+  return 1
 end
-return display
+return {display = display}
