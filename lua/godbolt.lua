@@ -70,16 +70,53 @@ local function setup(cfg)
     return nil
   end
 end
-local function get(cmd)
+local function prepare_buf(text)
+  local buf = api.nvim_create_buf(false, true)
+  api.nvim_buf_set_option(buf, "filetype", "asm")
+  api.nvim_buf_set_lines(buf, 0, 0, false, vim.split(text, "\n", {trimempty = true}))
+  return buf
+end
+local function setup_aucmd(buf, offset)
+  vim.cmd("augroup Godbolt")
+  vim.cmd(string.format("autocmd CursorHold <buffer=%s> lua require('godbolt').highlight(%s, %s)", buf, buf, offset))
+  vim.cmd(string.format("autocmd CursorMoved,BufLeave <buffer=%s> lua require('godbolt').clear(%s)", buf, buf))
+  return vim.cmd("augroup END")
+end
+local function display(response, begin)
+  local asm
+  do
+    local str = ""
+    for k, v in pairs(response.asm) do
+      str = (str .. "\n" .. v.text)
+    end
+    asm = str
+  end
+  local source_winid = fun.win_getid()
+  local source_bufnr = fun.bufnr()
+  local disp_buf = prepare_buf(asm)
+  vim.cmd("vsplit")
+  vim.cmd(string.format("buffer %d", disp_buf))
+  api.nvim_win_set_option(0, "number", false)
+  api.nvim_win_set_option(0, "relativenumber", false)
+  api.nvim_win_set_option(0, "spell", false)
+  api.nvim_win_set_option(0, "cursorline", false)
+  api.nvim_set_current_win(source_winid)
+  do end (__fnl_global__source_2dasm_2dbufs)[source_bufnr] = {disp_buf, response.asm}
+  return setup_aucmd(source_bufnr, begin)
+end
+local function get(cmd, begin)
   local output_arr = {}
   local jobid
   local function _9_(_, data, _0)
     return vim.list_extend(output_arr, data)
   end
-  jobid = fun.jobstart(cmd, {on_stdout = _9_})
-  local t = fun.jobwait({jobid})
-  local json = fun.join(output_arr)
-  return fun.json_decode(json)
+  local function _10_(_, _0, _1)
+    local json = fun.join(output_arr)
+    local response = fun.json_decode(json)
+    return display(response, begin)
+  end
+  jobid = fun.jobstart(cmd, {on_stdout = _9_, on_exit = _10_})
+  return nil
 end
 local function build_cmd(compiler, text, options)
   local json = fun.json_encode({source = text, options = {userArguments = options}})
@@ -97,44 +134,12 @@ local function get_compiler(compiler, options)
     return {config[ft].compiler, config[ft].options}
   end
 end
-local function setup_aucmd(buf, offset)
-  vim.cmd("augroup Godbolt")
-  vim.cmd(string.format("autocmd CursorHold <buffer=%s> lua require('godbolt').highlight(%s, %s)", buf, buf, offset))
-  vim.cmd(string.format("autocmd CursorMoved,BufLeave <buffer=%s> lua require('godbolt').clear(%s)", buf, buf))
-  return vim.cmd("augroup END")
-end
-local function prepare_buf(text)
-  local buf = api.nvim_create_buf(false, true)
-  api.nvim_buf_set_option(buf, "filetype", "asm")
-  api.nvim_buf_set_lines(buf, 0, 0, false, vim.split(text, "\n", {trimempty = true}))
-  return buf
-end
-local function display(begin, _end, compiler, options)
+local function pre_display(begin, _end, compiler, options)
   if vim.g.godbolt_loaded then
     local lines = api.nvim_buf_get_lines(0, (begin - 1), _end, true)
     local text = fun.join(lines, "\n")
     local chosen_compiler = get_compiler(compiler, options)
-    local response = get(build_cmd(chosen_compiler[1], text, chosen_compiler[2]))
-    local asm
-    do
-      local str = ""
-      for k, v in pairs(response.asm) do
-        str = (str .. "\n" .. v.text)
-      end
-      asm = str
-    end
-    local source_winid = fun.win_getid()
-    local source_bufnr = fun.bufnr()
-    local disp_buf = prepare_buf(asm)
-    vim.cmd("vsplit")
-    vim.cmd(string.format("buffer %d", disp_buf))
-    api.nvim_win_set_option(0, "number", false)
-    api.nvim_win_set_option(0, "relativenumber", false)
-    api.nvim_win_set_option(0, "spell", false)
-    api.nvim_win_set_option(0, "cursorline", false)
-    api.nvim_set_current_win(source_winid)
-    do end (__fnl_global__source_2dasm_2dbufs)[source_bufnr] = {disp_buf, response.asm}
-    return setup_aucmd(source_bufnr, begin)
+    return get(build_cmd(chosen_compiler[1], text, chosen_compiler[2]), begin)
   else
     return vim.api.nvim_err_writeln("setup function not called")
   end
@@ -157,4 +162,4 @@ local function highlight(buf, offset)
   end
   return nil
 end
-return {display = display, highlight = highlight, clear = clear, setup = setup}
+return {["pre-display"] = pre_display, highlight = highlight, clear = clear, setup = setup}

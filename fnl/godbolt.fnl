@@ -79,15 +79,48 @@
                   (tset config k v)))
         (set vim.g.godbolt_loaded true))))
 
-(fn get [cmd]
+(fn prepare-buf [text]
+  "Prepare the assembly buffer: set buffer options and add text"
+  (local buf (api.nvim_create_buf false true))
+  (api.nvim_buf_set_option buf :filetype :asm)
+  (api.nvim_buf_set_lines buf 0 0 false
+    (vim.split text "\n" {:trimempty true}))
+  buf)
+
+(fn setup-aucmd [buf offset]
+  "Setup autocommands for highlight and clearing highlights"
+  (vim.cmd "augroup Godbolt")
+  (vim.cmd (string.format "autocmd CursorHold <buffer=%s> lua require('godbolt').highlight(%s, %s)" buf buf offset))
+  (vim.cmd (string.format "autocmd CursorMoved,BufLeave <buffer=%s> lua require('godbolt').clear(%s)" buf buf))
+  (vim.cmd "augroup END"))
+
+(fn display [response begin]
+  (let [asm (accumulate [str ""
+                         k v (pairs (. response :asm))]
+              (.. str "\n" (. v :text)))
+        source-winid (fun.win_getid)
+        source-bufnr (fun.bufnr)
+        disp-buf (prepare-buf asm)]
+      (vim.cmd :vsplit)
+      (vim.cmd (string.format "buffer %d" disp-buf))
+      (api.nvim_win_set_option 0 :number false)
+      (api.nvim_win_set_option 0 :relativenumber false)
+      (api.nvim_win_set_option 0 :spell false)
+      (api.nvim_win_set_option 0 :cursorline false)
+      (api.nvim_set_current_win source-winid)
+      (tset source-asm-bufs source-bufnr [disp-buf (. response :asm)])
+      (setup-aucmd source-bufnr begin)))
+
+(fn get [cmd begin]
   "Get the response from godbolt.org as a lua table"
   (var output_arr [])
   (local jobid (fun.jobstart cmd
                  {:on_stdout (fn [_ data _]
-                               (vim.list_extend output_arr data))}))
-  (local t (fun.jobwait [jobid]))
-  (local json (fun.join output_arr))
-  (fun.json_decode json))
+                               (vim.list_extend output_arr data))
+                  :on_exit (fn [_ _ _]
+                             (local json (fun.join output_arr))
+                             (local response (fun.json_decode json))
+                             (display response begin))})))
 
 (fn build-cmd [compiler text options]
   "Build curl command from compiler, text and flags"
@@ -111,44 +144,13 @@
       (local ft vim.bo.filetype)
       [(. config ft :compiler) (. config ft :options)])))
 
-(fn setup-aucmd [buf offset]
-  "Setup autocommands for highlight and clearing highlights"
-  (vim.cmd "augroup Godbolt")
-  (vim.cmd (string.format "autocmd CursorHold <buffer=%s> lua require('godbolt').highlight(%s, %s)" buf buf offset))
-  (vim.cmd (string.format "autocmd CursorMoved,BufLeave <buffer=%s> lua require('godbolt').clear(%s)" buf buf))
-  (vim.cmd "augroup END"))
-
-(fn prepare-buf [text]
-  "Prepare the assembly buffer: set buffer options and add text"
-  (local buf (api.nvim_create_buf false true))
-  (api.nvim_buf_set_option buf :filetype :asm)
-  (api.nvim_buf_set_lines buf 0 0 false
-    (vim.split text "\n" {:trimempty true}))
-  buf)
-
-(fn display [begin end compiler options]
+(fn pre-display [begin end compiler options]
   "Display assembly in a split"
   (if vim.g.godbolt_loaded
     (let [lines (api.nvim_buf_get_lines 0 (- begin  1) end true)
           text (fun.join lines "\n")
-          chosen-compiler (get-compiler compiler options)
-          response (get (build-cmd
-                          (. chosen-compiler 1) text (. chosen-compiler 2)))
-          asm (accumulate [str ""
-                           k v (pairs (. response :asm))]
-                (.. str "\n" (. v :text)))
-          source-winid (fun.win_getid)
-          source-bufnr (fun.bufnr)
-          disp-buf (prepare-buf asm)]
-      (vim.cmd :vsplit)
-      (vim.cmd (string.format "buffer %d" disp-buf))
-      (api.nvim_win_set_option 0 :number false)
-      (api.nvim_win_set_option 0 :relativenumber false)
-      (api.nvim_win_set_option 0 :spell false)
-      (api.nvim_win_set_option 0 :cursorline false)
-      (api.nvim_set_current_win source-winid)
-      (tset source-asm-bufs source-bufnr [disp-buf (. response :asm)])
-      (setup-aucmd source-bufnr begin))
+          chosen-compiler (get-compiler compiler options)]
+      (get (build-cmd (. chosen-compiler 1) text (. chosen-compiler 2)) begin))
     (vim.api.nvim_err_writeln "setup function not called")))
 
 (fn clear [buf]
@@ -167,4 +169,4 @@
          [(- k 1) 0] [(- k 1) 100]
          :linewise true)))))
 
-{: display : highlight : clear : setup}
+{: pre-display : highlight : clear : setup}
