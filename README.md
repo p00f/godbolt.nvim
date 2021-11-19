@@ -38,7 +38,7 @@ You can get the list of compiler ids by visiting or `curl`ing `https://godbolt.o
   `:'<,'>GodboltCompiler <compiler> <options>`
 
 ## Demo
-https://user-images.githubusercontent.com/36493671/142676167-488e23a6-c52a-4bd8-8f5b-c00f55632105.mp4
+https://user-images.githubusercontent.com/36493671/142684304-68e606a2-faa5-4aa1-ab16-09f509f661ce.mp4
 
 ## TODO
  - [ ] Telescope for selecting custom compiler.
