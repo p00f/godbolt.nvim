@@ -78,8 +78,8 @@ local function prepare_buf(text)
 end
 local function setup_aucmd(buf, offset)
   vim.cmd("augroup Godbolt")
-  vim.cmd(string.format("autocmd CursorHold <buffer=%s> lua require('godbolt').highlight(%s, %s)", buf, buf, offset))
-  vim.cmd(string.format("autocmd CursorMoved,BufLeave <buffer=%s> lua require('godbolt').clear(%s)", buf, buf))
+  vim.cmd(string.format("autocmd CursorMoved <buffer=%s> lua require('godbolt').update(%s, %s)", buf, buf, offset))
+  vim.cmd(string.format("autocmd BufLeave <buffer=%s> lua require('godbolt').clear(%s)", buf, buf))
   return vim.cmd("augroup END")
 end
 local function display(response, begin)
@@ -147,7 +147,8 @@ end
 local function clear(buf)
   return vim.api.nvim_buf_clear_namespace((__fnl_global__source_2dasm_2dbufs)[buf][1], nsid, 0, -1)
 end
-local function highlight(buf, offset)
+local function update(buf, offset)
+  clear(buf)
   local disp_buf = (__fnl_global__source_2dasm_2dbufs)[buf][1]
   local asm_table = (__fnl_global__source_2dasm_2dbufs)[buf][2]
   local linenum = ((fun.getcurpos()[2] - offset) + 1)
@@ -162,4 +163,4 @@ local function highlight(buf, offset)
   end
   return nil
 end
-return {["pre-display"] = pre_display, highlight = highlight, clear = clear, setup = setup}
+return {["pre-display"] = pre_display, update = update, clear = clear, setup = setup}
