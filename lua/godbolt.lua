@@ -88,17 +88,9 @@ end
 local function get_compiler(compiler, options)
   if compiler then
     if ("telescope" == compiler) then
-      if options then
-        return {tscope(vim.bo.filetype), options}
-      else
-        return {tscope(vim.bo.filetype), nil}
-      end
+      return {tscope(vim.bo.filetype), options}
     else
-      if options then
-        return {compiler, options}
-      else
-        return {compiler, nil}
-      end
+      return {compiler, options}
     end
   else
     local ft = vim.bo.filetype

@@ -1,3 +1,20 @@
+;  Copyright (C) 2021 Chinmay Dalal
+;
+;  This file is part of godbolt.nvim.
+;
+;  godbolt.nvim is free software: you can redistribute it and/or modify
+;  it under the terms of the GNU General Public License as published by
+;  the Free Software Foundation, either version 3 of the License, or
+;  (at your option) any later version.
+;
+;  godbolt.nvim is distributed in the hope that it will be useful,
+;  but WITHOUT ANY WARRANTY; without even the implied warranty of
+;  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;  GNU General Public License for more details.
+;
+;  You should have received a copy of the GNU General Public License
+;  along with godbolt.nvim.  If not, see <https://www.gnu.org/licenses/>.
+
 (local fun vim.fn)
 (local api vim.api)
 (local nsid (vim.api.nvim_create_namespace :godbolt))
@@ -17,6 +34,7 @@
 
 
 (fn transform [entry]
+  "Get the compiler id"
   {:value (. (vim.split entry " ") 1)
    :display entry
    :ordinal entry})
@@ -84,25 +102,24 @@
     compiler json))
 
 (fn get-compiler [compiler options]
+  "Get the compiler the user chose or the default one for the language"
   (if compiler
     (if (= :telescope compiler)
-      (if options
-        [(tscope vim.bo.filetype) options]
-        [(tscope vim.bo.filetype) nil])
-      (if options
-        [compiler options]
-        [compiler nil]))
+      [(tscope vim.bo.filetype) options]
+      [compiler options])
     (do
       (local ft vim.bo.filetype)
       [(. config ft :compiler) (. config ft :options)])))
 
 (fn setup-aucmd [buf offset]
+  "Setup autocommands for highlight and clearing highlights"
   (vim.cmd "augroup Godbolt")
   (vim.cmd (string.format "autocmd CursorHold <buffer=%s> lua require('godbolt').highlight(%s, %s)" buf buf offset))
   (vim.cmd (string.format "autocmd CursorMoved,BufLeave <buffer=%s> lua require('godbolt').clear(%s)" buf buf))
   (vim.cmd "augroup END"))
 
 (fn prepare-buf [text]
+  "Prepare the assembly buffer: set buffer options and add text"
   (local buf (api.nvim_create_buf false true))
   (api.nvim_buf_set_option buf :filetype :asm)
   (api.nvim_buf_set_lines buf 0 0 false
