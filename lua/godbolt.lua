@@ -78,7 +78,7 @@ local function prepare_buf(text)
 end
 local function setup_aucmd(buf, offset)
   vim.cmd("augroup Godbolt")
-  vim.cmd(string.format("autocmd CursorMoved <buffer=%s> lua require('godbolt').['smolck-update'](%s, %s)", buf, buf, offset))
+  vim.cmd(string.format("autocmd CursorMoved <buffer=%s> lua require('godbolt')['smolck-update'](%s, %s)", buf, buf, offset))
   vim.cmd(string.format("autocmd BufLeave <buffer=%s> lua require('godbolt').clear(%s)", buf, buf))
   return vim.cmd("augroup END")
 end

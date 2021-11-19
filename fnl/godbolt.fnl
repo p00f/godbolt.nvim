@@ -90,7 +90,7 @@
 (fn setup-aucmd [buf offset]
   "Setup autocommands for highlight and clearing highlights"
   (vim.cmd "augroup Godbolt")
-  (vim.cmd (string.format "autocmd CursorMoved <buffer=%s> lua require('godbolt').['smolck-update'](%s, %s)" buf buf offset))
+  (vim.cmd (string.format "autocmd CursorMoved <buffer=%s> lua require('godbolt')['smolck-update'](%s, %s)" buf buf offset))
   (vim.cmd (string.format "autocmd BufLeave <buffer=%s> lua require('godbolt').clear(%s)" buf buf))
   (vim.cmd "augroup END"))
 
