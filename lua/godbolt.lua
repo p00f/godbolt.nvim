@@ -1,6 +1,5 @@
 local fun = vim.fn
 local api = vim.api
-local nsid = vim.api.nvim_create_namespace("godbolt")
 local function get_compiler_list(cmd)
   local op = {}
   local jobid
@@ -60,6 +59,7 @@ local function setup(cfg)
     return nil
   else
     __fnl_global__source_2dasm_2dbufs = {}
+    nsid = vim.api.nvim_create_namespace("godbolt")
     if cfg then
       for k, v in pairs(cfg) do
         config[k] = v

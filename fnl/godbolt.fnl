@@ -17,7 +17,6 @@
 
 (local fun vim.fn)
 (local api vim.api)
-(local nsid (vim.api.nvim_create_namespace :godbolt))
 
 
 (fn get-compiler-list [cmd]
@@ -75,6 +74,7 @@
   (if vim.g.godbolt_loaded
     nil
     (do (global source-asm-bufs {})
+        (global nsid (vim.api.nvim_create_namespace :godbolt))
         (if cfg (each [k v (pairs cfg)]
                   (tset config k v)))
         (set vim.g.godbolt_loaded true))))
