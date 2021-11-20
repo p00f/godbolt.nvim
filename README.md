@@ -25,7 +25,7 @@ You can get the list of compiler ids by visiting or `curl`ing `https://godbolt.o
  - To use the default/setup compiler for the entire buffer:
 
   `:Godbolt`
- - To use the default/setup compiler for a visual selection: Select the function you want and
+ - To use the default/setup compiler for a visual selection: Select the function(s) you want and
  
   `:'<,'>Godbolt`
  - To use a custom compiler with options for the entire buffer:
