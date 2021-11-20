@@ -2,6 +2,8 @@
 
 Display assembly for the current buffer or visual selection from https://godbolt.org
 
+Requires neovim 0.6
+
 ## Setup
 You need to call the setup function in your config. Calling it without arguments uses these default values:
 

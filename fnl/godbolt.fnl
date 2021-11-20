@@ -17,6 +17,7 @@
 
 (local fun vim.fn)
 (local api vim.api)
+(local cmd vim.cmd)
 
 
 
@@ -53,10 +54,10 @@
 
 (fn setup-aucmd [source-buf asm-buf]
   "Setup autocommands for updating highlights"
-  (vim.cmd "augroup Godbolt")
-  (vim.cmd (string.format "autocmd CursorMoved <buffer=%s> lua require('godbolt')['smolck-update'](%s, %s)" source-buf source-buf asm-buf))
-  (vim.cmd (string.format "autocmd BufLeave <buffer=%s> lua require('godbolt').clear(%s)" source-buf source-buf))
-  (vim.cmd "augroup END"))
+  (cmd "augroup Godbolt")
+  (cmd (string.format "autocmd CursorMoved <buffer=%s> lua require('godbolt')['smolck-update'](%s, %s)" source-buf source-buf asm-buf))
+  (cmd (string.format "autocmd BufLeave <buffer=%s> lua require('godbolt').clear(%s)" source-buf source-buf))
+  (cmd "augroup END"))
 
 (fn build-cmd [compiler text options]
   "Build curl command from compiler, text and flags"
@@ -90,8 +91,8 @@
         source-winid (fun.win_getid)
         source-bufnr (fun.bufnr)
         asm-buf (prepare-buf asm)]
-      (vim.cmd :vsplit)
-      (vim.cmd (string.format "buffer %d" asm-buf))
+      (cmd :vsplit)
+      (cmd (string.format "buffer %d" asm-buf))
       (api.nvim_win_set_option 0 :number false)
       (api.nvim_win_set_option 0 :relativenumber false)
       (api.nvim_win_set_option 0 :spell false)

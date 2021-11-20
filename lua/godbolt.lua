@@ -1,5 +1,6 @@
 local fun = vim.fn
 local api = vim.api
+local cmd = vim.cmd
 local config = {cpp = {compiler = "g112", options = nil}, c = {compiler = "cg112", options = nil}, rust = {compiler = "r1560", options = nil}}
 local function setup(cfg)
   if fun.has("nvim-0.6") then
@@ -36,10 +37,10 @@ local function prepare_buf(text)
   return buf
 end
 local function setup_aucmd(source_buf, asm_buf)
-  vim.cmd("augroup Godbolt")
-  vim.cmd(string.format("autocmd CursorMoved <buffer=%s> lua require('godbolt')['smolck-update'](%s, %s)", source_buf, source_buf, asm_buf))
-  vim.cmd(string.format("autocmd BufLeave <buffer=%s> lua require('godbolt').clear(%s)", source_buf, source_buf))
-  return vim.cmd("augroup END")
+  cmd("augroup Godbolt")
+  cmd(string.format("autocmd CursorMoved <buffer=%s> lua require('godbolt')['smolck-update'](%s, %s)", source_buf, source_buf, asm_buf))
+  cmd(string.format("autocmd BufLeave <buffer=%s> lua require('godbolt').clear(%s)", source_buf, source_buf))
+  return cmd("augroup END")
 end
 local function build_cmd(compiler, text, options)
   local json = vim.json.encode({source = text, options = {userArguments = options}})
@@ -69,8 +70,8 @@ local function display(response, begin)
   local source_winid = fun.win_getid()
   local source_bufnr = fun.bufnr()
   local asm_buf = prepare_buf(asm)
-  vim.cmd("vsplit")
-  vim.cmd(string.format("buffer %d", asm_buf))
+  cmd("vsplit")
+  cmd(string.format("buffer %d", asm_buf))
   api.nvim_win_set_option(0, "number", false)
   api.nvim_win_set_option(0, "relativenumber", false)
   api.nvim_win_set_option(0, "spell", false)
@@ -83,7 +84,7 @@ local function display(response, begin)
   __fnl_global__source_2dasm_2dbufs[source_bufnr][asm_buf] = {asm = response.asm, offset = begin}
   return setup_aucmd(source_bufnr, asm_buf)
 end
-local function get_then_display(cmd, begin)
+local function get_then_display(cmd0, begin)
   local output_arr = {}
   local _jobid
   local function _8_(_, data, _0)
@@ -92,7 +93,7 @@ local function get_then_display(cmd, begin)
   local function _9_(_, _0, _1)
     return display(vim.json.decode(fun.join(output_arr)), begin)
   end
-  _jobid = fun.jobstart(cmd, {on_stdout = _8_, on_exit = _9_})
+  _jobid = fun.jobstart(cmd0, {on_stdout = _8_, on_exit = _9_})
   return nil
 end
 local function pre_display(begin, _end, compiler, options)
