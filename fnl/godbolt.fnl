@@ -96,7 +96,9 @@
       (api.nvim_win_set_option 0 :spell false)
       (api.nvim_win_set_option 0 :cursorline false)
       (api.nvim_set_current_win source-winid)
-      (tset source-asm-bufs source-bufnr [disp-buf (. response :asm)])
+      (if (not (. source-asm-bufs source-bufnr))
+        (tset source-asm-bufs source-bufnr {}))
+      (tset source-asm-bufs source-bufnr disp-buf (. response :asm))
       (setup-aucmd source-bufnr begin)))
 
 (fn get-then-display [cmd begin]
@@ -123,21 +125,22 @@
 
 
 ; Highlighting
-(fn clear [buf]
-  (-> (. source-asm-bufs buf 1)
-      (vim.api.nvim_buf_clear_namespace nsid 0 -1)))
+(fn clear [source-buf]
+  (each [disp-buf asm (pairs (. source-asm-bufs source-buf))]
+    (api.nvim_buf_clear_namespace disp-buf nsid 0 -1)))
 
 (fn smolck-update [buf offset]
   (clear buf)
-  (local disp-buf (. source-asm-bufs buf 1))
-  (local asm-table (. source-asm-bufs buf 2))
-  (local linenum (-> (fun.getcurpos) (. 2) (- offset) (+ 1)))
-  (each [k v (pairs asm-table)]
-    (if (= (type (. v :source)) :table)
-      (if (= linenum (. v :source :line))
-        (vim.highlight.range
-         disp-buf nsid :Visual
-         [(- k 1) 0] [(- k 1) 100]
-         :linewise true)))))
+  (each [disp-buf asm-table (pairs (. source-asm-bufs buf))]
+  ;(local disp-buf (. source-asm-bufs buf 1))
+  ;(local asm-table (. source-asm-bufs buf 2))
+    (local linenum (-> (fun.getcurpos) (. 2) (- offset) (+ 1)))
+    (each [k v (pairs asm-table)]
+      (if (= (type (. v :source)) :table)
+        (if (= linenum (. v :source :line))
+          (vim.highlight.range
+           disp-buf nsid :Visual
+           [(- k 1) 0] [(- k 1) 100]
+           :linewise true))))))
 
 {: pre-display : smolck-update : clear : setup}

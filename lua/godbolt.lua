@@ -64,21 +64,25 @@ local function display(response, begin)
   api.nvim_win_set_option(0, "spell", false)
   api.nvim_win_set_option(0, "cursorline", false)
   api.nvim_set_current_win(source_winid)
-  do end (__fnl_global__source_2dasm_2dbufs)[source_bufnr] = {disp_buf, response.asm}
+  if not (__fnl_global__source_2dasm_2dbufs)[source_bufnr] then
+    __fnl_global__source_2dasm_2dbufs[source_bufnr] = {}
+  else
+  end
+  __fnl_global__source_2dasm_2dbufs[source_bufnr][disp_buf] = response.asm
   return setup_aucmd(source_bufnr, begin)
 end
 local function get_then_display(cmd, begin)
   local output_arr = {}
   local jobid
-  local function _5_(_, data, _0)
+  local function _6_(_, data, _0)
     return vim.list_extend(output_arr, data)
   end
-  local function _6_(_, _0, _1)
+  local function _7_(_, _0, _1)
     local json = fun.join(output_arr)
     local response = fun.json_decode(json)
     return display(response, begin)
   end
-  jobid = fun.jobstart(cmd, {on_stdout = _5_, on_exit = _6_})
+  jobid = fun.jobstart(cmd, {on_stdout = _6_, on_exit = _7_})
   return nil
 end
 local function pre_display(begin, _end, compiler, options)
@@ -91,21 +95,24 @@ local function pre_display(begin, _end, compiler, options)
     return vim.api.nvim_err_writeln("setup function not called")
   end
 end
-local function clear(buf)
-  return vim.api.nvim_buf_clear_namespace((__fnl_global__source_2dasm_2dbufs)[buf][1], nsid, 0, -1)
+local function clear(source_buf)
+  for disp_buf, asm in pairs((__fnl_global__source_2dasm_2dbufs)[source_buf]) do
+    api.nvim_buf_clear_namespace(disp_buf, nsid, 0, -1)
+  end
+  return nil
 end
 local function smolck_update(buf, offset)
   clear(buf)
-  local disp_buf = (__fnl_global__source_2dasm_2dbufs)[buf][1]
-  local asm_table = (__fnl_global__source_2dasm_2dbufs)[buf][2]
-  local linenum = ((fun.getcurpos()[2] - offset) + 1)
-  for k, v in pairs(asm_table) do
-    if (type(v.source) == "table") then
-      if (linenum == v.source.line) then
-        vim.highlight.range(disp_buf, nsid, "Visual", {(k - 1), 0}, {(k - 1), 100}, "linewise", true)
+  for disp_buf, asm_table in pairs((__fnl_global__source_2dasm_2dbufs)[buf]) do
+    local linenum = ((fun.getcurpos()[2] - offset) + 1)
+    for k, v in pairs(asm_table) do
+      if (type(v.source) == "table") then
+        if (linenum == v.source.line) then
+          vim.highlight.range(disp_buf, nsid, "Visual", {(k - 1), 0}, {(k - 1), 100}, "linewise", true)
+        else
+        end
       else
       end
-    else
     end
   end
   return nil
