@@ -49,11 +49,11 @@
     (vim.split text "\n" {:trimempty true}))
   buf)
 
-(fn setup-aucmd [buf offset]
+(fn setup-aucmd [source-buf asm-buf]
   "Setup autocommands for updating highlights"
   (vim.cmd "augroup Godbolt")
-  (vim.cmd (string.format "autocmd CursorMoved <buffer=%s> lua require('godbolt')['smolck-update'](%s, %s)" buf buf offset))
-  (vim.cmd (string.format "autocmd BufLeave <buffer=%s> lua require('godbolt').clear(%s)" buf buf))
+  (vim.cmd (string.format "autocmd CursorMoved <buffer=%s> lua require('godbolt')['smolck-update'](%s, %s)" source-buf source-buf asm-buf))
+  (vim.cmd (string.format "autocmd BufLeave <buffer=%s> lua require('godbolt').clear(%s)" source-buf source-buf))
   (vim.cmd "augroup END"))
 
 (fn build-cmd [compiler text options]
@@ -88,9 +88,9 @@
               (.. str "\n" (. v :text)))
         source-winid (fun.win_getid)
         source-bufnr (fun.bufnr)
-        disp-buf (prepare-buf asm)]
+        asm-buf (prepare-buf asm)]
       (vim.cmd :vsplit)
-      (vim.cmd (string.format "buffer %d" disp-buf))
+      (vim.cmd (string.format "buffer %d" asm-buf))
       (api.nvim_win_set_option 0 :number false)
       (api.nvim_win_set_option 0 :relativenumber false)
       (api.nvim_win_set_option 0 :spell false)
@@ -98,8 +98,9 @@
       (api.nvim_set_current_win source-winid)
       (if (not (. source-asm-bufs source-bufnr))
         (tset source-asm-bufs source-bufnr {}))
-      (tset source-asm-bufs source-bufnr disp-buf (. response :asm))
-      (setup-aucmd source-bufnr begin)))
+      (tset source-asm-bufs source-bufnr asm-buf {:asm (. response :asm)
+                                                   :offset begin})
+      (setup-aucmd source-bufnr asm-buf)))
 
 (fn get-then-display [cmd begin]
   "Get the response from godbolt.org as a lua table"
@@ -126,21 +127,20 @@
 
 ; Highlighting
 (fn clear [source-buf]
-  (each [disp-buf asm (pairs (. source-asm-bufs source-buf))]
-    (api.nvim_buf_clear_namespace disp-buf nsid 0 -1)))
+  (each [asm-buf _ (pairs (. source-asm-bufs source-buf))]
+    (api.nvim_buf_clear_namespace asm-buf nsid 0 -1)))
 
-(fn smolck-update [buf offset]
-  (clear buf)
-  (each [disp-buf asm-table (pairs (. source-asm-bufs buf))]
-  ;(local disp-buf (. source-asm-bufs buf 1))
-  ;(local asm-table (. source-asm-bufs buf 2))
-    (local linenum (-> (fun.getcurpos) (. 2) (- offset) (+ 1)))
-    (each [k v (pairs asm-table)]
-      (if (= (type (. v :source)) :table)
-        (if (= linenum (. v :source :line))
-          (vim.highlight.range
-           disp-buf nsid :Visual
-           [(- k 1) 0] [(- k 1) 100]
-           :linewise true))))))
+(fn smolck-update [source-buf asm-buf]
+  (api.nvim_buf_clear_namespace asm-buf nsid 0 -1)
+  (local asm-table (. source-asm-bufs source-buf asm-buf :asm))
+  (local offset (. source-asm-bufs source-buf asm-buf :offset))
+  (local linenum (-> (fun.getcurpos) (. 2) (- offset) (+ 1)))
+  (each [k v (pairs asm-table)]
+    (if (= (type (. v :source)) :table)
+      (if (= linenum (. v :source :line))
+        (vim.highlight.range
+         asm-buf nsid :Visual
+         [(- k 1) 0] [(- k 1) 100]
+         :linewise true)))))
 
 {: pre-display : smolck-update : clear : setup}

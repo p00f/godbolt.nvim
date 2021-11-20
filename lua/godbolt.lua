@@ -23,10 +23,10 @@ local function prepare_buf(text)
   api.nvim_buf_set_lines(buf, 0, 0, false, vim.split(text, "\n", {trimempty = true}))
   return buf
 end
-local function setup_aucmd(buf, offset)
+local function setup_aucmd(source_buf, asm_buf)
   vim.cmd("augroup Godbolt")
-  vim.cmd(string.format("autocmd CursorMoved <buffer=%s> lua require('godbolt')['smolck-update'](%s, %s)", buf, buf, offset))
-  vim.cmd(string.format("autocmd BufLeave <buffer=%s> lua require('godbolt').clear(%s)", buf, buf))
+  vim.cmd(string.format("autocmd CursorMoved <buffer=%s> lua require('godbolt')['smolck-update'](%s, %s)", source_buf, source_buf, asm_buf))
+  vim.cmd(string.format("autocmd BufLeave <buffer=%s> lua require('godbolt').clear(%s)", source_buf, source_buf))
   return vim.cmd("augroup END")
 end
 local function build_cmd(compiler, text, options)
@@ -56,9 +56,9 @@ local function display(response, begin)
   end
   local source_winid = fun.win_getid()
   local source_bufnr = fun.bufnr()
-  local disp_buf = prepare_buf(asm)
+  local asm_buf = prepare_buf(asm)
   vim.cmd("vsplit")
-  vim.cmd(string.format("buffer %d", disp_buf))
+  vim.cmd(string.format("buffer %d", asm_buf))
   api.nvim_win_set_option(0, "number", false)
   api.nvim_win_set_option(0, "relativenumber", false)
   api.nvim_win_set_option(0, "spell", false)
@@ -68,8 +68,8 @@ local function display(response, begin)
     __fnl_global__source_2dasm_2dbufs[source_bufnr] = {}
   else
   end
-  __fnl_global__source_2dasm_2dbufs[source_bufnr][disp_buf] = response.asm
-  return setup_aucmd(source_bufnr, begin)
+  __fnl_global__source_2dasm_2dbufs[source_bufnr][asm_buf] = {asm = response.asm, offset = begin}
+  return setup_aucmd(source_bufnr, asm_buf)
 end
 local function get_then_display(cmd, begin)
   local output_arr = {}
@@ -96,23 +96,23 @@ local function pre_display(begin, _end, compiler, options)
   end
 end
 local function clear(source_buf)
-  for disp_buf, asm in pairs((__fnl_global__source_2dasm_2dbufs)[source_buf]) do
-    api.nvim_buf_clear_namespace(disp_buf, nsid, 0, -1)
+  for asm_buf, _ in pairs((__fnl_global__source_2dasm_2dbufs)[source_buf]) do
+    api.nvim_buf_clear_namespace(asm_buf, nsid, 0, -1)
   end
   return nil
 end
-local function smolck_update(buf, offset)
-  clear(buf)
-  for disp_buf, asm_table in pairs((__fnl_global__source_2dasm_2dbufs)[buf]) do
-    local linenum = ((fun.getcurpos()[2] - offset) + 1)
-    for k, v in pairs(asm_table) do
-      if (type(v.source) == "table") then
-        if (linenum == v.source.line) then
-          vim.highlight.range(disp_buf, nsid, "Visual", {(k - 1), 0}, {(k - 1), 100}, "linewise", true)
-        else
-        end
+local function smolck_update(source_buf, asm_buf)
+  api.nvim_buf_clear_namespace(asm_buf, nsid, 0, -1)
+  local asm_table = (__fnl_global__source_2dasm_2dbufs)[source_buf][asm_buf].asm
+  local offset = (__fnl_global__source_2dasm_2dbufs)[source_buf][asm_buf].offset
+  local linenum = ((fun.getcurpos()[2] - offset) + 1)
+  for k, v in pairs(asm_table) do
+    if (type(v.source) == "table") then
+      if (linenum == v.source.line) then
+        vim.highlight.range(asm_buf, nsid, "Visual", {(k - 1), 0}, {(k - 1), 100}, "linewise", true)
       else
       end
+    else
     end
   end
   return nil
