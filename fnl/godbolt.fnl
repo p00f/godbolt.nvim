@@ -19,52 +19,9 @@
 (local api vim.api)
 
 
-(fn get-compiler-list [cmd]
-  (var op [])
-  (local jobid (vim.fn.jobstart cmd
-                 {:on_stdout (fn [_ data _]
-                               (vim.list_extend op data))}))
-  (local t (vim.fn.jobwait [jobid]))
-  (var final [])
-  (each [k v (pairs op)]
-    (if (not= k 1)
-      (table.insert final v)))
-  final)
 
 
-(fn transform [entry]
-  "Get the compiler id"
-  {:value (. (vim.split entry " ") 1)
-   :display entry
-   :ordinal entry})
-
-; FIXME
-(fn tscope [ft]
-
-  (local pickers (require :telescope.pickers))
-  (local finders (require :telescope.finders))
-  (local conf (. (require :telescope.config) :values))
-  (local actions (require :telescope.actions))
-  (local actions-state (require :telescope.actions.state))
-
-  (local ft (match ft
-              :cpp :c++
-              x x))
-  (local cmd (string.format "curl https://godbolt.org/api/compilers/%s" ft))
-  (local lines (get-compiler-list cmd))
-  (var compiler nil)
-  (: (pickers.new nil {:prompt_title "Choose compiler"
-                       :finder (finders.new_table {:results lines
-                                                   :entry_maker transform})
-                       :sorter (conf.generic_sorter nil)
-                       :attach_mappings (fn [prompt-bufnr map]
-                                         (actions.select_default:replace (fn []
-                                                                          (actions.close prompt-bufnr)
-                                                                          (local selection (actions-state.get_selected_entry))
-                                                                          (set compiler (. selection :value)))))})
-     :find)
-  compiler)
-
+; Setup
 (var config
   {:cpp {:compiler :g112 :options nil}
    :c {:compiler :cg112 :options nil}
@@ -79,6 +36,11 @@
                   (tset config k v)))
         (set vim.g.godbolt_loaded true))))
 
+
+
+
+
+; Helper functions
 (fn prepare-buf [text]
   "Prepare the assembly buffer: set buffer options and add text"
   (local buf (api.nvim_create_buf false true))
@@ -88,12 +50,38 @@
   buf)
 
 (fn setup-aucmd [buf offset]
-  "Setup autocommands for highlight and clearing highlights"
+  "Setup autocommands for updating highlights"
   (vim.cmd "augroup Godbolt")
   (vim.cmd (string.format "autocmd CursorMoved <buffer=%s> lua require('godbolt')['smolck-update'](%s, %s)" buf buf offset))
   (vim.cmd (string.format "autocmd BufLeave <buffer=%s> lua require('godbolt').clear(%s)" buf buf))
   (vim.cmd "augroup END"))
 
+(fn build-cmd [compiler text options]
+  "Build curl command from compiler, text and flags"
+  (local json (fun.json_encode
+                {:source text
+                 :options {:userArguments options}}))
+  (string.format
+    (.. "curl https://godbolt.org/api/compiler/'%s'/compile"
+        " --data-binary '%s'"
+        " --header 'Accept: application/json'"
+        " --header 'Content-Type: application/json'")
+    compiler json))
+
+(fn get-compiler [compiler options]
+  "Get the compiler the user chose or the default one for the language"
+  (local ft vim.bo.filetype)
+  (if compiler
+    (if (= :telescope compiler)
+      [((. (require :godbolt.telescope) :compiler-choice) ft) options]
+      [compiler options])
+    (do
+      [(. config ft :compiler) (. config ft :options)])))
+
+
+
+
+; Main
 (fn display [response begin]
   (let [asm (accumulate [str ""
                          k v (pairs (. response :asm))]
@@ -111,7 +99,7 @@
       (tset source-asm-bufs source-bufnr [disp-buf (. response :asm)])
       (setup-aucmd source-bufnr begin)))
 
-(fn get [cmd begin]
+(fn get-then-display [cmd begin]
   "Get the response from godbolt.org as a lua table"
   (var output_arr [])
   (local jobid (fun.jobstart cmd
@@ -122,37 +110,19 @@
                              (local response (fun.json_decode json))
                              (display response begin))})))
 
-(fn build-cmd [compiler text options]
-  "Build curl command from compiler, text and flags"
-  (local json (fun.json_encode
-                {:source text
-                 :options {:userArguments options}}))
-  (string.format
-    (.. "curl https://godbolt.org/api/compiler/'%s'/compile"
-        " --data-binary '%s'"
-        " --header 'Accept: application/json'"
-        " --header 'Content-Type: application/json'")
-    compiler json))
-
-(fn get-compiler [compiler options]
-  "Get the compiler the user chose or the default one for the language"
-  (if compiler
-    (if (= :telescope compiler)
-      [(tscope vim.bo.filetype) options]
-      [compiler options])
-    (do
-      (local ft vim.bo.filetype)
-      [(. config ft :compiler) (. config ft :options)])))
-
 (fn pre-display [begin end compiler options]
-  "Display assembly in a split"
+  "Prepare text for displaying and call get-then-display"
   (if vim.g.godbolt_loaded
     (let [lines (api.nvim_buf_get_lines 0 (- begin  1) end true)
           text (fun.join lines "\n")
           chosen-compiler (get-compiler compiler options)]
-      (get (build-cmd (. chosen-compiler 1) text (. chosen-compiler 2)) begin))
+      (get-then-display (build-cmd (. chosen-compiler 1) text (. chosen-compiler 2)) begin))
     (vim.api.nvim_err_writeln "setup function not called")))
 
+
+
+
+; Highlighting
 (fn clear [buf]
   (-> (. source-asm-bufs buf 1)
       (vim.api.nvim_buf_clear_namespace nsid 0 -1)))
