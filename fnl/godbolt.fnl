@@ -28,13 +28,15 @@
    :rust {:compiler :r1560 :options nil}})
 
 (fn setup [cfg]
-  (if vim.g.godbolt_loaded
-    nil
-    (do (global source-asm-bufs {})
-        (global nsid (api.nvim_create_namespace :godbolt))
-        (if cfg (each [k v (pairs cfg)]
-                  (tset config k v)))
-        (set vim.g.godbolt_loaded true))))
+  (if (fun.has :nvim-0.6)
+    (if vim.g.godbolt_loaded
+      nil
+      (do (global source-asm-bufs {})
+          (global nsid (api.nvim_create_namespace :godbolt))
+          (if cfg (each [k v (pairs cfg)]
+                    (tset config k v)))
+          (set vim.g.godbolt_loaded true))
+      (api.nvim_err_writeln "neovim 0.6 is required"))))
 
 
 
@@ -58,7 +60,7 @@
 
 (fn build-cmd [compiler text options]
   "Build curl command from compiler, text and flags"
-  (local json (fun.json_encode {:source text
+  (local json (vim.json.encode {:source text
                                 :options {:userArguments options}}))
   (string.format
     (.. "curl https://godbolt.org/api/compiler/'%s'/compile"
@@ -110,7 +112,7 @@
                    :on_exit (fn [_ _ _]
                               (display (-> output_arr
                                            (fun.join)
-                                           (fun.json_decode))
+                                           (vim.json.decode))
                                        begin))})))
 
 (fn pre-display [begin end compiler options]

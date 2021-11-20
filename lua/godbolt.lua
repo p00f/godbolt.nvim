@@ -2,18 +2,30 @@ local fun = vim.fn
 local api = vim.api
 local config = {cpp = {compiler = "g112", options = nil}, c = {compiler = "cg112", options = nil}, rust = {compiler = "r1560", options = nil}}
 local function setup(cfg)
-  if vim.g.godbolt_loaded then
-    return nil
-  else
-    __fnl_global__source_2dasm_2dbufs = {}
-    nsid = api.nvim_create_namespace("godbolt")
-    if cfg then
-      for k, v in pairs(cfg) do
-        config[k] = v
-      end
+  if fun.has("nvim-0.6") then
+    if vim.g.godbolt_loaded then
+      return nil
     else
+      local _1_
+      do
+        __fnl_global__source_2dasm_2dbufs = {}
+        nsid = api.nvim_create_namespace("godbolt")
+        if cfg then
+          for k, v in pairs(cfg) do
+            config[k] = v
+          end
+        else
+        end
+        vim.g.godbolt_loaded = true
+        _1_ = nil
+      end
+      if _1_ then
+        return api.nvim_err_writeln("neovim 0.6 is required")
+      else
+        return nil
+      end
     end
-    vim.g.godbolt_loaded = true
+  else
     return nil
   end
 end
@@ -30,7 +42,7 @@ local function setup_aucmd(source_buf, asm_buf)
   return vim.cmd("augroup END")
 end
 local function build_cmd(compiler, text, options)
-  local json = fun.json_encode({source = text, options = {userArguments = options}})
+  local json = vim.json.encode({source = text, options = {userArguments = options}})
   return string.format(("curl https://godbolt.org/api/compiler/'%s'/compile" .. " --data-binary '%s'" .. " --header 'Accept: application/json'" .. " --header 'Content-Type: application/json'"), compiler, json)
 end
 local function get_compiler(compiler, options)
@@ -74,13 +86,13 @@ end
 local function get_then_display(cmd, begin)
   local output_arr = {}
   local _jobid
-  local function _6_(_, data, _0)
+  local function _8_(_, data, _0)
     return vim.list_extend(output_arr, data)
   end
-  local function _7_(_, _0, _1)
-    return display(fun.json_decode(fun.join(output_arr)), begin)
+  local function _9_(_, _0, _1)
+    return display(vim.json.decode(fun.join(output_arr)), begin)
   end
-  _jobid = fun.jobstart(cmd, {on_stdout = _6_, on_exit = _7_})
+  _jobid = fun.jobstart(cmd, {on_stdout = _8_, on_exit = _9_})
   return nil
 end
 local function pre_display(begin, _end, compiler, options)
