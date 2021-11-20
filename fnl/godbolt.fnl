@@ -31,7 +31,7 @@
   (if vim.g.godbolt_loaded
     nil
     (do (global source-asm-bufs {})
-        (global nsid (vim.api.nvim_create_namespace :godbolt))
+        (global nsid (api.nvim_create_namespace :godbolt))
         (if cfg (each [k v (pairs cfg)]
                   (tset config k v)))
         (set vim.g.godbolt_loaded true))))
@@ -58,9 +58,8 @@
 
 (fn build-cmd [compiler text options]
   "Build curl command from compiler, text and flags"
-  (local json (fun.json_encode
-                {:source text
-                 :options {:userArguments options}}))
+  (local json (fun.json_encode {:source text
+                                :options {:userArguments options}}))
   (string.format
     (.. "curl https://godbolt.org/api/compiler/'%s'/compile"
         " --data-binary '%s'"
@@ -105,13 +104,14 @@
 (fn get-then-display [cmd begin]
   "Get the response from godbolt.org as a lua table"
   (var output_arr [])
-  (local jobid (fun.jobstart cmd
-                 {:on_stdout (fn [_ data _]
-                               (vim.list_extend output_arr data))
-                  :on_exit (fn [_ _ _]
-                             (local json (fun.join output_arr))
-                             (local response (fun.json_decode json))
-                             (display response begin))})))
+  (local _jobid (fun.jobstart cmd
+                  {:on_stdout (fn [_ data _]
+                                (vim.list_extend output_arr data))
+                   :on_exit (fn [_ _ _]
+                              (display (-> output_arr
+                                           (fun.join)
+                                           (fun.json_decode))
+                                       begin))})))
 
 (fn pre-display [begin end compiler options]
   "Prepare text for displaying and call get-then-display"
@@ -119,8 +119,10 @@
     (let [lines (api.nvim_buf_get_lines 0 (- begin  1) end true)
           text (fun.join lines "\n")
           chosen-compiler (get-compiler compiler options)]
-      (get-then-display (build-cmd (. chosen-compiler 1) text (. chosen-compiler 2)) begin))
-    (vim.api.nvim_err_writeln "setup function not called")))
+      (get-then-display (build-cmd (. chosen-compiler 1)
+                                   text
+                                   (. chosen-compiler 2)) begin))
+    (api.nvim_err_writeln "setup function not called")))
 
 
 
@@ -132,15 +134,19 @@
 
 (fn smolck-update [source-buf asm-buf]
   (api.nvim_buf_clear_namespace asm-buf nsid 0 -1)
-  (local asm-table (. source-asm-bufs source-buf asm-buf :asm))
-  (local offset (. source-asm-bufs source-buf asm-buf :offset))
-  (local linenum (-> (fun.getcurpos) (. 2) (- offset) (+ 1)))
-  (each [k v (pairs asm-table)]
-    (if (= (type (. v :source)) :table)
-      (if (= linenum (. v :source :line))
-        (vim.highlight.range
-         asm-buf nsid :Visual
-         [(- k 1) 0] [(- k 1) 100]
-         :linewise true)))))
+  (let [entry (. source-asm-bufs source-buf asm-buf)
+        offset (. entry :offset)
+        asm-table (. entry :asm)
+        linenum (-> (fun.getcurpos)
+                    (. 2)
+                    (- offset)
+                    (+ 1))]
+    (each [k v (pairs asm-table)]
+      (if (= (type (. v :source)) :table)
+        (if (= linenum (. v :source :line))
+          (vim.highlight.range
+           asm-buf nsid :Visual
+           [(- k 1) 0] [(- k 1) 100]
+           :linewise true))))))
 
 {: pre-display : smolck-update : clear : setup}

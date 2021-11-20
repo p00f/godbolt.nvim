@@ -6,7 +6,7 @@ local function setup(cfg)
     return nil
   else
     __fnl_global__source_2dasm_2dbufs = {}
-    nsid = vim.api.nvim_create_namespace("godbolt")
+    nsid = api.nvim_create_namespace("godbolt")
     if cfg then
       for k, v in pairs(cfg) do
         config[k] = v
@@ -73,16 +73,14 @@ local function display(response, begin)
 end
 local function get_then_display(cmd, begin)
   local output_arr = {}
-  local jobid
+  local _jobid
   local function _6_(_, data, _0)
     return vim.list_extend(output_arr, data)
   end
   local function _7_(_, _0, _1)
-    local json = fun.join(output_arr)
-    local response = fun.json_decode(json)
-    return display(response, begin)
+    return display(fun.json_decode(fun.join(output_arr)), begin)
   end
-  jobid = fun.jobstart(cmd, {on_stdout = _6_, on_exit = _7_})
+  _jobid = fun.jobstart(cmd, {on_stdout = _6_, on_exit = _7_})
   return nil
 end
 local function pre_display(begin, _end, compiler, options)
@@ -92,7 +90,7 @@ local function pre_display(begin, _end, compiler, options)
     local chosen_compiler = get_compiler(compiler, options)
     return get_then_display(build_cmd(chosen_compiler[1], text, chosen_compiler[2]), begin)
   else
-    return vim.api.nvim_err_writeln("setup function not called")
+    return api.nvim_err_writeln("setup function not called")
   end
 end
 local function clear(source_buf)
@@ -103,8 +101,9 @@ local function clear(source_buf)
 end
 local function smolck_update(source_buf, asm_buf)
   api.nvim_buf_clear_namespace(asm_buf, nsid, 0, -1)
-  local asm_table = (__fnl_global__source_2dasm_2dbufs)[source_buf][asm_buf].asm
-  local offset = (__fnl_global__source_2dasm_2dbufs)[source_buf][asm_buf].offset
+  local entry = (__fnl_global__source_2dasm_2dbufs)[source_buf][asm_buf]
+  local offset = entry.offset
+  local asm_table = entry.asm
   local linenum = ((fun.getcurpos()[2] - offset) + 1)
   for k, v in pairs(asm_table) do
     if (type(v.source) == "table") then
