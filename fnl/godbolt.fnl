@@ -72,8 +72,9 @@
 
 (fn get-compiler [compiler flags]
   "Get the compiler the user chose or the default one for the language"
-  (let [ft vim.bo.filetype
-        options {:userArguments flags}]
+  (let [ft vim.bo.filetype]
+    (var options (. config ft :options))
+    (tset options :userArguments flags)
     (if compiler
       (if (= :telescope compiler)
         [((. (require :godbolt.telescope) :compiler-choice) ft) options]
@@ -130,6 +131,37 @@
 
 
 
+; Execute
+(fn echo-output [response]
+  (if (= 0 (. response :code))
+    (let [output (accumulate [str ""
+                              k v (pairs (. response :stdout))]
+                   (.. str "\n" (. v :text)))]
+      (api.nvim_echo [[(.. "Output:" output)]] true {}))
+    (let [err (accumulate [str ""
+                           k v (pairs (. response :stderr))]
+                (.. str "\n" (. v :text)))]
+      (api.nvim_err_writeln err))))
+
+(fn execute [begin end compiler flags]
+  (let [lines (api.nvim_buf_get_lines 0 (- begin  1) end true)
+        text (fun.join lines "\n")
+        chosen-compiler (get-compiler compiler flags)]
+    (var options (. chosen-compiler 2))
+    (tset options :compilerOptions {:executorRequest true})
+    (local cmd (build-cmd (. chosen-compiler 1)
+                          text
+                          options))
+    (var output_arr [])
+    (local _jobid (fun.jobstart cmd
+                    {:on_stdout (fn [_ data _]
+                                  (vim.list_extend output_arr data))
+                     :on_exit (fn [_ _ _]
+                                (echo-output (-> output_arr
+                                                 (fun.join)
+                                                 (vim.json.decode))))}))))
+
+
 
 ; Highlighting
 (fn clear [source-buf]
@@ -153,4 +185,11 @@
            [(- k 1) 0] [(- k 1) 100]
            :linewise true))))))
 
-{: pre-display : smolck-update : clear : setup}
+
+; Main
+(fn godbolt [begin end compiler flags]
+  (pre-display begin end compiler flags)
+  (if vim.b.godbolt_exec
+    (execute begin end compiler flags)))
+
+{: godbolt : smolck-update : clear : setup}

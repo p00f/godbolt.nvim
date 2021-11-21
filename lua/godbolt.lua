@@ -48,7 +48,8 @@ local function build_cmd(compiler, text, options)
 end
 local function get_compiler(compiler, flags)
   local ft = vim.bo.filetype
-  local options = {userArguments = flags}
+  local options = config[ft].options
+  options["userArguments"] = flags
   if compiler then
     if ("telescope" == compiler) then
       return {(require("godbolt.telescope"))["compiler-choice"](ft), options}
@@ -107,6 +108,47 @@ local function pre_display(begin, _end, compiler, flags)
     return api.nvim_err_writeln("setup function not called")
   end
 end
+local function echo_output(response)
+  if (0 == response.code) then
+    local output
+    do
+      local str = ""
+      for k, v in pairs(response.stdout) do
+        str = (str .. "\n" .. v.text)
+      end
+      output = str
+    end
+    return api.nvim_echo({{("Output:" .. output)}}, true, {})
+  else
+    local err
+    do
+      local str = ""
+      for k, v in pairs(response.stderr) do
+        str = (str .. "\n" .. v.text)
+      end
+      err = str
+    end
+    return api.nvim_err_writeln(err)
+  end
+end
+local function execute(begin, _end, compiler, flags)
+  local lines = api.nvim_buf_get_lines(0, (begin - 1), _end, true)
+  local text = fun.join(lines, "\n")
+  local chosen_compiler = get_compiler(compiler, flags)
+  local options = chosen_compiler[2]
+  options["compilerOptions"] = {executorRequest = true}
+  local cmd0 = build_cmd(chosen_compiler[1], text, options)
+  local output_arr = {}
+  local _jobid
+  local function _12_(_, data, _0)
+    return vim.list_extend(output_arr, data)
+  end
+  local function _13_(_, _0, _1)
+    return echo_output(vim.json.decode(fun.join(output_arr)))
+  end
+  _jobid = fun.jobstart(cmd0, {on_stdout = _12_, on_exit = _13_})
+  return nil
+end
 local function clear(source_buf)
   for asm_buf, _ in pairs((__fnl_global__source_2dasm_2dbufs)[source_buf]) do
     api.nvim_buf_clear_namespace(asm_buf, nsid, 0, -1)
@@ -130,4 +172,12 @@ local function smolck_update(source_buf, asm_buf)
   end
   return nil
 end
-return {["pre-display"] = pre_display, ["smolck-update"] = smolck_update, clear = clear, setup = setup}
+local function godbolt(begin, _end, compiler, flags)
+  pre_display(begin, _end, compiler, flags)
+  if vim.b.godbolt_exec then
+    return execute(begin, _end, compiler, flags)
+  else
+    return nil
+  end
+end
+return {godbolt = godbolt, ["smolck-update"] = smolck_update, clear = clear, setup = setup}
