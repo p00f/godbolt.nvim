@@ -37,6 +37,8 @@ You can get the list of compiler ids by visiting or `curl`ing `https://godbolt.o
 
 ## Usage
 
+  Setting `b:godbolt_exec` to true will execute the code in addition to displaying assembly and display the output/error in the message area.
+
  - To use the default/setup compiler for the entire buffer:
 
   `:Godbolt`
@@ -47,10 +49,7 @@ You can get the list of compiler ids by visiting or `curl`ing `https://godbolt.o
 
   `:GodboltCompiler <compiler> <flags>`
 
-   **NOTE**:
-   1) This will not use the options in your config! If you want to set multiple options , like using third-party libraries and adding compiler flags, you should set this up in your config instead, as described in the setup section above.
-
-   2) You need to escape the options appropriately here, like `:GodboltCompiler g112 -Wall\ -O2`
+   **NOTE**: You need to escape the options appropriately here, like `:GodboltCompiler g112 -Wall\ -O2`
  - Similarly, to use a custom compiler with flags for a visual selection: Select the function you want and
 
   `:'<,'>GodboltCompiler <compiler> <flags>`
