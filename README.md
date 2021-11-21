@@ -25,9 +25,12 @@ lua << EOF
 EOF
 ```
 
-`options` is a table corresponding to the `options` field in the [schema](https://github.com/compiler-explorer/compiler-explorer/blob/main/docs/API.md#post-apicompilercompiler-idcompile---perform-a-compilation). For example, if you want to add compiler flags then you need to set it to `{ userArguments = "-Wall -O2" }`.
+`options` is a table corresponding to the `options` field in the [schema](https://github.com/compiler-explorer/compiler-explorer/blob/main/docs/API.md#post-apicompilercompiler-idcompile---perform-a-compilation). For example:
 
-You can get the list of compiler ids by visiting or `curl`ing `https://godbolt.org/api/compilers/<language>`
+ - If you want to add compiler flags then you need to set it to `{ userArguments = "-Wall -O2" }`
+ - If you want to use boost then you need to set it to `{ userArguments = "-I /opt/compiler-explorer/libs/boost_1_77_0", libraries = { id = "boost", version = "1.77.0" } }` and so on. `-I /opt/compiler-explorer/libs/boost_1_77_0` was for including boost, you can get the path of the library by `curl`ing or visiting `https://godbolt.org/api/libraries/c++`
+
+You can get the list of compiler ids by visiting or `curl`ing `https://godbolt.org/api/compilers/<language>` and the list of libraries by `curl`ing or visiting `https://godbolt.org/api/libraries/<language>`. For more info, see https://github.com/compiler-explorer/compiler-explorer/blob/main/docs/API.md
 
 (Note: use `c++`, not `cpp` for C++)
 
@@ -45,7 +48,7 @@ You can get the list of compiler ids by visiting or `curl`ing `https://godbolt.o
   `:GodboltCompiler <compiler> <flags>`
 
    **NOTE**:
-   1) This will not use the options in your config! For example, if you want to use third-party libraries like boost and add compiler flags, you should set this up in your config instead, as described in the setup section above.
+   1) This will not use the options in your config! If you want to set multiple options , like using third-party libraries and adding compiler flags, you should set this up in your config instead, as described in the setup section above.
 
    2) You need to escape the options appropriately here, like `:GodboltCompiler g112 -Wall\ -O2`
  - Similarly, to use a custom compiler with flags for a visual selection: Select the function you want and
