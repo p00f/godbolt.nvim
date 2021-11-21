@@ -45,7 +45,7 @@ You can get the list of compiler ids by visiting or `curl`ing `https://godbolt.o
  - To use the default/setup compiler for a visual selection: Select the function(s) you want and
 
   `:'<,'>Godbolt`
- - To use a custom compiler with flags for the entire buffer:
+ - To use a custom compiler with flags for the entire buffer (`<flags>` is optional):
 
   `:GodboltCompiler <compiler> <flags>`
 
@@ -57,6 +57,13 @@ You can get the list of compiler ids by visiting or `curl`ing `https://godbolt.o
 ## Demo
 https://user-images.githubusercontent.com/36493671/142733190-433f8057-6be2-4012-a235-435f30c8a012.mp4
 
+### Fuzzy finder integration
+
+If in `:GodboltCompiler <compiler> <flags>` or `:'<,'>GodboltCompiler <compiler> <flags>`, `<compiler>` is `telescope` or `fzf`, you can choose the compiler using [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) or [fzf](https://github.com/junegunn/fzf) respectively.
+
+#### Demo
+https://user-images.githubusercontent.com/36493671/142774015-9fb20d17-fef0-497a-87dd-ed0f52e8bec4.mp4
+
+
 ## TODO
- - [ ] Telescope for selecting custom compiler.
  - [ ] Update default compilers using Github Actions.
