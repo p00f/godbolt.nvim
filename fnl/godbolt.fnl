@@ -24,9 +24,9 @@
 
 ; Setup
 (var config
-  {:cpp {:compiler :g112 :options nil}
-   :c {:compiler :cg112 :options nil}
-   :rust {:compiler :r1560 :options nil}})
+  {:cpp {:compiler :g112 :options {}}
+   :c {:compiler :cg112 :options {}}
+   :rust {:compiler :r1560 :options {}}})
 
 (fn setup [cfg]
   (if (fun.has :nvim-0.6)
@@ -60,9 +60,9 @@
   (cmd "augroup END"))
 
 (fn build-cmd [compiler text options]
-  "Build curl command from compiler, text and flags"
+  "Build curl command from compiler, text and options"
   (local json (vim.json.encode {:source text
-                                :options {:userArguments options}}))
+                                :options options}))
   (string.format
     (.. "curl https://godbolt.org/api/compiler/'%s'/compile"
         " --data-binary '%s'"
@@ -70,15 +70,16 @@
         " --header 'Content-Type: application/json'")
     compiler json))
 
-(fn get-compiler [compiler options]
+(fn get-compiler [compiler flags]
   "Get the compiler the user chose or the default one for the language"
-  (local ft vim.bo.filetype)
-  (if compiler
-    (if (= :telescope compiler)
-      [((. (require :godbolt.telescope) :compiler-choice) ft) options]
-      [compiler options])
-    (do
-      [(. config ft :compiler) (. config ft :options)])))
+  (let [ft vim.bo.filetype
+        options {:userArguments flags}]
+    (if compiler
+      (if (= :telescope compiler)
+        [((. (require :godbolt.telescope) :compiler-choice) ft) options]
+        [compiler options])
+      (do
+        [(. config ft :compiler) (. config ft :options)]))))
 
 
 
@@ -116,12 +117,12 @@
                                            (vim.json.decode))
                                        begin))})))
 
-(fn pre-display [begin end compiler options]
+(fn pre-display [begin end compiler flags]
   "Prepare text for displaying and call get-then-display"
   (if vim.g.godbolt_loaded
     (let [lines (api.nvim_buf_get_lines 0 (- begin  1) end true)
           text (fun.join lines "\n")
-          chosen-compiler (get-compiler compiler options)]
+          chosen-compiler (get-compiler compiler flags)]
       (get-then-display (build-cmd (. chosen-compiler 1)
                                    text
                                    (. chosen-compiler 2)) begin))

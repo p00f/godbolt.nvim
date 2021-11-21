@@ -1,7 +1,7 @@
 local fun = vim.fn
 local api = vim.api
 local cmd = vim.cmd
-local config = {cpp = {compiler = "g112", options = nil}, c = {compiler = "cg112", options = nil}, rust = {compiler = "r1560", options = nil}}
+local config = {cpp = {compiler = "g112", options = {}}, c = {compiler = "cg112", options = {}}, rust = {compiler = "r1560", options = {}}}
 local function setup(cfg)
   if fun.has("nvim-0.6") then
     if vim.g.godbolt_loaded then
@@ -43,11 +43,12 @@ local function setup_aucmd(source_buf, asm_buf)
   return cmd("augroup END")
 end
 local function build_cmd(compiler, text, options)
-  local json = vim.json.encode({source = text, options = {userArguments = options}})
+  local json = vim.json.encode({source = text, options = options})
   return string.format(("curl https://godbolt.org/api/compiler/'%s'/compile" .. " --data-binary '%s'" .. " --header 'Accept: application/json'" .. " --header 'Content-Type: application/json'"), compiler, json)
 end
-local function get_compiler(compiler, options)
+local function get_compiler(compiler, flags)
   local ft = vim.bo.filetype
+  local options = {userArguments = flags}
   if compiler then
     if ("telescope" == compiler) then
       return {(require("godbolt.telescope"))["compiler-choice"](ft), options}
@@ -96,11 +97,11 @@ local function get_then_display(cmd0, begin)
   _jobid = fun.jobstart(cmd0, {on_stdout = _8_, on_exit = _9_})
   return nil
 end
-local function pre_display(begin, _end, compiler, options)
+local function pre_display(begin, _end, compiler, flags)
   if vim.g.godbolt_loaded then
     local lines = api.nvim_buf_get_lines(0, (begin - 1), _end, true)
     local text = fun.join(lines, "\n")
-    local chosen_compiler = get_compiler(compiler, options)
+    local chosen_compiler = get_compiler(compiler, flags)
     return get_then_display(build_cmd(chosen_compiler[1], text, chosen_compiler[2]), begin)
   else
     return api.nvim_err_writeln("setup function not called")
