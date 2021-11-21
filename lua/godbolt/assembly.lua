@@ -77,12 +77,11 @@ local function get_then_display(command, begin)
   _jobid = fun.jobstart(command, {on_stdout = _4_, on_exit = _5_})
   return nil
 end
-local function pre_display(begin, _end, compiler, flags)
+local function pre_display(begin, _end, compiler, options)
   if vim.g.godbolt_loaded then
     local lines = api.nvim_buf_get_lines(0, (begin - 1), _end, true)
     local text = fun.join(lines, "\n")
-    local chosen_compiler = get_compiler(compiler, flags)
-    return get_then_display(build_cmd(chosen_compiler[1], text, chosen_compiler[2]), begin)
+    return get_then_display(build_cmd(compiler, text, options), begin)
   else
     return api.nvim_err_writeln("setup function not called")
   end

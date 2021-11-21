@@ -101,15 +101,14 @@
                                            (vim.json.decode))
                                        begin))})))
 
-(fn pre-display [begin end compiler flags]
+(fn pre-display [begin end compiler options]
   "Prepare text for displaying and call get-then-display"
   (if vim.g.godbolt_loaded
     (let [lines (api.nvim_buf_get_lines 0 (- begin  1) end true)
-          text (fun.join lines "\n")
-          chosen-compiler (get-compiler compiler flags)]
-      (get-then-display (build-cmd (. chosen-compiler 1)
+          text (fun.join lines "\n")]
+      (get-then-display (build-cmd compiler
                                    text
-                                   (. chosen-compiler 2)) begin))
+                                   options) begin))
     (api.nvim_err_writeln "setup function not called")))
 
 

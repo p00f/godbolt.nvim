@@ -4,61 +4,73 @@ if not vim.g.godbolt_loaded then
   __fnl_global__gb_2dexports = {}
 else
 end
-local godbolt_config = {cpp = {compiler = "g112", options = {}}, c = {compiler = "cg112", options = {}}, rust = {compiler = "r1560", options = {}}}
 local function setup(cfg)
   if fun.has("nvim-0.6") then
-    if vim.g.godbolt_loaded then
+    if not vim.g.godbolt_loaded then
+      __fnl_global__gb_2dexports["bufmap"] = {}
+      __fnl_global__gb_2dexports["nsid"] = api.nvim_create_namespace("godbolt")
+      vim.g.godbolt_config = {cpp = {compiler = "g112", options = {}}, c = {compiler = "cg112", options = {}}, rust = {compiler = "r1560", options = {}}}
+      if cfg then
+        for k, v in pairs(cfg) do
+          vim.g.godbolt_config[k] = v
+        end
+      else
+      end
+      vim.g.godbolt_loaded = true
       return nil
     else
-      local _2_
-      do
-        __fnl_global__gb_2dexports["bufmap"] = {}
-        __fnl_global__gb_2dexports["nsid"] = api.nvim_create_namespace("godbolt")
-        if cfg then
-          for k, v in pairs(cfg) do
-            godbolt_config[k] = v
-          end
-        else
-        end
-        vim.g.godbolt_loaded = true
-        _2_ = nil
-      end
-      if _2_ then
-        return api.nvim_err_writeln("neovim 0.6 is required")
-      else
-        return nil
-      end
+      return nil
     end
   else
-    return nil
+    return api.nvim_err_writeln("neovim 0.6 is required")
   end
 end
 local function build_cmd(compiler, text, options)
   local json = vim.json.encode({source = text, options = options})
   return string.format(("curl https://godbolt.org/api/compiler/'%s'/compile" .. " --data-binary '%s'" .. " --header 'Accept: application/json'" .. " --header 'Content-Type: application/json'"), compiler, json)
 end
-local function get_compiler(compiler, flags)
-  local ft = vim.bo.filetype
-  local options = godbolt_config[ft].options
-  options["userArguments"] = flags
-  if compiler then
-    if ("telescope" == compiler) then
-      return {(require("godbolt.telescope"))["compiler-choice"](ft), options}
+local function godbolt(begin, _end, compiler_arg, flags)
+  if vim.g.godbolt_loaded then
+    local pre_display = (require("godbolt.assembly"))["pre-display"]
+    local execute = (require("godbolt.execute")).execute
+    local ft = vim.bo.filetype
+    local options = vim.deepcopy(vim.g.godbolt_config[ft].options)
+    if flags then
+      options["userArguments"] = flags
     else
-      return {compiler, options}
+    end
+    if compiler_arg then
+      local _6_ = compiler_arg
+      local function _7_()
+        local fuzzy = _6_
+        return (("telescope" == fuzzy) or ("fzf" == fuzzy))
+      end
+      if ((nil ~= _6_) and _7_()) then
+        local fuzzy = _6_
+        local picker = (require(("godbolt." .. fuzzy)))[fuzzy]
+        return picker(ft, begin, _end, options, (true == vim.b.godbolt_exec))
+      elseif true then
+        local _ = _6_
+        pre_display(begin, _end, compiler_arg, options)
+        if vim.b.godbolt_exec then
+          return execute(begin, _end, compiler_arg, options)
+        else
+          return nil
+        end
+      else
+        return nil
+      end
+    else
+      local def_comp = vim.g.godbolt_config[ft].compiler
+      pre_display(begin, _end, def_comp, options)
+      if vim.b.godbolt_exec then
+        return execute(begin, _end, def_comp, options)
+      else
+        return nil
+      end
     end
   else
-    return {godbolt_config[ft].compiler, godbolt_config[ft].options}
+    return api.nvim_err_writeln("setup function not called")
   end
 end
-local function godbolt(begin, _end, compiler, flags)
-  local pre_display = (require("godbolt.assembly"))["pre-display"]
-  local execute = (require("godbolt.execute")).execute
-  pre_display(begin, _end, compiler, flags)
-  if vim.b.godbolt_exec then
-    return execute(begin, _end, compiler, flags)
-  else
-    return nil
-  end
-end
-return {setup = setup, ["build-cmd"] = build_cmd, ["get-compiler"] = get_compiler, godbolt = godbolt}
+return {setup = setup, ["build-cmd"] = build_cmd, godbolt = godbolt}

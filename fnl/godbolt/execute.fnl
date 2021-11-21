@@ -35,13 +35,11 @@
                 (.. str "\n" (. v :text)))]
       (api.nvim_err_writeln err))))
 
-(fn execute [begin end compiler flags]
+(fn execute [begin end compiler options]
   (let [lines (api.nvim_buf_get_lines 0 (- begin  1) end true)
-        text (fun.join lines "\n")
-        chosen-compiler (get-compiler compiler flags)]
-    (var options (. chosen-compiler 2))
+        text (fun.join lines "\n")]
     (tset options :compilerOptions {:executorRequest true})
-    (local cmd (build-cmd (. chosen-compiler 1)
+    (local cmd (build-cmd compiler
                           text
                           options))
     (var output_arr [])

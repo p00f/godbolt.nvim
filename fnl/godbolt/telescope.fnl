@@ -34,31 +34,34 @@
    :display entry
    :ordinal entry})
 
-; FIXME
-(fn choice [ft]
 
-  (local pickers (require :telescope.pickers))
-  (local finders (require :telescope.finders))
-  (local conf (. (require :telescope.config) :values))
-  (local actions (require :telescope.actions))
-  (local actions-state (require :telescope.actions.state))
+(fn telescope [ft begin end options exec]
 
-  (local ft (match ft
-              :cpp :c++
-              x x))
-  (local cmd (string.format "curl https://godbolt.org/api/compilers/%s" ft))
-  (local lines (get-compiler-list cmd))
-  (var compiler nil)
-  (: (pickers.new nil {:prompt_title "Choose compiler"
-                       :finder (finders.new_table {:results lines
-                                                   :entry_maker transform})
-                       :sorter (conf.generic_sorter nil)
-                       :attach_mappings (fn [prompt-bufnr map]
-                                         (actions.select_default:replace (fn []
-                                                                          (actions.close prompt-bufnr)
-                                                                          (local selection (actions-state.get_selected_entry))
-                                                                          (set compiler (. selection :value)))))})
-     :find)
-  compiler)
+  (let [pickers (require :telescope.pickers)
+        finders (require :telescope.finders)
+        conf (. (require :telescope.config) :values)
+        actions (require :telescope.actions)
+        actions-state (require :telescope.actions.state)
+        ft (match ft
+             :cpp :c++
+             x x)
+        cmd (string.format "curl https://godbolt.org/api/compilers/%s" ft)
+        lines (get-compiler-list cmd)]
 
-{:compiler-choice choice}
+    (: (pickers.new {} {:prompt_title "Choose compiler"
+                        :finder (finders.new_table {:results lines
+                                                    :entry_maker transform})
+                        :sorter (conf.generic_sorter nil)
+                        :attach_mappings (fn [prompt-bufnr map]
+                                           (actions.select_default:replace
+                                             (fn []
+                                               (actions.close prompt-bufnr)
+                                               (local compiler (. (actions-state.get_selected_entry) :value))
+                                               ((. (require :godbolt.assembly) :pre-display)
+                                                begin end compiler options)
+                                               (if exec
+                                                 ((. (require :godbolt.execute) :execute)
+                                                  begin end compiler options)))))})
+       :find)))
+
+{: telescope}

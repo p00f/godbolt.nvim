@@ -18,7 +18,7 @@ end
 local function transform(entry)
   return {value = (vim.split(entry, " "))[1], display = entry, ordinal = entry}
 end
-local function choice(ft)
+local function telescope(ft, begin, _end, options, exec)
   local pickers = require("telescope.pickers")
   local finders = require("telescope.finders")
   local conf = (require("telescope.config")).values
@@ -38,17 +38,19 @@ local function choice(ft)
   end
   local cmd = string.format("curl https://godbolt.org/api/compilers/%s", ft0)
   local lines = get_compiler_list(cmd)
-  local compiler = nil
   local function _5_(prompt_bufnr, map)
     local function _6_()
       actions.close(prompt_bufnr)
-      local selection = actions_state.get_selected_entry()
-      compiler = selection.value
-      return nil
+      local compiler = actions_state.get_selected_entry().value
+      do end (require("godbolt.assembly"))["pre-display"](begin, _end, compiler, options)
+      if exec then
+        return (require("godbolt.execute")).execute(begin, _end, compiler, options)
+      else
+        return nil
+      end
     end
     return (actions.select_default):replace(_6_)
   end
-  pickers.new(nil, {prompt_title = "Choose compiler", finder = finders.new_table({results = lines, entry_maker = transform}), sorter = conf.generic_sorter(nil), attach_mappings = _5_}):find()
-  return compiler
+  return pickers.new({}, {prompt_title = "Choose compiler", finder = finders.new_table({results = lines, entry_maker = transform}), sorter = conf.generic_sorter(nil), attach_mappings = _5_}):find()
 end
-return {["compiler-choice"] = choice}
+return {telescope = telescope}
