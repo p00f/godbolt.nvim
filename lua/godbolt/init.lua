@@ -43,7 +43,7 @@ local function godbolt(begin, _end, compiler_arg, flags)
       local _6_ = compiler_arg
       local function _7_()
         local fuzzy = _6_
-        return (("telescope" == fuzzy) or ("fzf" == fuzzy))
+        return (("telescope" == fuzzy) or ("fzf" == fuzzy) or ("skim" == fuzzy))
       end
       if ((nil ~= _6_) and _7_()) then
         local fuzzy = _6_

@@ -50,6 +50,17 @@
                           ((. (require :godbolt.execute) :execute)
                            begin end compiler options)))}))
 
+(fn skim [entries begin end options exec]
+  (fun.skim#run {:source entries
+                 :window {:width 0.9 :height 0.6}
+                 :sink (fn [choice]
+                         (local compiler (-> choice (vim.split " ") (. 1)))
+                         ((. (require :godbolt.assembly) :pre-display)
+                          begin end compiler options)
+                         (if exec
+                           ((. (require :godbolt.execute) :execute)
+                            begin end compiler options)))}))
+
 
 (fn telescope [entries begin end options exec]
   (let [pickers (require :telescope.pickers)
@@ -90,5 +101,6 @@
                                              (when (not= k 1) v))]
                                  (match picker
                                         :fzf (fzf final begin end options exec)
-                                        :telescope (telescope final begin end options exec))))}))))
+                                        :telescope (telescope final begin end options exec)
+                                        :skim (skim final begin end options exec))))}))))
 {: fuzzy}
