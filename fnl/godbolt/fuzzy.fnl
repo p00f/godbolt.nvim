@@ -17,18 +17,6 @@
 
 (local fun vim.fn)
 
-(fn get-compiler-list [cmd]
-  (var op [])
-  (local jobid (fun.jobstart cmd
-                 {:on_stdout (fn [_ data _]
-                               (vim.list_extend op data))}))
-  (local t (fun.jobwait [jobid]))
-  (var final [])
-  (each [k v (pairs op)]
-    (if (not= k 1)
-      (table.insert final v)))
-  final)
-
 
 (fn transform [entry]
   "Get the compiler id"
@@ -50,6 +38,7 @@
                           ((. (require :godbolt.execute) :execute)
                            begin end compiler options)))}))
 
+; Same as fzf, just s/fzf/skim/g
 (fn skim [entries begin end options exec]
   (fun.skim#run {:source entries
                  :window {:width 0.9 :height 0.6}
@@ -91,7 +80,7 @@
 
 (fn fuzzy [picker ft begin end options exec]
   (let [ft (match ft :cpp :c++ x x)
-        cmd (string.format "curl https://godbolt.org/api/compilers/%s --limit-rate 1" ft)]
+        cmd (string.format "curl https://godbolt.org/api/compilers/%s" ft)]
     (var output [])
     (local jobid (fun.jobstart cmd
                    {:on_stdout (fn [_ data _]
