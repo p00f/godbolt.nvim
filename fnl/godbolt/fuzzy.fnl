@@ -39,37 +39,27 @@
 
 
 
-
-(fn fzf [ft begin end options exec]
-  (let [ft (match ft :cpp :c++ x x)
-        cmd (string.format "curl https://godbolt.org/api/compilers/%s" ft)
-        lines (get-compiler-list cmd)]
-
-    (fun.fzf#run {:source lines
-                  :window {:width 0.9 :height 0.6}
-                  :sink (fn [choice]
-                          (local compiler (-> choice (vim.split " ") (. 1)))
-                          ((. (require :godbolt.assembly) :pre-display)
-                           begin end compiler options)
-                          (if exec
-                            ((. (require :godbolt.execute) :execute)
-                             begin end compiler options)))})))
+(fn fzf [entries begin end options exec]
+  (fun.fzf#run {:source entries
+                :window {:width 0.9 :height 0.6}
+                :sink (fn [choice]
+                        (local compiler (-> choice (vim.split " ") (. 1)))
+                        ((. (require :godbolt.assembly) :pre-display)
+                         begin end compiler options)
+                        (if exec
+                          ((. (require :godbolt.execute) :execute)
+                           begin end compiler options)))}))
 
 
-(fn telescope [ft begin end options exec]
+(fn telescope [entries begin end options exec]
   (let [pickers (require :telescope.pickers)
         finders (require :telescope.finders)
         conf (. (require :telescope.config) :values)
         actions (require :telescope.actions)
-        actions-state (require :telescope.actions.state)
-        ft (match ft
-             :cpp :c++
-             x x)
-        cmd (string.format "curl https://godbolt.org/api/compilers/%s" ft)
-        lines (get-compiler-list cmd)]
+        actions-state (require :telescope.actions.state)]
 
     (: (pickers.new {} {:prompt_title "Choose compiler"
-                        :finder (finders.new_table {:results lines
+                        :finder (finders.new_table {:results entries
                                                     :entry_maker transform})
                         :sorter (conf.generic_sorter nil)
                         :attach_mappings (fn [prompt-bufnr map]
@@ -84,4 +74,21 @@
                                                   begin end compiler options)))))})
        :find)))
 
-{: fzf : telescope}
+
+
+
+
+(fn fuzzy [picker ft begin end options exec]
+  (let [ft (match ft :cpp :c++ x x)
+        cmd (string.format "curl https://godbolt.org/api/compilers/%s --limit-rate 1" ft)]
+    (var output [])
+    (local jobid (fun.jobstart cmd
+                   {:on_stdout (fn [_ data _]
+                                 (vim.list_extend output data))
+                    :on_exit (fn [_ _ _]
+                               (let [final (icollect [k v (ipairs output)]
+                                             (when (not= k 1) v))]
+                                 (match picker
+                                        :fzf (fzf final begin end options exec)
+                                        :telescope (telescope final begin end options exec))))}))))
+{: fuzzy}

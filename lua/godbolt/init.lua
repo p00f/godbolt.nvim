@@ -47,8 +47,7 @@ local function godbolt(begin, _end, compiler_arg, flags)
       end
       if ((nil ~= _6_) and _7_()) then
         local fuzzy = _6_
-        local picker = (require("godbolt.fuzzy"))[fuzzy]
-        return picker(ft, begin, _end, options, (true == vim.b.godbolt_exec))
+        return (require("godbolt.fuzzy")).fuzzy(fuzzy, ft, begin, _end, options, (true == vim.b.godbolt_exec))
       elseif true then
         local _ = _6_
         pre_display(begin, _end, compiler_arg, options)
