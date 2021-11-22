@@ -40,6 +40,7 @@
                          {:on_stdout (fn [_ data _]
                                        (vim.list_extend output_arr data))
                           :on_exit (fn [_ _ _]
+                                     (os.remove :godbolt.json)
                                      (echo-output (-> output_arr
                                                       (fun.join)
                                                       (vim.json.decode))))}))))

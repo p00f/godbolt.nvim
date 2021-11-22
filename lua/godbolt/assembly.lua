@@ -73,6 +73,7 @@ local function pre_display(begin, _end, compiler, options)
     return vim.list_extend(output_arr, data)
   end
   local function _5_(_, _0, _1)
+    os.remove("godbolt.json")
     return display(vim.json.decode(fun.join(output_arr)), begin)
   end
   _jobid = fun.jobstart(curl_cmd, {on_stdout = _4_, on_exit = _5_})

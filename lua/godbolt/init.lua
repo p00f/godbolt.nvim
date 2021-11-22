@@ -27,8 +27,10 @@ local function setup(cfg)
 end
 local function build_cmd(compiler, text, options)
   local json = vim.json.encode({source = text, options = options})
-  json = string.gsub(json, "'", "\\'")
-  local ret = string.format(("curl https://godbolt.org/api/compiler/'%s'/compile" .. " --data-binary '%s'" .. " --header 'Accept: application/json'" .. " --header 'Content-Type: application/json'"), compiler, json)
+  local file = io.open("godbolt.json", "w")
+  file:write(json)
+  io.close(file)
+  local ret = string.format(("curl https://godbolt.org/api/compiler/'%s'/compile" .. " --data-binary @godbolt.json" .. " --header 'Accept: application/json'" .. " --header 'Content-Type: application/json'"), compiler)
   return ret
 end
 local function godbolt(begin, _end, compiler_arg, flags)

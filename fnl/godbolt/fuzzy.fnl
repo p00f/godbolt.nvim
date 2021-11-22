@@ -72,6 +72,7 @@
                                                                                        options)))))})
        :find)))
 
+;; fnlfmt: skip
 (fn fuzzy [picker ft begin end options exec]
   (let [ft (match ft
              :cpp :c++
@@ -92,4 +93,3 @@
                                         final begin end options exec)))}))))
 
 {: fuzzy}
-
