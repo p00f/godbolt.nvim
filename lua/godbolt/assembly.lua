@@ -1,7 +1,7 @@
 local fun = vim.fn
 local api = vim.api
 local cmd = vim.cmd
-local source_asm_bufs = (__fnl_global__gb_2dexports).bufmap
+local source_asm_bufs = (_G["gb-exports"]).bufmap
 local function prepare_buf(text)
   local buf = api.nvim_create_buf(false, true)
   api.nvim_buf_set_option(buf, "filetype", "asm")
@@ -16,12 +16,12 @@ local function setup_aucmd(source_buf, asm_buf)
 end
 local function clear(source_buf)
   for asm_buf, _ in pairs(source_asm_bufs[source_buf]) do
-    api.nvim_buf_clear_namespace(asm_buf, (__fnl_global__gb_2dexports).nsid, 0, -1)
+    api.nvim_buf_clear_namespace(asm_buf, (_G["gb-exports"]).nsid, 0, -1)
   end
   return nil
 end
 local function smolck_update(source_buf, asm_buf)
-  api.nvim_buf_clear_namespace(asm_buf, (__fnl_global__gb_2dexports).nsid, 0, -1)
+  api.nvim_buf_clear_namespace(asm_buf, (_G["gb-exports"]).nsid, 0, -1)
   local entry = source_asm_bufs[source_buf][asm_buf]
   local offset = entry.offset
   local asm_table = entry.asm
@@ -29,7 +29,7 @@ local function smolck_update(source_buf, asm_buf)
   for k, v in pairs(asm_table) do
     if (type(v.source) == "table") then
       if (linenum == v.source.line) then
-        vim.highlight.range(asm_buf, (__fnl_global__gb_2dexports).nsid, "Visual", {(k - 1), 0}, {(k - 1), 100}, "linewise", true)
+        vim.highlight.range(asm_buf, (_G["gb-exports"]).nsid, "Visual", {(k - 1), 0}, {(k - 1), 100}, "linewise", true)
       else
       end
     else

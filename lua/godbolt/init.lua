@@ -1,14 +1,14 @@
 local fun = vim.fn
 local api = vim.api
 if not vim.g.godbolt_loaded then
-  __fnl_global__gb_2dexports = {}
+  _G["gb-exports"] = {}
 else
 end
 local function setup(cfg)
   if fun.has("nvim-0.6") then
     if not vim.g.godbolt_loaded then
-      __fnl_global__gb_2dexports["bufmap"] = {}
-      __fnl_global__gb_2dexports["nsid"] = api.nvim_create_namespace("godbolt")
+      _G["gb-exports"]["bufmap"] = {}
+      _G["gb-exports"]["nsid"] = api.nvim_create_namespace("godbolt")
       vim.g.godbolt_config = {cpp = {compiler = "g112", options = {}}, c = {compiler = "cg112", options = {}}, rust = {compiler = "r1560", options = {}}}
       if cfg then
         for k, v in pairs(cfg) do
