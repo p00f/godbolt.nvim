@@ -15,7 +15,7 @@
 ;  You should have received a copy of the GNU General Public License
 ;  along with godbolt.nvim.  If not, see <https://www.gnu.org/licenses/>.
 
-(import-macros {: m>} :macros)
+(import-macros {: m> : dec} :macros)
 (local fun vim.fn)
 (local api vim.api)
 (local cmd vim.cmd)
@@ -56,7 +56,7 @@
       (if (= (type (. v :source)) :table)
           (if (= linenum (. v :source :line))
               (vim.highlight.range asm-buf (. gb-exports :nsid) :Visual
-                                   [(- k 1) 0] [(- k 1) 100] :linewise true))))))
+                                   [(dec k) 0] [(dec k) 100] :linewise true))))))
 
 ; Main
 (fn display [response begin]
@@ -93,7 +93,7 @@
 (fn pre-display [begin end compiler options]
   "Prepare text for displaying and call get-then-display"
   (if vim.g.godbolt_loaded
-      (let [lines (api.nvim_buf_get_lines 0 (- begin 1) end true)
+      (let [lines (api.nvim_buf_get_lines 0 (dec begin) end true)
             text (fun.join lines "\n")]
         (get-then-display (m> :godbolt.init :build-cmd compiler text options)
                           begin))

@@ -15,7 +15,7 @@
 ;  You should have received a copy of the GNU General Public License
 ;  along with godbolt.nvim.  If not, see <https://www.gnu.org/licenses/>.
 
-(import-macros {: m>} :macros)
+(import-macros {: m> : first} :macros)
 
 (local fun vim.fn)
 (local pre-display (. (require :godbolt.assembly) :pre-display))
@@ -39,7 +39,7 @@
   (fun.skim#run {:source entries
                  :window {:width 0.9 :height 0.6}
                  :sink (fn [choice]
-                         (local compiler (-> choice (vim.split " ") (. 1)))
+                         (local compiler (first (vim.split choice " ")))
                          (pre-display begin end compiler options)
                          (if exec
                              (execute begin end compiler options)))}))
