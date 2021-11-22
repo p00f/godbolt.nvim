@@ -41,6 +41,7 @@
 (fn build-cmd [compiler text options]
   "Build curl command from compiler, text and options"
   (local json (vim.json.encode {:source text : options}))
+  (json:gsub "'" "\\'")
   (string.format (.. "curl https://godbolt.org/api/compiler/'%s'/compile"
                      " --data-binary '%s'"
                      " --header 'Accept: application/json'"
