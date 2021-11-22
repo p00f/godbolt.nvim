@@ -86,11 +86,11 @@
                                      (let [final (icollect [k v (ipairs output)]
                                                    (when (not= k 1)
                                                      v))]
-                                       (match picker
-                                         :fzf (fzf final begin end options exec)
-                                         :telescope (telescope final begin end
-                                                               options exec)
-                                         :skim (skim final begin end options
-                                                     exec))))}))))
+                                       ((match picker
+                                          :fzf fzf
+                                          :skim skim
+                                          :telescope telescope)
+                                        final begin end options exec)))}))))
 
 {: fuzzy}
+

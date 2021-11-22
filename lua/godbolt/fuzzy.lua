@@ -88,16 +88,20 @@ local function fuzzy(picker, ft, begin, _end, options, exec)
       end
       final = tbl_14_auto
     end
-    local _14_ = picker
-    if (_14_ == "fzf") then
-      return fzf(final, begin, _end, options, exec)
-    elseif (_14_ == "telescope") then
-      return telescope(final, begin, _end, options, exec)
-    elseif (_14_ == "skim") then
-      return skim(final, begin, _end, options, exec)
-    else
-      return nil
+    local _15_
+    do
+      local _14_ = picker
+      if (_14_ == "fzf") then
+        _15_ = fzf
+      elseif (_14_ == "skim") then
+        _15_ = skim
+      elseif (_14_ == "telescope") then
+        _15_ = telescope
+      else
+        _15_ = nil
+      end
     end
+    return _15_(final, begin, _end, options, exec)
   end
   jobid = fun.jobstart(cmd, {on_stdout = _10_, on_exit = _11_})
   return nil

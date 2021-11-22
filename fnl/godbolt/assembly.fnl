@@ -78,25 +78,21 @@
           {:asm (. response :asm) :offset begin})
     (setup-aucmd source-bufnr asm-buf)))
 
-(fn get-then-display [command begin]
-  "Get the response from godbolt.org as a lua table"
-  (var output_arr [])
-  (local _jobid (fun.jobstart command
-                              {:on_stdout (fn [_ data _]
-                                            (vim.list_extend output_arr data))
-                               :on_exit (fn [_ _ _]
-                                          (display (-> output_arr
-                                                       (fun.join)
-                                                       (vim.json.decode))
-                                                   begin))})))
-
 (fn pre-display [begin end compiler options]
-  "Prepare text for displaying and call get-then-display"
-  (if vim.g.godbolt_loaded
-      (let [lines (api.nvim_buf_get_lines 0 (dec begin) end true)
-            text (fun.join lines "\n")]
-        (get-then-display (m> :godbolt.init :build-cmd compiler text options)
-                          begin))
-      (api.nvim_err_writeln "setup function not called")))
+  "Prepare text for displaying and call display"
+  (let [lines (api.nvim_buf_get_lines 0 (dec begin) end true)
+        text (fun.join lines "\n")
+        curl-cmd (m> :godbolt.init :build-cmd compiler text options)]
+    (var output_arr [])
+    (local _jobid
+           (fun.jobstart curl-cmd
+                         {:on_stdout (fn [_ data _]
+                                       (vim.list_extend output_arr data))
+                          :on_exit (fn [_ _ _]
+                                     (display (-> output_arr
+                                                  (fun.join)
+                                                  (vim.json.decode))
+                                              begin))}))))
 
 {: pre-display : clear : smolck-update}
+

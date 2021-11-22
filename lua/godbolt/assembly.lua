@@ -63,7 +63,10 @@ local function display(response, begin)
   source_asm_bufs[source_bufnr][asm_buf] = {asm = response.asm, offset = begin}
   return setup_aucmd(source_bufnr, asm_buf)
 end
-local function get_then_display(command, begin)
+local function pre_display(begin, _end, compiler, options)
+  local lines = api.nvim_buf_get_lines(0, (begin - 1), _end, true)
+  local text = fun.join(lines, "\n")
+  local curl_cmd = (require("godbolt.init"))["build-cmd"](compiler, text, options)
   local output_arr = {}
   local _jobid
   local function _4_(_, data, _0)
@@ -72,16 +75,7 @@ local function get_then_display(command, begin)
   local function _5_(_, _0, _1)
     return display(vim.json.decode(fun.join(output_arr)), begin)
   end
-  _jobid = fun.jobstart(command, {on_stdout = _4_, on_exit = _5_})
+  _jobid = fun.jobstart(curl_cmd, {on_stdout = _4_, on_exit = _5_})
   return nil
-end
-local function pre_display(begin, _end, compiler, options)
-  if vim.g.godbolt_loaded then
-    local lines = api.nvim_buf_get_lines(0, (begin - 1), _end, true)
-    local text = fun.join(lines, "\n")
-    return get_then_display((require("godbolt.init"))["build-cmd"](compiler, text, options), begin)
-  else
-    return api.nvim_err_writeln("setup function not called")
-  end
 end
 return {["pre-display"] = pre_display, clear = clear, ["smolck-update"] = smolck_update}
