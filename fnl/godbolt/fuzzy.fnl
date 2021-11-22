@@ -17,26 +17,22 @@
 
 (local fun vim.fn)
 
-
 (fn transform [entry]
   "Get the compiler id"
-  {:value (. (vim.split entry " ") 1)
-   :display entry
-   :ordinal entry})
-
-
-
+  {:value (. (vim.split entry " ") 1) :display entry :ordinal entry})
 
 (fn fzf [entries begin end options exec]
   (fun.fzf#run {:source entries
                 :window {:width 0.9 :height 0.6}
                 :sink (fn [choice]
                         (local compiler (-> choice (vim.split " ") (. 1)))
-                        ((. (require :godbolt.assembly) :pre-display)
-                         begin end compiler options)
+                        ((. (require :godbolt.assembly) :pre-display) begin end
+                                                                      compiler
+                                                                      options)
                         (if exec
-                          ((. (require :godbolt.execute) :execute)
-                           begin end compiler options)))}))
+                            ((. (require :godbolt.execute) :execute) begin end
+                                                                     compiler
+                                                                     options)))}))
 
 ; Same as fzf, just s/fzf/skim/g
 (fn skim [entries begin end options exec]
@@ -44,12 +40,14 @@
                  :window {:width 0.9 :height 0.6}
                  :sink (fn [choice]
                          (local compiler (-> choice (vim.split " ") (. 1)))
-                         ((. (require :godbolt.assembly) :pre-display)
-                          begin end compiler options)
+                         ((. (require :godbolt.assembly) :pre-display) begin
+                                                                       end
+                                                                       compiler
+                                                                       options)
                          (if exec
-                           ((. (require :godbolt.execute) :execute)
-                            begin end compiler options)))}))
-
+                             ((. (require :godbolt.execute) :execute) begin end
+                                                                      compiler
+                                                                      options)))}))
 
 (fn telescope [entries begin end options exec]
   (let [pickers (require :telescope.pickers)
@@ -57,39 +55,49 @@
         conf (. (require :telescope.config) :values)
         actions (require :telescope.actions)
         actions-state (require :telescope.actions.state)]
-
-    (: (pickers.new {} {:prompt_title "Choose compiler"
-                        :finder (finders.new_table {:results entries
-                                                    :entry_maker transform})
-                        :sorter (conf.generic_sorter nil)
-                        :attach_mappings (fn [prompt-bufnr map]
-                                           (actions.select_default:replace
-                                             (fn []
-                                               (actions.close prompt-bufnr)
-                                               (local compiler (. (actions-state.get_selected_entry) :value))
-                                               ((. (require :godbolt.assembly) :pre-display)
-                                                begin end compiler options)
-                                               (if exec
-                                                 ((. (require :godbolt.execute) :execute)
-                                                  begin end compiler options)))))})
+    (: (pickers.new {}
+                    {:prompt_title "Choose compiler"
+                     :finder (finders.new_table {:results entries
+                                                 :entry_maker transform})
+                     :sorter (conf.generic_sorter nil)
+                     :attach_mappings (fn [prompt-bufnr map]
+                                        (actions.select_default:replace (fn []
+                                                                          (actions.close prompt-bufnr)
+                                                                          (local compiler
+                                                                                 (. (actions-state.get_selected_entry)
+                                                                                    :value))
+                                                                          ((. (require :godbolt.assembly)
+                                                                              :pre-display) begin
+                                                                                                                                                                                                      end
+                                                                                                                                                                                                      compiler
+                                                                                                                                                                                                      options)
+                                                                          (if exec
+                                                                              ((. (require :godbolt.execute)
+                                                                                  :execute) begin
+                                                                                                                                                                                                         end
+                                                                                                                                                                                                         compiler
+                                                                                                                                                                                                         options)))))})
        :find)))
 
-
-
-
-
 (fn fuzzy [picker ft begin end options exec]
-  (let [ft (match ft :cpp :c++ x x)
+  (let [ft (match ft
+             :cpp :c++
+             x x)
         cmd (string.format "curl https://godbolt.org/api/compilers/%s" ft)]
     (var output [])
-    (local jobid (fun.jobstart cmd
-                   {:on_stdout (fn [_ data _]
-                                 (vim.list_extend output data))
-                    :on_exit (fn [_ _ _]
-                               (let [final (icollect [k v (ipairs output)]
-                                             (when (not= k 1) v))]
-                                 (match picker
-                                        :fzf (fzf final begin end options exec)
-                                        :telescope (telescope final begin end options exec)
-                                        :skim (skim final begin end options exec))))}))))
+    (local jobid
+           (fun.jobstart cmd
+                         {:on_stdout (fn [_ data _]
+                                       (vim.list_extend output data))
+                          :on_exit (fn [_ _ _]
+                                     (let [final (icollect [k v (ipairs output)]
+                                                   (when (not= k 1)
+                                                     v))]
+                                       (match picker
+                                         :fzf (fzf final begin end options exec)
+                                         :telescope (telescope final begin end
+                                                               options exec)
+                                         :skim (skim final begin end options
+                                                     exec))))}))))
+
 {: fuzzy}

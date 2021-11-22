@@ -20,35 +20,29 @@
 (local get-compiler (. (require :godbolt.init) :get-compiler))
 (local build-cmd (. (require :godbolt.init) :build-cmd))
 
-
-
-
 ; Execute
 (fn echo-output [response]
   (if (= 0 (. response :code))
-    (let [output (accumulate [str ""
-                              k v (pairs (. response :stdout))]
-                   (.. str "\n" (. v :text)))]
-      (api.nvim_echo [[(.. "Output:" output)]] true {}))
-    (let [err (accumulate [str ""
-                           k v (pairs (. response :stderr))]
-                (.. str "\n" (. v :text)))]
-      (api.nvim_err_writeln err))))
+      (let [output (accumulate [str "" k v (pairs (. response :stdout))]
+                     (.. str "\n" (. v :text)))]
+        (api.nvim_echo [[(.. "Output:" output)]] true {}))
+      (let [err (accumulate [str "" k v (pairs (. response :stderr))]
+                  (.. str "\n" (. v :text)))]
+        (api.nvim_err_writeln err))))
 
 (fn execute [begin end compiler options]
-  (let [lines (api.nvim_buf_get_lines 0 (- begin  1) end true)
+  (let [lines (api.nvim_buf_get_lines 0 (- begin 1) end true)
         text (fun.join lines "\n")]
     (tset options :compilerOptions {:executorRequest true})
-    (local cmd (build-cmd compiler
-                          text
-                          options))
+    (local cmd (build-cmd compiler text options))
     (var output_arr [])
-    (local _jobid (fun.jobstart cmd
-                    {:on_stdout (fn [_ data _]
-                                  (vim.list_extend output_arr data))
-                     :on_exit (fn [_ _ _]
-                                (echo-output (-> output_arr
-                                                 (fun.join)
-                                                 (vim.json.decode))))}))))
+    (local _jobid
+           (fun.jobstart cmd
+                         {:on_stdout (fn [_ data _]
+                                       (vim.list_extend output_arr data))
+                          :on_exit (fn [_ _ _]
+                                     (echo-output (-> output_arr
+                                                      (fun.join)
+                                                      (vim.json.decode))))}))))
 
 {: execute}
