@@ -15,12 +15,14 @@
 ;  You should have received a copy of the GNU General Public License
 ;  along with godbolt.nvim.  If not, see <https://www.gnu.org/licenses/>.
 
+(local fun vim.fn)
+
 (fn get-compiler-list [cmd]
   (var op [])
-  (local jobid (vim.fn.jobstart cmd
+  (local jobid (fun.jobstart cmd
                  {:on_stdout (fn [_ data _]
                                (vim.list_extend op data))}))
-  (local t (vim.fn.jobwait [jobid]))
+  (local t (fun.jobwait [jobid]))
   (var final [])
   (each [k v (pairs op)]
     (if (not= k 1)
@@ -35,8 +37,26 @@
    :ordinal entry})
 
 
-(fn telescope [ft begin end options exec]
 
+
+
+(fn fzf [ft begin end options exec]
+  (let [ft (match ft :cpp :c++ x x)
+        cmd (string.format "curl https://godbolt.org/api/compilers/%s" ft)
+        lines (get-compiler-list cmd)]
+
+    (fun.fzf#run {:source lines
+                  :window {:width 0.9 :height 0.6}
+                  :sink (fn [choice]
+                          (local compiler (-> choice (vim.split " ") (. 1)))
+                          ((. (require :godbolt.assembly) :pre-display)
+                           begin end compiler options)
+                          (if exec
+                            ((. (require :godbolt.execute) :execute)
+                             begin end compiler options)))})))
+
+
+(fn telescope [ft begin end options exec]
   (let [pickers (require :telescope.pickers)
         finders (require :telescope.finders)
         conf (. (require :telescope.config) :values)
@@ -64,4 +84,4 @@
                                                   begin end compiler options)))))})
        :find)))
 
-{: telescope}
+{: fzf : telescope}

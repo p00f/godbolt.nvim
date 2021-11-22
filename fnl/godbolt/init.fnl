@@ -69,7 +69,7 @@
         (match compiler-arg
           (where fuzzy (or (= :telescope fuzzy)
                            (= :fzf fuzzy)))
-          (let [picker (. (require (.. "godbolt." fuzzy)) fuzzy)]
+          (let [picker (. (require :godbolt.fuzzy) fuzzy)]
             (picker ft begin end options (= true vim.b.godbolt_exec)))
           _ (do
               (pre-display begin end compiler-arg options)
