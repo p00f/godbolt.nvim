@@ -66,17 +66,11 @@
                                                                           (local compiler
                                                                                  (. (actions-state.get_selected_entry)
                                                                                     :value))
-                                                                          ((. (require :godbolt.assembly)
-                                                                              :pre-display) begin
-                                                                                                                                                                                                      end
-                                                                                                                                                                                                      compiler
-                                                                                                                                                                                                      options)
+                                                                          ((. (require :godbolt.assembly) :pre-display)
+                                                                           begin end compiler options)
                                                                           (if exec
-                                                                              ((. (require :godbolt.execute)
-                                                                                  :execute) begin
-                                                                                                                                                                                                         end
-                                                                                                                                                                                                         compiler
-                                                                                                                                                                                                         options)))))})
+                                                                              ((. (require :godbolt.execute) :execute)
+                                                                               begin end compiler options)))))})
        :find)))
 
 (fn fuzzy [picker ft begin end options exec]
