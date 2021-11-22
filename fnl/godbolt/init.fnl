@@ -15,6 +15,7 @@
 ;  You should have received a copy of the GNU General Public License
 ;  along with godbolt.nvim.  If not, see <https://www.gnu.org/licenses/>.
 
+(import-macros {: m>} :macros)
 (local fun vim.fn)
 (local api vim.api)
 
@@ -57,8 +58,8 @@
             (match compiler-arg
               (where fuzzy (or (= :telescope fuzzy) (= :fzf fuzzy)
                                (= :skim fuzzy)))
-              ((. (require :godbolt.fuzzy) :fuzzy) fuzzy ft begin end options
-                                                   (= true vim.b.godbolt_exec))
+              (m> :godbolt.fuzzy :fuzzy fuzzy ft begin end options
+                  (= true vim.b.godbolt_exec))
               _ (do
                   (pre-display begin end compiler-arg options)
                   (if vim.b.godbolt_exec

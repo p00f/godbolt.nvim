@@ -15,11 +15,10 @@
 ;  You should have received a copy of the GNU General Public License
 ;  along with godbolt.nvim.  If not, see <https://www.gnu.org/licenses/>.
 
+(import-macros {: m>} :macros)
 (local fun vim.fn)
 (local api vim.api)
 (local cmd vim.cmd)
-(local get-compiler (. (require :godbolt.init) :get-compiler))
-(local build-cmd (. (require :godbolt.init) :build-cmd))
 (var source-asm-bufs (. gb-exports :bufmap))
 
 ; Helper functions
@@ -96,7 +95,8 @@
   (if vim.g.godbolt_loaded
       (let [lines (api.nvim_buf_get_lines 0 (- begin 1) end true)
             text (fun.join lines "\n")]
-        (get-then-display (build-cmd compiler text options) begin))
+        (get-then-display (m> :godbolt.init :build-cmd compiler text options)
+                          begin))
       (api.nvim_err_writeln "setup function not called")))
 
 {: pre-display : clear : smolck-update}

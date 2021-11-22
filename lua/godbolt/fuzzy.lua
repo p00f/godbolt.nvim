@@ -1,13 +1,15 @@
 local fun = vim.fn
+local pre_display = (require("godbolt.assembly"))["pre-display"]
+local execute = (require("godbolt.execute")).execute
 local function transform(entry)
   return {value = (vim.split(entry, " "))[1], display = entry, ordinal = entry}
 end
 local function fzf(entries, begin, _end, options, exec)
   local function _1_(choice)
     local compiler = (vim.split(choice, " "))[1]
-    do end (require("godbolt.assembly"))["pre-display"](begin, _end, compiler, options)
+    pre_display(begin, _end, compiler, options)
     if exec then
-      return (require("godbolt.execute")).execute(begin, _end, compiler, options)
+      return execute(begin, _end, compiler, options)
     else
       return nil
     end
@@ -17,9 +19,9 @@ end
 local function skim(entries, begin, _end, options, exec)
   local function _3_(choice)
     local compiler = (vim.split(choice, " "))[1]
-    do end (require("godbolt.assembly"))["pre-display"](begin, _end, compiler, options)
+    pre_display(begin, _end, compiler, options)
     if exec then
-      return (require("godbolt.execute")).execute(begin, _end, compiler, options)
+      return execute(begin, _end, compiler, options)
     else
       return nil
     end
@@ -36,9 +38,9 @@ local function telescope(entries, begin, _end, options, exec)
     local function _6_()
       actions.close(prompt_bufnr)
       local compiler = actions_state.get_selected_entry().value
-      do end (require("godbolt.assembly"))["pre-display"](begin, _end, compiler, options)
+      pre_display(begin, _end, compiler, options)
       if exec then
-        return (require("godbolt.execute")).execute(begin, _end, compiler, options)
+        return execute(begin, _end, compiler, options)
       else
         return nil
       end

@@ -1,7 +1,5 @@
 local fun = vim.fn
 local api = vim.api
-local get_compiler = (require("godbolt.init"))["get-compiler"]
-local build_cmd = (require("godbolt.init"))["build-cmd"]
 local function echo_output(response)
   if (0 == response.code) then
     local output
@@ -29,7 +27,7 @@ local function execute(begin, _end, compiler, options)
   local lines = api.nvim_buf_get_lines(0, (begin - 1), _end, true)
   local text = fun.join(lines, "\n")
   do end (options)["compilerOptions"] = {executorRequest = true}
-  local cmd = build_cmd(compiler, text, options)
+  local cmd = (require("godbolt.init"))["build-cmd"]()(compiler, text, options)
   local output_arr = {}
   local _jobid
   local function _2_(_, data, _0)

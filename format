@@ -1,0 +1,4 @@
+#!/usr/bin/fish
+for file in fnl/godbolt/*
+    fnlfmt --fix $file
+end

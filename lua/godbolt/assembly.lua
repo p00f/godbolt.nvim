@@ -1,8 +1,6 @@
 local fun = vim.fn
 local api = vim.api
 local cmd = vim.cmd
-local get_compiler = (require("godbolt.init"))["get-compiler"]
-local build_cmd = (require("godbolt.init"))["build-cmd"]
 local source_asm_bufs = (__fnl_global__gb_2dexports).bufmap
 local function prepare_buf(text)
   local buf = api.nvim_create_buf(false, true)
@@ -81,7 +79,7 @@ local function pre_display(begin, _end, compiler, options)
   if vim.g.godbolt_loaded then
     local lines = api.nvim_buf_get_lines(0, (begin - 1), _end, true)
     local text = fun.join(lines, "\n")
-    return get_then_display(build_cmd(compiler, text, options), begin)
+    return get_then_display((require("godbolt.init"))["build-cmd"](compiler, text, options), begin)
   else
     return api.nvim_err_writeln("setup function not called")
   end

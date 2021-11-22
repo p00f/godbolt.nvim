@@ -15,7 +15,11 @@
 ;  You should have received a copy of the GNU General Public License
 ;  along with godbolt.nvim.  If not, see <https://www.gnu.org/licenses/>.
 
+(import-macros {: m>} :macros)
+
 (local fun vim.fn)
+(local pre-display (. (require :godbolt.assembly) :pre-display))
+(local execute (. (require :godbolt.execute) :execute))
 
 (fn transform [entry]
   "Get the compiler id"
@@ -26,13 +30,9 @@
                 :window {:width 0.9 :height 0.6}
                 :sink (fn [choice]
                         (local compiler (-> choice (vim.split " ") (. 1)))
-                        ((. (require :godbolt.assembly) :pre-display) begin end
-                                                                      compiler
-                                                                      options)
+                        (pre-display begin end compiler options)
                         (if exec
-                            ((. (require :godbolt.execute) :execute) begin end
-                                                                     compiler
-                                                                     options)))}))
+                            (execute begin end compiler options)))}))
 
 ; Same as fzf, just s/fzf/skim/g
 (fn skim [entries begin end options exec]
@@ -40,14 +40,9 @@
                  :window {:width 0.9 :height 0.6}
                  :sink (fn [choice]
                          (local compiler (-> choice (vim.split " ") (. 1)))
-                         ((. (require :godbolt.assembly) :pre-display) begin
-                                                                       end
-                                                                       compiler
-                                                                       options)
+                         (pre-display begin end compiler options)
                          (if exec
-                             ((. (require :godbolt.execute) :execute) begin end
-                                                                      compiler
-                                                                      options)))}))
+                             (execute begin end compiler options)))}))
 
 (fn telescope [entries begin end options exec]
   (let [pickers (require :telescope.pickers)
@@ -66,11 +61,15 @@
                                                                           (local compiler
                                                                                  (. (actions-state.get_selected_entry)
                                                                                     :value))
-                                                                          ((. (require :godbolt.assembly) :pre-display)
-                                                                           begin end compiler options)
+                                                                          (pre-display begin
+                                                                                       end
+                                                                                       compiler
+                                                                                       options)
                                                                           (if exec
-                                                                              ((. (require :godbolt.execute) :execute)
-                                                                               begin end compiler options)))))})
+                                                                              (execute begin
+                                                                                       end
+                                                                                       compiler
+                                                                                       options)))))})
        :find)))
 
 (fn fuzzy [picker ft begin end options exec]
