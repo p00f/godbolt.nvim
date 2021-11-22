@@ -1,4 +1,5 @@
 #!/usr/bin/fish
-for file in fnl/godbolt/*
+for file in $argv
+    echo "formatting $file"
     fnlfmt --fix $file
 end

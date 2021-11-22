@@ -1,4 +1,5 @@
 SHELL := fish
+.PHONY: format
 default:
 	fennel --globals vim --add-macro-path fnl/macros.fnl --compile fnl/godbolt/init.fnl > lua/godbolt/init.lua
 	fennel --globals vim --add-macro-path fnl/macros.fnl --compile fnl/godbolt/assembly.fnl > lua/godbolt/assembly.lua
@@ -7,4 +8,5 @@ default:
 clean:
 	rm lua/godbolt/*
 format:
-	exec ./format
+	@./format fnl/godbolt/*
+	@./format fnl/macros.fnl
