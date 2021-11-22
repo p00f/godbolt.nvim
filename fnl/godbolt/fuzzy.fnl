@@ -84,8 +84,7 @@
                                        (vim.list_extend output data))
                           :on_exit (fn [_ _ _]
                                      (let [final (icollect [k v (ipairs output)]
-                                                   (when (not= k 1)
-                                                     v))]
+                                                   (when (not= k 1) v))]
                                        ((match picker
                                           :fzf fzf
                                           :skim skim
