@@ -27,33 +27,31 @@ local function setup(cfg)
 end
 local function build_cmd(compiler, text, options)
   local json = vim.json.encode({source = text, options = options})
-  local file = io.open("godbolt.json", "w")
+  local file = io.open("godbolt_request.json", "w")
   file:write(json)
   io.close(file)
-  local ret = string.format(("curl https://godbolt.org/api/compiler/'%s'/compile" .. " --data-binary @godbolt.json" .. " --header 'Accept: application/json'" .. " --header 'Content-Type: application/json'"), compiler)
+  local ret = string.format(("curl https://godbolt.org/api/compiler/'%s'/compile" .. " --data-binary @godbolt_request.json" .. " --header 'Accept: application/json'" .. " --header 'Content-Type: application/json'"), compiler)
   return ret
 end
-local function godbolt(begin, _end, compiler_arg, flags)
+local function godbolt(begin, _end, compiler_arg)
   if vim.g.godbolt_loaded then
     local pre_display = (require("godbolt.assembly"))["pre-display"]
     local execute = (require("godbolt.execute")).execute
     local ft = vim.bo.filetype
     local options = vim.deepcopy(vim.g.godbolt_config[ft].options)
-    if flags then
-      options["userArguments"] = flags
-    else
-    end
     if compiler_arg then
-      local _6_ = compiler_arg
-      local function _7_()
-        local fuzzy = _6_
+      local flags = vim.fn.input({prompt = "Flags: ", default = ""})
+      do end (options)["userArguments"] = flags
+      local _5_ = compiler_arg
+      local function _6_()
+        local fuzzy = _5_
         return (("telescope" == fuzzy) or ("fzf" == fuzzy) or ("skim" == fuzzy))
       end
-      if ((nil ~= _6_) and _7_()) then
-        local fuzzy = _6_
+      if ((nil ~= _5_) and _6_()) then
+        local fuzzy = _5_
         return (require("godbolt.fuzzy")).fuzzy(fuzzy, ft, begin, _end, options, (true == vim.b.godbolt_exec))
       elseif true then
-        local _ = _6_
+        local _ = _5_
         pre_display(begin, _end, compiler_arg, options)
         if vim.b.godbolt_exec then
           return execute(begin, _end, compiler_arg, options)

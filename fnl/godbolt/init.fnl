@@ -41,33 +41,34 @@
 (fn build-cmd [compiler text options]
   "Build curl command from compiler, text and options"
   (var json (vim.json.encode {:source text : options}))
-  (local file (io.open :godbolt.json :w))
+  (local file (io.open :godbolt_request.json :w))
   (file:write json)
   (io.close file)
   (local ret (string.format (.. "curl https://godbolt.org/api/compiler/'%s'/compile"
-                                " --data-binary @godbolt.json"
+                                " --data-binary @godbolt_request.json"
                                 " --header 'Accept: application/json'"
                                 " --header 'Content-Type: application/json'")
                             compiler))
   ret)
 
-(fn godbolt [begin end compiler-arg flags]
+(fn godbolt [begin end compiler-arg]
   (if vim.g.godbolt_loaded
       (let [pre-display (. (require :godbolt.assembly) :pre-display)
             execute (. (require :godbolt.execute) :execute)
             ft vim.bo.filetype]
         (var options (vim.deepcopy (. vim.g.godbolt_config ft :options)))
-        (if flags (tset options :userArguments flags))
         (if compiler-arg
-            (match compiler-arg
-              (where fuzzy (or (= :telescope fuzzy) (= :fzf fuzzy)
-                               (= :skim fuzzy)))
-              (m> :godbolt.fuzzy :fuzzy fuzzy ft begin end options
-                  (= true vim.b.godbolt_exec))
-              _ (do
-                  (pre-display begin end compiler-arg options)
-                  (if vim.b.godbolt_exec
-                      (execute begin end compiler-arg options))))
+            (let [flags (vim.fn.input {:prompt "Flags: " :default ""})]
+              (tset options :userArguments flags)
+              (match compiler-arg
+                (where fuzzy (or (= :telescope fuzzy) (= :fzf fuzzy)
+                                 (= :skim fuzzy)))
+                (m> :godbolt.fuzzy :fuzzy fuzzy ft begin end options
+                    (= true vim.b.godbolt_exec))
+                _ (do
+                    (pre-display begin end compiler-arg options)
+                    (if vim.b.godbolt_exec
+                        (execute begin end compiler-arg options)))))
             (do
               (local def-comp (. vim.g.godbolt_config ft :compiler))
               (pre-display begin end def-comp options)
@@ -76,3 +77,4 @@
       (api.nvim_err_writeln "setup function not called")))
 
 {: setup : build-cmd : godbolt}
+

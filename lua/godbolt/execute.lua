@@ -34,7 +34,7 @@ local function execute(begin, _end, compiler, options)
     return vim.list_extend(output_arr, data)
   end
   local function _3_(_, _0, _1)
-    os.remove("godbolt.json")
+    os.remove("godbolt_request.json")
     return echo_output(vim.json.decode(fun.join(output_arr)))
   end
   _jobid = fun.jobstart(cmd, {on_stdout = _2_, on_exit = _3_})
