@@ -49,7 +49,6 @@ You can get the list of compiler ids by visiting or `curl`ing `https://godbolt.o
 
   `:GodboltCompiler <compiler>` and type in your flags in the prompt.
 
-   **NOTE**: You need to escape the options appropriately here, like `:GodboltCompiler g112 -Wall\ -O2`
  - Similarly, to use a custom compiler with flags for a visual selection: Select the function you want and
 
   `:'<,'>GodboltCompiler <compiler>` and type in your flags in the prompt.
