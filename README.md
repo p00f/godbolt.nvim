@@ -45,14 +45,14 @@ You can get the list of compiler ids by visiting or `curl`ing `https://godbolt.o
  - To use the default/setup compiler for a visual selection: Select the function(s) you want and
 
   `:'<,'>Godbolt`
- - To use a custom compiler with flags for the entire buffer (`<flags>` is optional):
+ - To use a custom compiler with flags for the entire buffer:
 
-  `:GodboltCompiler <compiler> <flags>`
+  `:GodboltCompiler <compiler>` and type in your flags in the prompt.
 
    **NOTE**: You need to escape the options appropriately here, like `:GodboltCompiler g112 -Wall\ -O2`
  - Similarly, to use a custom compiler with flags for a visual selection: Select the function you want and
 
-  `:'<,'>GodboltCompiler <compiler> <flags>`
+  `:'<,'>GodboltCompiler <compiler>` and type in your flags in the prompt.
 
 ## Demo
 https://user-images.githubusercontent.com/36493671/142733190-433f8057-6be2-4012-a235-435f30c8a012.mp4
