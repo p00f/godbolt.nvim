@@ -53,15 +53,12 @@ You can get the list of compiler ids by visiting or `curl`ing `https://godbolt.o
 
   `:'<,'>GodboltCompiler <compiler>` and type in your flags in the prompt.
 
-## Demo
-https://user-images.githubusercontent.com/36493671/142733190-433f8057-6be2-4012-a235-435f30c8a012.mp4
-
 ### Fuzzy finder integration
 
-If in `:GodboltCompiler <compiler> <flags>` or `:'<,'>GodboltCompiler <compiler> <flags>`, `<compiler>` is `telescope`, `fzf` or `skim`, you can choose the compiler using [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim), [fzf](https://github.com/junegunn/fzf) or [skim](https://github.com/lotabout/skim) respectively.
+If in `:GodboltCompiler <compiler>` or `:'<,'>GodboltCompiler <compiler>`, `<compiler>` is `telescope`, `fzf` or `skim`, you can choose the compiler using [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim), [fzf](https://github.com/junegunn/fzf) or [skim](https://github.com/lotabout/skim) respectively.
 
-#### Demo
-https://user-images.githubusercontent.com/36493671/142774015-9fb20d17-fef0-497a-87dd-ed0f52e8bec4.mp4
+## Demo
+https://user-images.githubusercontent.com/36493671/143026157-d74eaa39-6768-4f7a-8e36-f5395464c3ec.mp4
 
 
 ## TODO
