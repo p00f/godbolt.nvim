@@ -42,7 +42,11 @@ local function display(response, begin)
   do
     local str = ""
     for k, v in pairs(response.asm) do
-      str = (str .. "\n" .. v.text)
+      if v.text then
+        str = (str .. "\n" .. v.text)
+      else
+        str = str
+      end
     end
     asm = str
   end
@@ -69,14 +73,14 @@ local function pre_display(begin, _end, compiler, options)
   local curl_cmd = (require("godbolt.init"))["build-cmd"](compiler, text, options)
   local output_arr = {}
   local _jobid
-  local function _4_(_, data, _0)
+  local function _5_(_, data, _0)
     return vim.list_extend(output_arr, data)
   end
-  local function _5_(_, _0, _1)
+  local function _6_(_, _0, _1)
     os.remove("godbolt_request.json")
     return display(vim.json.decode(fun.join(output_arr)), begin)
   end
-  _jobid = fun.jobstart(curl_cmd, {on_stdout = _4_, on_exit = _5_})
+  _jobid = fun.jobstart(curl_cmd, {on_stdout = _5_, on_exit = _6_})
   return nil
 end
 return {["pre-display"] = pre_display, clear = clear, ["smolck-update"] = smolck_update}

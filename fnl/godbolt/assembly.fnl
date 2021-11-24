@@ -61,7 +61,9 @@
 ; Main
 (fn display [response begin]
   (let [asm (accumulate [str "" k v (pairs (. response :asm))]
-              (.. str "\n" (. v :text)))
+              (if (. v :text)
+                  (.. str "\n" (. v :text))
+                  str))
         source-winid (fun.win_getid)
         source-bufnr (fun.bufnr)
         asm-buf (prepare-buf asm)]
