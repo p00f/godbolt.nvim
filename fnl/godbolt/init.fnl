@@ -61,8 +61,9 @@
             (let [flags (vim.fn.input {:prompt "Flags: " :default ""})]
               (tset options :userArguments flags)
               (match compiler-arg
-                (where fuzzy (or (= :telescope fuzzy) (= :fzf fuzzy)
-                                 (= :skim fuzzy)))
+                (where fuzzy
+                       (or (= :telescope fuzzy) (= :fzf fuzzy) (= :skim fuzzy)
+                           (= :fzy fuzzy)))
                 (m> :godbolt.fuzzy :fuzzy fuzzy ft begin end options
                     (= true vim.b.godbolt_exec))
                 _ (do

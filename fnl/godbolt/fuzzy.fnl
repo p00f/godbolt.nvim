@@ -72,6 +72,16 @@
                                                                                        options)))))})
        :find)))
 
+(fn fzy [entries begin end options exec]
+  (m> :fzy :pick_one entries
+      "Choose compiler: "
+      (fn [text] text)
+      (fn [choice]
+        (local compiler (first (vim.split choice " ")))
+        (pre-display begin end compiler options)
+        (if exec
+            (execute begin end compiler options)))))
+
 ;; fnlfmt: skip
 (fn fuzzy [picker ft begin end options exec]
   (let [ft (match ft
@@ -89,7 +99,9 @@
                                        ((match picker
                                           :fzf fzf
                                           :skim skim
-                                          :telescope telescope)
+                                          :telescope telescope
+                                          :fzy fzy)
                                         final begin end options exec)))}))))
 
 {: fuzzy}
+
