@@ -30,7 +30,7 @@ EOF
  - If you want to add compiler flags then you need to set it to `{ userArguments = "-Wall -O2" }`
  - If you want to use boost then you need to set it to `{ userArguments = "-I /opt/compiler-explorer/libs/boost_1_77_0", libraries = { id = "boost", version = "1.77.0" } }` and so on. `-I /opt/compiler-explorer/libs/boost_1_77_0` was for including boost, you can get the path of the library by `curl`ing or visiting `https://godbolt.org/api/libraries/c++`
 
-You can get the list of compiler ids by visiting or `curl`ing `https://godbolt.org/api/compilers/<language>` and the list of libraries by `curl`ing or visiting `https://godbolt.org/api/libraries/<language>`. For more info, see https://github.com/compiler-explorer/compiler-explorer/blob/main/docs/API.md
+You can get the list of compiler ids by visiting or `curl`ing `https://godbolt.org/api/compilers/<language>` (or using the fuzzy finders mentioned) and the list of libraries by `curl`ing or visiting `https://godbolt.org/api/libraries/<language>`. For more info, see https://github.com/compiler-explorer/compiler-explorer/blob/main/docs/API.md
 
 (Note: use `c++`, not `cpp` for C++)
 
