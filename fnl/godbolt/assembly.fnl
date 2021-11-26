@@ -19,7 +19,7 @@
 (local fun vim.fn)
 (local api vim.api)
 (local cmd vim.cmd)
-(var source-asm-bufs (. _G.gb-exports :bufmap))
+(var source-asm-bufs (. _G._private-gb-exports :bufmap))
 
 ; Helper functions
 (fn prepare-buf [text name]
@@ -42,10 +42,10 @@
 ; Highlighting
 (fn clear [source-buf]
   (each [asm-buf _ (pairs (. source-asm-bufs source-buf))]
-    (api.nvim_buf_clear_namespace asm-buf (. _G.gb-exports :nsid) 0 -1)))
+    (api.nvim_buf_clear_namespace asm-buf (. _G._private-gb-exports :nsid) 0 -1)))
 
 (fn smolck-update [source-buf asm-buf]
-  (api.nvim_buf_clear_namespace asm-buf (. _G.gb-exports :nsid) 0 -1)
+  (api.nvim_buf_clear_namespace asm-buf (. _G._private-gb-exports :nsid) 0 -1)
   (let [entry (. source-asm-bufs source-buf asm-buf)
         offset (. entry :offset)
         asm-table (. entry :asm)
@@ -56,7 +56,7 @@
     (each [k v (pairs asm-table)]
       (if (= (type (. v :source)) :table)
           (if (= linenum (. v :source :line))
-              (vim.highlight.range asm-buf (. _G.gb-exports :nsid) :Visual
+              (vim.highlight.range asm-buf (. _G._private-gb-exports :nsid) :Visual
                                    [(dec k) 0] [(dec k) 100] :linewise true))))))
 
 ; Main

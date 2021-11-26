@@ -1,5 +1,5 @@
 function s:complete(_a, _b, _c)
-    return ['fzf', 'telescope', 'skim']
+    return ['fzf', 'fzy', 'skim', 'telescope']
 endfunction
 
 command -nargs=0 -range=% Godbolt lua require("godbolt").godbolt(<line1>, <line2>)

@@ -21,14 +21,14 @@
 
 ; Setup
 (if (not vim.g.godbolt_loaded)
-    (tset _G :gb-exports {}))
+    (tset _G :_private-gb-exports {}))
 
 (fn setup [cfg]
   (if (fun.has :nvim-0.6)
       (if (not vim.g.godbolt_loaded)
           (do
-            (tset _G.gb-exports :bufmap {})
-            (tset _G.gb-exports :nsid (api.nvim_create_namespace :godbolt))
+            (tset _G._private-gb-exports :bufmap {})
+            (tset _G._private-gb-exports :nsid (api.nvim_create_namespace :godbolt))
             (set vim.g.godbolt_config
                  {:cpp {:compiler :g112 :options {}}
                   :c {:compiler :cg112 :options {}}
