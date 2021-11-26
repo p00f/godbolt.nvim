@@ -26,23 +26,33 @@
   {:value (. (vim.split entry " ") 1) :display entry :ordinal entry})
 
 (fn fzf [entries begin end options exec]
-  (fun.fzf#run {:source entries
-                :window {:width 0.9 :height 0.6}
-                :sink (fn [choice]
-                        (local compiler (-> choice (vim.split " ") (. 1)))
-                        (pre-display begin end compiler options)
-                        (if exec
-                            (execute begin end compiler options)))}))
+  (let [maxlen (accumulate [mlen -1 k v (pairs entries)]
+                 (let [len (fun.len v)]
+                   (if (> len mlen) len mlen)))
+        width (-> maxlen (/ vim.o.columns) (+ 0.05))]
+    (fun.fzf#run {:source entries
+                  :window {: width :height 0.6}
+                  :sink (fn [choice]
+                          (local compiler (-> choice (vim.split " ") (. 1)))
+                          (pre-display begin end compiler options)
+                          (if exec
+                              (execute begin end compiler options)))})))
+
 
 ; Same as fzf, just s/fzf/skim/g
 (fn skim [entries begin end options exec]
-  (fun.skim#run {:source entries
-                 :window {:width 0.9 :height 0.6}
-                 :sink (fn [choice]
-                         (local compiler (first (vim.split choice " ")))
-                         (pre-display begin end compiler options)
-                         (if exec
-                             (execute begin end compiler options)))}))
+  (let [maxlen (accumulate [mlen -1 k v (pairs entries)]
+                 (let [len (fun.len v)]
+                   (if (> len mlen) len mlen)))
+        width (-> maxlen (/ vim.o.columns) (+ 0.05))]
+    (fun.skim#run {:source entries
+                   :window {: width :height 0.6}
+                   :sink (fn [choice]
+                           (local compiler (first (vim.split choice " ")))
+                           (pre-display begin end compiler options)
+                           (if exec
+                               (execute begin end compiler options)))})))
+
 
 (fn telescope [entries begin end options exec]
   (let [pickers (require :telescope.pickers)
