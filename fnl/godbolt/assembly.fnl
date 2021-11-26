@@ -22,11 +22,12 @@
 (var source-asm-bufs (. _G.gb-exports :bufmap))
 
 ; Helper functions
-(fn prepare-buf [text]
+(fn prepare-buf [text name]
   "Prepare the assembly buffer: set buffer options and add text"
   (local buf (api.nvim_create_buf false true))
   (api.nvim_buf_set_option buf :filetype :asm)
   (api.nvim_buf_set_lines buf 0 0 false (vim.split text "\n" {:trimempty true}))
+  (api.nvim_buf_set_name buf name)
   buf)
 
 (fn setup-aucmd [source-buf asm-buf]
@@ -59,14 +60,14 @@
                                    [(dec k) 0] [(dec k) 100] :linewise true))))))
 
 ; Main
-(fn display [response begin]
+(fn display [response begin name]
   (let [asm (accumulate [str "" k v (pairs (. response :asm))]
               (if (. v :text)
                   (.. str "\n" (. v :text))
                   str))
         source-winid (fun.win_getid)
         source-bufnr (fun.bufnr)
-        asm-buf (prepare-buf asm)]
+        asm-buf (prepare-buf asm name)]
     (cmd :vsplit)
     (cmd (string.format "buffer %d" asm-buf))
     (api.nvim_win_set_option 0 :number false)
@@ -80,7 +81,7 @@
           {:asm (. response :asm) :offset begin})
     (setup-aucmd source-bufnr asm-buf)))
 
-(fn pre-display [begin end compiler options]
+(fn pre-display [begin end compiler options name]
   "Prepare text for displaying and call display"
   (let [lines (api.nvim_buf_get_lines 0 (dec begin) end true)
         text (fun.join lines "\n")
@@ -95,6 +96,7 @@
                                      (display (-> output_arr
                                                   (fun.join)
                                                   (vim.json.decode))
-                                              begin))}))))
+                                              begin
+                                              (or name compiler)))}))))
 
 {: pre-display : clear : smolck-update}
