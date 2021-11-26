@@ -1,12 +1,9 @@
 local fun = vim.fn
 local api = vim.api
-if not vim.g.godbolt_loaded then
-  _G["_private-gb-exports"] = {}
-else
-end
 local function setup(cfg)
   if fun.has("nvim-0.6") then
     if not vim.g.godbolt_loaded then
+      _G["_private-gb-exports"] = {}
       _G["_private-gb-exports"]["bufmap"] = {}
       _G["_private-gb-exports"]["nsid"] = api.nvim_create_namespace("godbolt")
       vim.g.godbolt_config = {cpp = {compiler = "g112", options = {}}, c = {compiler = "cg112", options = {}}, rust = {compiler = "r1560", options = {}}}
@@ -42,16 +39,16 @@ local function godbolt(begin, _end, compiler_arg)
     if compiler_arg then
       local flags = vim.fn.input({prompt = "Flags: ", default = ""})
       do end (options)["userArguments"] = flags
-      local _5_ = compiler_arg
-      local function _6_()
-        local fuzzy = _5_
+      local _4_ = compiler_arg
+      local function _5_()
+        local fuzzy = _4_
         return (("telescope" == fuzzy) or ("fzf" == fuzzy) or ("skim" == fuzzy) or ("fzy" == fuzzy))
       end
-      if ((nil ~= _5_) and _6_()) then
-        local fuzzy = _5_
+      if ((nil ~= _4_) and _5_()) then
+        local fuzzy = _4_
         return (require("godbolt.fuzzy")).fuzzy(fuzzy, ft, begin, _end, options, (true == vim.b.godbolt_exec))
       elseif true then
-        local _ = _5_
+        local _ = _4_
         pre_display(begin, _end, compiler_arg, options)
         if vim.b.godbolt_exec then
           return execute(begin, _end, compiler_arg, options)

@@ -19,14 +19,12 @@
 (local fun vim.fn)
 (local api vim.api)
 
-; Setup
-(if (not vim.g.godbolt_loaded)
-    (tset _G :_private-gb-exports {}))
 
 (fn setup [cfg]
   (if (fun.has :nvim-0.6)
       (if (not vim.g.godbolt_loaded)
           (do
+            (tset _G :_private-gb-exports {})
             (tset _G._private-gb-exports :bufmap {})
             (tset _G._private-gb-exports :nsid (api.nvim_create_namespace :godbolt))
             (set vim.g.godbolt_config
