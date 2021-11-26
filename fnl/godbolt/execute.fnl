@@ -17,7 +17,7 @@
 
 (local fun vim.fn)
 (local api vim.api)
-(import-macros {: m>} :macros)
+(import-macros {: m> : dec} :godbolt.macros)
 
 ; Execute
 (fn echo-output [response]
@@ -30,7 +30,7 @@
         (api.nvim_err_writeln err))))
 
 (fn execute [begin end compiler options]
-  (let [lines (api.nvim_buf_get_lines 0 (- begin 1) end true)
+  (let [lines (api.nvim_buf_get_lines 0 (dec begin) end true)
         text (fun.join lines "\n")]
     (tset options :compilerOptions {:executorRequest true})
     (local cmd (m> :godbolt.init :build-cmd compiler text options))

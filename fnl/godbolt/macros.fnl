@@ -11,4 +11,7 @@
 (fn dec [n]
   `(- ,n 1))
 
-{: m> : first : second : dec}
+(fn inc [n]
+  `(+ ,n 1))
+
+{: m> : first : second : dec : inc}

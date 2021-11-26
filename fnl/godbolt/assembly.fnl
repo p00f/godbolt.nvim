@@ -15,7 +15,7 @@
 ;  You should have received a copy of the GNU General Public License
 ;  along with godbolt.nvim.  If not, see <https://www.gnu.org/licenses/>.
 
-(import-macros {: m> : dec} :macros)
+(import-macros {: m> : dec : second : inc} :godbolt.macros)
 (local fun vim.fn)
 (local api vim.api)
 (local cmd vim.cmd)
@@ -50,9 +50,9 @@
         offset (. entry :offset)
         asm-table (. entry :asm)
         linenum (-> (fun.getcurpos)
-                    (. 2)
+                    (second)
                     (- offset)
-                    (+ 1))]
+                    (inc))]
     (each [k v (pairs asm-table)]
       (if (= (type (. v :source)) :table)
           (if (= linenum (. v :source :line))
@@ -89,14 +89,14 @@
     (var output_arr [])
     (local _jobid
            (fun.jobstart curl-cmd
-                         {:on_stdout (fn [_ data _]
-                                       (vim.list_extend output_arr data))
-                          :on_exit (fn [_ _ _]
-                                     (os.remove :godbolt_request.json)
-                                     (display (-> output_arr
-                                                  (fun.join)
-                                                  (vim.json.decode))
-                                              begin
-                                              (or name compiler)))}))))
+             {:on_stdout (fn [_ data _]
+                           (vim.list_extend output_arr data))
+              :on_exit (fn [_ _ _]
+                         (os.remove :godbolt_request.json)
+                         (display (-> output_arr
+                                      (fun.join)
+                                      (vim.json.decode))
+                                  begin
+                                  (or name compiler)))}))))
 
 {: pre-display : clear : smolck-update}
