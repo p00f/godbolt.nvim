@@ -53,7 +53,7 @@
                            (if exec
                                (execute begin end compiler options)))})))
 
-
+;; fnlfmt: skip
 (fn telescope [entries begin end options exec]
   (let [pickers (require :telescope.pickers)
         finders (require :telescope.finders)
@@ -61,25 +61,18 @@
         actions (require :telescope.actions)
         actions-state (require :telescope.actions.state)]
     (: (pickers.new {}
-                    {:prompt_title "Choose compiler"
-                     :finder (finders.new_table {:results entries
-                                                 :entry_maker transform})
-                     :sorter (conf.generic_sorter nil)
-                     :attach_mappings (fn [prompt-bufnr map]
-                                        (actions.select_default:replace (fn []
-                                                                          (actions.close prompt-bufnr)
-                                                                          (local compiler
-                                                                                 (. (actions-state.get_selected_entry)
-                                                                                    :value))
-                                                                          (pre-display begin
-                                                                                       end
-                                                                                       compiler
-                                                                                       options)
-                                                                          (if exec
-                                                                              (execute begin
-                                                                                       end
-                                                                                       compiler
-                                                                                       options)))))})
+         {:prompt_title "Choose compiler"
+          :finder (finders.new_table {:results entries
+                                      :entry_maker transform})
+          :sorter (conf.generic_sorter nil)
+          :attach_mappings (fn [prompt-bufnr map]
+                             (actions.select_default:replace
+                               (fn []
+                                 (actions.close prompt-bufnr)
+                                 (local compiler (. (actions-state.get_selected_entry) :value))
+                                 (pre-display begin end compiler options)
+                                 (if exec
+                                     (execute begin end compiler options)))))})
        :find)))
 
 (fn fzy [entries begin end options exec]
@@ -100,18 +93,18 @@
         cmd (string.format "curl https://godbolt.org/api/compilers/%s" ft)]
     (var output [])
     (local jobid
-           (fun.jobstart cmd
-                         {:on_stdout (fn [_ data _]
-                                       (vim.list_extend output data))
-                          :on_exit (fn [_ _ _]
-                                     (let [final (icollect [k v (ipairs output)]
-                                                   (when (not= k 1) v))]
-                                       ((match picker
-                                          :fzf fzf
-                                          :skim skim
-                                          :telescope telescope
-                                          :fzy fzy)
-                                        final begin end options exec)))}))))
+      (fun.jobstart cmd
+        {:on_stdout (fn [_ data _]
+                      (vim.list_extend output data))
+         :on_exit (fn [_ _ _]
+                    (let [final (icollect [k v (ipairs output)]
+                                  (when (not= k 1) v))]
+                      ((match picker
+                         :fzf fzf
+                         :skim skim
+                         :telescope telescope
+                         :fzy fzy)
+                       final begin end options exec)))}))))
 
 {: fuzzy}
 

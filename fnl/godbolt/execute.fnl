@@ -36,13 +36,13 @@
     (local cmd (m> :godbolt.init :build-cmd compiler text options))
     (var output_arr [])
     (local _jobid
-           (fun.jobstart cmd
-                         {:on_stdout (fn [_ data _]
-                                       (vim.list_extend output_arr data))
-                          :on_exit (fn [_ _ _]
-                                     (os.remove :godbolt_request.json)
-                                     (echo-output (-> output_arr
-                                                      (fun.join)
-                                                      (vim.json.decode))))}))))
+      (fun.jobstart cmd
+        {:on_stdout (fn [_ data _]
+                      (vim.list_extend output_arr data))
+         :on_exit (fn [_ _ _]
+                    (os.remove :godbolt_request.json)
+                    (echo-output (-> output_arr
+                                     (fun.join)
+                                     (vim.json.decode))))}))))
 
 {: execute}
