@@ -72,6 +72,10 @@ local function pre_display(begin, _end, compiler, options, name)
   local lines = api.nvim_buf_get_lines(0, (begin - 1), _end, true)
   local text = fun.join(lines, "\n")
   local curl_cmd = (require("godbolt.init"))["build-cmd"](compiler, text, options)
+  local time = os.date("*t")
+  local hour = time.hour
+  local min = time.min
+  local sec = time.sec
   local output_arr = {}
   local _jobid
   local function _5_(_, data, _0)
@@ -79,7 +83,7 @@ local function pre_display(begin, _end, compiler, options, name)
   end
   local function _6_(_, _0, _1)
     os.remove("godbolt_request.json")
-    return display(vim.json.decode(fun.join(output_arr)), begin, (name or compiler))
+    return display(vim.json.decode(fun.join(output_arr)), begin, ((name or compiler) .. " " .. hour .. ":" .. min .. ":" .. sec))
   end
   _jobid = fun.jobstart(curl_cmd, {on_stdout = _5_, on_exit = _6_})
   return nil

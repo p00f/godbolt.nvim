@@ -85,18 +85,24 @@
   "Prepare text for displaying and call display"
   (let [lines (api.nvim_buf_get_lines 0 (dec begin) end true)
         text (fun.join lines "\n")
-        curl-cmd (m> :godbolt.init :build-cmd compiler text options)]
+        curl-cmd (m> :godbolt.init :build-cmd compiler text options)
+        time (os.date :*t)
+        hour (. time :hour)
+        min (. time :min)
+        sec (. time :sec)]
     (var output_arr [])
     (local _jobid
-           (fun.jobstart curl-cmd
-             {:on_stdout (fn [_ data _]
-                           (vim.list_extend output_arr data))
-              :on_exit (fn [_ _ _]
-                         (os.remove :godbolt_request.json)
-                         (display (-> output_arr
-                                      (fun.join)
-                                      (vim.json.decode))
-                                  begin
-                                  (or name compiler)))}))))
+      (fun.jobstart curl-cmd
+        {:on_stdout (fn [_ data _]
+                      (vim.list_extend output_arr data))
+         :on_exit (fn [_ _ _]
+                    (os.remove :godbolt_request.json)
+                    (display (-> output_arr
+                                 (fun.join)
+                                 (vim.json.decode))
+                             begin
+                             (.. (or name compiler) " " hour
+                                 ":" min ":" sec)))}))))
+
 
 {: pre-display : clear : smolck-update}
