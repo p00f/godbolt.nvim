@@ -61,7 +61,7 @@ You can get the list of compiler ids by visiting or `curl`ing `https://godbolt.o
 If in `:GodboltCompiler <compiler>` or `:'<,'>GodboltCompiler <compiler>`, `<compiler>` is `telescope`, `fzf`, `skim` or `fzy`, you can choose the compiler using [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim), [fzf](https://github.com/junegunn/fzf), [skim](https://github.com/lotabout/skim) or [fzy](https://github.com/jhawthorn/fzy) + [nvim-fzy](https://github.com/mfussenegger/nvim-fzy) respectively.
 
 ## Demo
-https://asciinema.org/a/451832
+[![asciicast](https://asciinema.org/a/451832.svg)](https://asciinema.org/a/451832)
 
 ## TODO
  - [ ] Update default compilers using Github Actions.
