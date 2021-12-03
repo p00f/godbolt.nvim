@@ -76,16 +76,16 @@ local function pre_display(begin, _end, compiler, options, name)
   local hour = time.hour
   local min = time.min
   local sec = time.sec
-  local output_arr = {}
   local _jobid
-  local function _5_(_, data, _0)
-    return vim.list_extend(output_arr, data)
-  end
-  local function _6_(_, _0, _1)
+  local function _5_(_, _0, _1)
+    local file = io.open("godbolt_response.json", "r")
+    local response = file:read("*all")
+    file:close()
     os.remove("godbolt_request.json")
-    return display(vim.json.decode(fun.join(output_arr)), begin, ((name or compiler) .. " " .. hour .. ":" .. min .. ":" .. sec))
+    os.remove("godbolt_response.json")
+    return display(vim.json.decode(response), begin, ((name or compiler) .. " " .. hour .. ":" .. min .. ":" .. sec))
   end
-  _jobid = fun.jobstart(curl_cmd, {on_stdout = _5_, on_exit = _6_})
+  _jobid = fun.jobstart(curl_cmd, {on_exit = _5_})
   return nil
 end
 return {["pre-display"] = pre_display, clear = clear, ["smolck-update"] = smolck_update}

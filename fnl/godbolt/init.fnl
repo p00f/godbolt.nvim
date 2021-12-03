@@ -45,7 +45,8 @@
   (local ret (string.format (.. "curl https://godbolt.org/api/compiler/'%s'/compile"
                                 " --data-binary @godbolt_request.json"
                                 " --header 'Accept: application/json'"
-                                " --header 'Content-Type: application/json'")
+                                " --header 'Content-Type: application/json'"
+                                " --output godbolt_response.json")
                             compiler))
   ret)
 

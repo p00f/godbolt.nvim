@@ -27,7 +27,7 @@ local function build_cmd(compiler, text, options)
   local file = io.open("godbolt_request.json", "w")
   file:write(json)
   io.close(file)
-  local ret = string.format(("curl https://godbolt.org/api/compiler/'%s'/compile" .. " --data-binary @godbolt_request.json" .. " --header 'Accept: application/json'" .. " --header 'Content-Type: application/json'"), compiler)
+  local ret = string.format(("curl https://godbolt.org/api/compiler/'%s'/compile" .. " --data-binary @godbolt_request.json" .. " --header 'Accept: application/json'" .. " --header 'Content-Type: application/json'" .. " --output godbolt_response.json"), compiler)
   return ret
 end
 local function godbolt(begin, _end, compiler_arg)

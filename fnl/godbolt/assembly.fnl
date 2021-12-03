@@ -90,16 +90,15 @@
         hour (. time :hour)
         min (. time :min)
         sec (. time :sec)]
-    (var output_arr [])
     (local _jobid
       (fun.jobstart curl-cmd
-        {:on_stdout (fn [_ data _]
-                      (vim.list_extend output_arr data))
-         :on_exit (fn [_ _ _]
+        {:on_exit (fn [_ _ _]
+                    (local file (io.open :godbolt_response.json :r))
+                    (local response (file:read "*all"))
+                    (file:close)
                     (os.remove :godbolt_request.json)
-                    (display (-> output_arr
-                                 (fun.join)
-                                 (vim.json.decode))
+                    (os.remove :godbolt_response.json)
+                    (display (vim.json.decode response)
                              begin
                              (.. (or name compiler) " " hour
                                  ":" min ":" sec)))}))))
