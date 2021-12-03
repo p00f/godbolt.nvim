@@ -35,20 +35,25 @@ local function godbolt(begin, _end, compiler_arg)
     local pre_display = (require("godbolt.assembly"))["pre-display"]
     local execute = (require("godbolt.execute")).execute
     local ft = vim.bo.filetype
-    local options = vim.deepcopy(vim.g.godbolt_config[ft].options)
+    local options
+    if vim.g.godbolt_config.ft then
+      options = vim.deepcopy(vim.g.godbolt_config.ft.options)
+    else
+      options = {}
+    end
     if compiler_arg then
       local flags = vim.fn.input({prompt = "Flags: ", default = ""})
       do end (options)["userArguments"] = flags
-      local _4_ = compiler_arg
-      local function _5_()
-        local fuzzy = _4_
+      local _5_ = compiler_arg
+      local function _6_()
+        local fuzzy = _5_
         return (("telescope" == fuzzy) or ("fzf" == fuzzy) or ("skim" == fuzzy) or ("fzy" == fuzzy))
       end
-      if ((nil ~= _4_) and _5_()) then
-        local fuzzy = _4_
+      if ((nil ~= _5_) and _6_()) then
+        local fuzzy = _5_
         return (require("godbolt.fuzzy")).fuzzy(fuzzy, ft, begin, _end, options, (true == vim.b.godbolt_exec))
       elseif true then
-        local _ = _4_
+        local _ = _5_
         pre_display(begin, _end, compiler_arg, options)
         if vim.b.godbolt_exec then
           return execute(begin, _end, compiler_arg, options)
