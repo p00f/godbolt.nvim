@@ -100,8 +100,9 @@
                     (os.remove :godbolt_response.json)
                     (display (vim.json.decode response)
                              begin
-                             (.. (or name compiler) " " hour
-                                 ":" min ":" sec)))}))))
+                             (string.format "%s %02d:%02d:%02d"
+                                            (or name compiler)
+                                            hour min sec)))}))))
 
 
 {: pre-display : clear : smolck-update}

@@ -83,7 +83,7 @@ local function pre_display(begin, _end, compiler, options, name)
     file:close()
     os.remove("godbolt_request.json")
     os.remove("godbolt_response.json")
-    return display(vim.json.decode(response), begin, ((name or compiler) .. " " .. hour .. ":" .. min .. ":" .. sec))
+    return display(vim.json.decode(response), begin, string.format("%s %02d:%02d:%02d", (name or compiler), hour, min, sec))
   end
   _jobid = fun.jobstart(curl_cmd, {on_exit = _5_})
   return nil
