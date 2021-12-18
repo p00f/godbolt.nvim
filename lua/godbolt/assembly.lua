@@ -93,7 +93,7 @@ local function display(response, begin, name)
   else
   end
   if ("<Compilation failed>" == response.asm[1].text) then
-    return vim.notify("Compilation failed")
+    return vim.notify("godbolt.nvim: Compilation failed")
   else
     cmd("vsplit")
     cmd(string.format("buffer %d", asm_buf))

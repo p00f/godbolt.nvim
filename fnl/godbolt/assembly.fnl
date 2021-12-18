@@ -93,7 +93,7 @@
                       (vim.cmd :copen))))
     (if (= "<Compilation failed>"
            (. response :asm 1 :text))
-        (vim.notify "Compilation failed")
+        (vim.notify "godbolt.nvim: Compilation failed")
         (do
           (cmd :vsplit)
           (cmd (string.format "buffer %d" asm-buf))
