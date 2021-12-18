@@ -67,7 +67,8 @@ If in `:GodboltCompiler <compiler>` or `:'<,'>GodboltCompiler <compiler>`, `<com
 ### Quickfix
 Set `quickfix.enable = true` as described above to populate the quickfix in case of errors.
 If `quickfix.auto_open` is true, a quickfix list will automatically open if the compiler outputs errors. Otherwise you can manually `:copen`
-[![asciicast](Screencast)](https://asciinema.org/a/457116)
+
+Screencast [![asciicast](https://asciinema.org/a/457116.svg)](https://asciinema.org/a/457116)
 
 ## Demo
 [![asciicast](https://asciinema.org/a/451832.svg)](https://asciinema.org/a/451832)
