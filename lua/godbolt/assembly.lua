@@ -92,19 +92,23 @@ local function display(response, begin, name)
     end
   else
   end
-  cmd("vsplit")
-  cmd(string.format("buffer %d", asm_buf))
-  api.nvim_win_set_option(0, "number", false)
-  api.nvim_win_set_option(0, "relativenumber", false)
-  api.nvim_win_set_option(0, "spell", false)
-  api.nvim_win_set_option(0, "cursorline", false)
-  api.nvim_set_current_win(source_winid)
-  if not source_asm_bufs[source_bufnr] then
-    source_asm_bufs[source_bufnr] = {}
+  if ("<Compilation failed>" == response.asm[1].text) then
+    return vim.notify("Compilation failed")
   else
+    cmd("vsplit")
+    cmd(string.format("buffer %d", asm_buf))
+    api.nvim_win_set_option(0, "number", false)
+    api.nvim_win_set_option(0, "relativenumber", false)
+    api.nvim_win_set_option(0, "spell", false)
+    api.nvim_win_set_option(0, "cursorline", false)
+    api.nvim_set_current_win(source_winid)
+    if not source_asm_bufs[source_bufnr] then
+      source_asm_bufs[source_bufnr] = {}
+    else
+    end
+    source_asm_bufs[source_bufnr][asm_buf] = {asm = response.asm, offset = begin}
+    return setup_aucmd(source_bufnr, asm_buf)
   end
-  source_asm_bufs[source_bufnr][asm_buf] = {asm = response.asm, offset = begin}
-  return setup_aucmd(source_bufnr, asm_buf)
 end
 local function pre_display(begin, _end, compiler, options, name)
   local lines = api.nvim_buf_get_lines(0, (begin - 1), _end, true)
@@ -115,7 +119,7 @@ local function pre_display(begin, _end, compiler, options, name)
   local min = time.min
   local sec = time.sec
   local _jobid
-  local function _11_(_, _0, _1)
+  local function _12_(_, _0, _1)
     local file = io.open("godbolt_response.json", "r")
     local response = file:read("*all")
     file:close()
@@ -123,7 +127,7 @@ local function pre_display(begin, _end, compiler, options, name)
     os.remove("godbolt_response.json")
     return display(vim.json.decode(response), begin, string.format("%s %02d:%02d:%02d", (name or compiler), hour, min, sec))
   end
-  _jobid = fun.jobstart(curl_cmd, {on_exit = _11_})
+  _jobid = fun.jobstart(curl_cmd, {on_exit = _12_})
   return nil
 end
 return {["pre-display"] = pre_display, clear = clear, ["smolck-update"] = smolck_update}

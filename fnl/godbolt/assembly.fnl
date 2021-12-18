@@ -91,18 +91,22 @@
                 (fun.setqflist qflist)
                 (when _G.godbolt_config.quickfix.auto_open
                       (vim.cmd :copen))))
-    (cmd :vsplit)
-    (cmd (string.format "buffer %d" asm-buf))
-    (api.nvim_win_set_option 0 :number false)
-    (api.nvim_win_set_option 0 :relativenumber false)
-    (api.nvim_win_set_option 0 :spell false)
-    (api.nvim_win_set_option 0 :cursorline false)
-    (api.nvim_set_current_win source-winid)
-    (if (not (. source-asm-bufs source-bufnr))
-        (tset source-asm-bufs source-bufnr {}))
-    (tset source-asm-bufs source-bufnr asm-buf
-          {:asm (. response :asm) :offset begin})
-    (setup-aucmd source-bufnr asm-buf)))
+    (if (= "<Compilation failed>"
+           (. response :asm 1 :text))
+        (vim.notify "Compilation failed")
+        (do
+          (cmd :vsplit)
+          (cmd (string.format "buffer %d" asm-buf))
+          (api.nvim_win_set_option 0 :number false)
+          (api.nvim_win_set_option 0 :relativenumber false)
+          (api.nvim_win_set_option 0 :spell false)
+          (api.nvim_win_set_option 0 :cursorline false)
+          (api.nvim_set_current_win source-winid)
+          (if (not (. source-asm-bufs source-bufnr))
+              (tset source-asm-bufs source-bufnr {}))
+          (tset source-asm-bufs source-bufnr asm-buf
+                {:asm (. response :asm) :offset begin})
+          (setup-aucmd source-bufnr asm-buf)))))
 
 (fn pre-display [begin end compiler options name]
   "Prepare text for displaying and call display"
