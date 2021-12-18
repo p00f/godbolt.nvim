@@ -16,6 +16,10 @@ require("godbolt").setup({
     cpp = { compiler = "g112", options = {} },
     rust = { compiler = "r1560", options = {} }
     -- any_additional_filetype = { compiler = ..., options = ... }
+    quickfix = {
+        enable = false -- whether to populate the quickfix list in case of errors
+        auto_open = false -- whether to open the quickfix list if the compiler outputs errors
+    }
 })
 ```
 
@@ -59,6 +63,10 @@ You can get the list of compiler ids by visiting or `curl`ing `https://godbolt.o
 ### Fuzzy finder integration
 
 If in `:GodboltCompiler <compiler>` or `:'<,'>GodboltCompiler <compiler>`, `<compiler>` is `telescope`, `fzf`, `skim` or `fzy`, you can choose the compiler using [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim), [fzf](https://github.com/junegunn/fzf), [skim](https://github.com/lotabout/skim) or [fzy](https://github.com/jhawthorn/fzy) + [nvim-fzy](https://github.com/mfussenegger/nvim-fzy) respectively.
+
+### Quickfix
+Set `quickfix.enable = true` as described above to populate the quickfix in case of errors.
+If `quickfix.auto_open` is true, a quickfix list will automatically open if the compiler outputs errors. Otherwise you can manually `:copen`
 
 ## Demo
 [![asciicast](https://asciinema.org/a/451832.svg)](https://asciinema.org/a/451832)

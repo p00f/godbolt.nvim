@@ -6,10 +6,10 @@ local function setup(cfg)
       _G["_private-gb-exports"] = {}
       _G["_private-gb-exports"]["bufmap"] = {}
       _G["_private-gb-exports"]["nsid"] = api.nvim_create_namespace("godbolt")
-      vim.g.godbolt_config = {cpp = {compiler = "g112", options = {}}, c = {compiler = "cg112", options = {}}, rust = {compiler = "r1560", options = {}}}
+      _G.godbolt_config = {cpp = {compiler = "g112", options = {}}, c = {compiler = "cg112", options = {}}, rust = {compiler = "r1560", options = {}}, quickfix = {enable = false, auto_open = false}}
       if cfg then
         for k, v in pairs(cfg) do
-          vim.g.godbolt_config[k] = v
+          _G.godbolt_config[k] = v
         end
       else
       end
@@ -36,8 +36,8 @@ local function godbolt(begin, _end, compiler_arg)
     local execute = (require("godbolt.execute")).execute
     local ft = vim.bo.filetype
     local options
-    if vim.g.godbolt_config.ft then
-      options = vim.deepcopy(vim.g.godbolt_config.ft.options)
+    if _G.godbolt_config.ft then
+      options = vim.deepcopy(_G.godbolt_config.ft.options)
     else
       options = {}
     end
@@ -64,7 +64,7 @@ local function godbolt(begin, _end, compiler_arg)
         return nil
       end
     else
-      local def_comp = vim.g.godbolt_config[ft].compiler
+      local def_comp = _G.godbolt_config[ft].compiler
       pre_display(begin, _end, def_comp, options)
       if vim.b.godbolt_exec then
         return execute(begin, _end, def_comp, options)

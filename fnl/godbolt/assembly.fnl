@@ -39,6 +39,23 @@
                       source-buf source-buf))
   (cmd "augroup END"))
 
+;; https://stackoverflow.com/a/49209650
+(fn make-qflist [err bufnr]
+  (when (next err)
+        (icollect [k v (ipairs err)]
+            (do
+              (local entry {:text
+                            (-> v
+                                (. :text)
+                                (string.gsub
+                                  "[\27\155][][()#;?%d]*[A-PRZcf-ntqry=><~]"
+                                  ""))
+                            : bufnr})
+              (when (. v :tag)
+                    (tset entry :col (. v :tag :column))
+                    (tset entry :lnum (. v :tag :line)))
+              entry))))
+
 ; Highlighting
 (fn clear [source-buf]
   (each [asm-buf _ (pairs (. source-asm-bufs source-buf))]
@@ -67,7 +84,13 @@
                   str))
         source-winid (fun.win_getid)
         source-bufnr (fun.bufnr)
+        qflist (make-qflist (. response :stderr) source-bufnr)
         asm-buf (prepare-buf asm name)]
+    (when _G.godbolt_config.quickfix.enable
+          (when qflist
+                (fun.setqflist qflist)
+                (when _G.godbolt_config.quickfix.auto_open
+                      (vim.cmd :copen))))
     (cmd :vsplit)
     (cmd (string.format "buffer %d" asm-buf))
     (api.nvim_win_set_option 0 :number false)

@@ -27,12 +27,13 @@
             (tset _G :_private-gb-exports {})
             (tset _G._private-gb-exports :bufmap {})
             (tset _G._private-gb-exports :nsid (api.nvim_create_namespace :godbolt))
-            (set vim.g.godbolt_config
+            (set _G.godbolt_config
                  {:cpp {:compiler :g112 :options {}}
                   :c {:compiler :cg112 :options {}}
-                  :rust {:compiler :r1560 :options {}}})
+                  :rust {:compiler :r1560 :options {}}
+                  :quickfix {:enable false :auto_open false}})
             (if cfg (each [k v (pairs cfg)]
-                      (tset vim.g.godbolt_config k v)))
+                      (tset _G.godbolt_config k v)))
             (set vim.g.godbolt_loaded true)))
       (api.nvim_err_writeln "neovim 0.6 is required")))
 
@@ -55,8 +56,8 @@
       (let [pre-display (. (require :godbolt.assembly) :pre-display)
             execute (. (require :godbolt.execute) :execute)
             ft vim.bo.filetype]
-        (var options (if (. vim.g.godbolt_config :ft)
-                         (vim.deepcopy (. vim.g.godbolt_config :ft :options))
+        (var options (if (. _G.godbolt_config :ft)
+                         (vim.deepcopy (. _G.godbolt_config :ft :options))
                          {}))
         (if compiler-arg
             (let [flags (vim.fn.input {:prompt "Flags: " :default ""})]
@@ -72,7 +73,7 @@
                     (if vim.b.godbolt_exec
                         (execute begin end compiler-arg options)))))
             (do
-              (local def-comp (. vim.g.godbolt_config ft :compiler))
+              (local def-comp (. _G.godbolt_config ft :compiler))
               (pre-display begin end def-comp options)
               (if vim.b.godbolt_exec
                   (execute begin end def-comp options)))))

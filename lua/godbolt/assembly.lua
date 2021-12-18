@@ -15,6 +15,32 @@ local function setup_aucmd(source_buf, asm_buf)
   cmd(string.format("autocmd BufLeave <buffer=%s> lua require('godbolt.assembly').clear(%s)", source_buf, source_buf))
   return cmd("augroup END")
 end
+local function make_qflist(err, bufnr)
+  if next(err) then
+    local tbl_15_auto = {}
+    local i_16_auto = #tbl_15_auto
+    for k, v in ipairs(err) do
+      local val_17_auto
+      do
+        local entry = {text = string.gsub(v.text, "[\27\155][][()#;?%d]*[A-PRZcf-ntqry=><~]", ""), bufnr = bufnr}
+        if v.tag then
+          entry["col"] = v.tag.column
+          entry["lnum"] = v.tag.line
+        else
+        end
+        val_17_auto = entry
+      end
+      if (nil ~= val_17_auto) then
+        i_16_auto = (i_16_auto + 1)
+        do end (tbl_15_auto)[i_16_auto] = val_17_auto
+      else
+      end
+    end
+    return tbl_15_auto
+  else
+    return nil
+  end
+end
 local function clear(source_buf)
   for asm_buf, _ in pairs(source_asm_bufs[source_buf]) do
     api.nvim_buf_clear_namespace(asm_buf, (_G["_private-gb-exports"]).nsid, 0, -1)
@@ -53,7 +79,19 @@ local function display(response, begin, name)
   end
   local source_winid = fun.win_getid()
   local source_bufnr = fun.bufnr()
+  local qflist = make_qflist(response.stderr, source_bufnr)
   local asm_buf = prepare_buf(asm, name)
+  if _G.godbolt_config.quickfix.enable then
+    if qflist then
+      fun.setqflist(qflist)
+      if _G.godbolt_config.quickfix.auto_open then
+        vim.cmd("copen")
+      else
+      end
+    else
+    end
+  else
+  end
   cmd("vsplit")
   cmd(string.format("buffer %d", asm_buf))
   api.nvim_win_set_option(0, "number", false)
@@ -77,7 +115,7 @@ local function pre_display(begin, _end, compiler, options, name)
   local min = time.min
   local sec = time.sec
   local _jobid
-  local function _5_(_, _0, _1)
+  local function _11_(_, _0, _1)
     local file = io.open("godbolt_response.json", "r")
     local response = file:read("*all")
     file:close()
@@ -85,7 +123,7 @@ local function pre_display(begin, _end, compiler, options, name)
     os.remove("godbolt_response.json")
     return display(vim.json.decode(response), begin, string.format("%s %02d:%02d:%02d", (name or compiler), hour, min, sec))
   end
-  _jobid = fun.jobstart(curl_cmd, {on_exit = _5_})
+  _jobid = fun.jobstart(curl_cmd, {on_exit = _11_})
   return nil
 end
 return {["pre-display"] = pre_display, clear = clear, ["smolck-update"] = smolck_update}
