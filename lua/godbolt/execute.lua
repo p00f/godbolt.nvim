@@ -1,44 +1,75 @@
 local fun = vim.fn
 local api = vim.api
-local function echo_output(response)
-  if (0 == response.code) then
-    local output
-    do
-      local str = ""
-      for k, v in pairs(response.stdout) do
-        str = (str .. "\n" .. v.text)
+local wo_set = api.nvim_win_set_option
+local function prepare_buf(lines)
+  local time = os.date("*t")
+  local hour = time.hour
+  local min = time.min
+  local sec = time.sec
+  local buf = api.nvim_create_buf(false, true)
+  api.nvim_buf_set_lines(buf, 0, 0, false, lines)
+  api.nvim_buf_set_name(buf, string.format("%02d:%02d:%02d", hour, min, sec))
+  return buf
+end
+local function display_output(response)
+  local stderr
+  do
+    local tbl_15_auto = {}
+    local i_16_auto = #tbl_15_auto
+    for k, v in pairs(response.stderr) do
+      local val_17_auto = v.text
+      if (nil ~= val_17_auto) then
+        i_16_auto = (i_16_auto + 1)
+        do end (tbl_15_auto)[i_16_auto] = val_17_auto
+      else
       end
-      output = str
     end
-    return api.nvim_echo({{("Output:" .. output)}}, true, {})
-  else
-    local err
-    do
-      local str = ""
-      for k, v in pairs(response.stderr) do
-        str = (str .. "\n" .. v.text)
-      end
-      err = str
-    end
-    return api.nvim_err_writeln(err)
+    stderr = tbl_15_auto
   end
+  local stdout
+  do
+    local tbl_15_auto = {}
+    local i_16_auto = #tbl_15_auto
+    for k, v in pairs(response.stdout) do
+      local val_17_auto = v.text
+      if (nil ~= val_17_auto) then
+        i_16_auto = (i_16_auto + 1)
+        do end (tbl_15_auto)[i_16_auto] = val_17_auto
+      else
+      end
+    end
+    stdout = tbl_15_auto
+  end
+  local lines = {("exit code: " .. response.code)}
+  table.insert(lines, "stdout:")
+  vim.list_extend(lines, stdout)
+  table.insert(lines, "stderr:")
+  vim.list_extend(lines, stderr)
+  local output_buf = prepare_buf(lines)
+  local old_winid = fun.win_getid()
+  vim.cmd("split")
+  vim.cmd(("buffer " .. output_buf))
+  wo_set(0, "number", false)
+  wo_set(0, "relativenumber", false)
+  wo_set(0, "spell", false)
+  wo_set(0, "cursorline", false)
+  return api.nvim_set_current_win(old_winid)
 end
 local function execute(begin, _end, compiler, options)
   local lines = api.nvim_buf_get_lines(0, (begin - 1), _end, true)
   local text = fun.join(lines, "\n")
   do end (options)["compilerOptions"] = {executorRequest = true}
   local cmd = (require("godbolt.init"))["build-cmd"](compiler, text, options, "exec")
-  local output_arr = {}
   local _jobid
-  local function _2_(_, _0, _1)
+  local function _3_(_, _0, _1)
     local file = io.open("godbolt_response_exec.json", "r")
     local response = file:read("*all")
     file:close()
     os.remove("godbolt_request_exec.json")
     os.remove("godbolt_response_exec.json")
-    return echo_output(vim.json.decode(response))
+    return display_output(vim.json.decode(response))
   end
-  _jobid = fun.jobstart(cmd, {on_exit = _2_})
+  _jobid = fun.jobstart(cmd, {on_exit = _3_})
   return nil
 end
 return {execute = execute}

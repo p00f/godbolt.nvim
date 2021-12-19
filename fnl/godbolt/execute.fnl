@@ -17,24 +17,48 @@
 
 (local fun vim.fn)
 (local api vim.api)
+(local wo-set api.nvim_win_set_option)
 (import-macros {: m> : dec} :godbolt.macros)
 
-; Execute
-(fn echo-output [response]
-  (if (= 0 (. response :code))
-      (let [output (accumulate [str "" k v (pairs (. response :stdout))]
-                     (.. str "\n" (. v :text)))]
-        (api.nvim_echo [[(.. "Output:" output)]] true {}))
-      (let [err (accumulate [str "" k v (pairs (. response :stderr))]
-                  (.. str "\n" (. v :text)))]
-        (api.nvim_err_writeln err))))
+(fn prepare-buf [lines]
+  "Prepare the output buffer: set buffer options and add text"
+  (let [time (os.date :*t)
+        hour (. time :hour)
+        min (. time :min)
+        sec (. time :sec)]
+    (local buf (api.nvim_create_buf false true))
+    (api.nvim_buf_set_lines buf 0 0 false lines)
+    (api.nvim_buf_set_name buf (string.format "%02d:%02d:%02d"
+                                              hour min sec))
+    buf))
+
+(fn display-output [response]
+  (local stderr (icollect [k v (pairs (. response :stderr))]
+                  (. v :text)))
+  (local stdout (icollect [k v (pairs (. response :stdout))]
+                  (. v :text)))
+  (var lines [(->> :code
+                   (. response)
+                   (.. "exit code: "))])
+  (table.insert lines "stdout:")
+  (vim.list_extend lines stdout)
+  (table.insert lines "stderr:")
+  (vim.list_extend lines stderr)
+  (local output-buf (prepare-buf lines))
+  (local old-winid (fun.win_getid))
+  (vim.cmd "split")
+  (vim.cmd (.. "buffer " output-buf))
+  (wo-set 0 :number false)
+  (wo-set 0 :relativenumber false)
+  (wo-set 0 :spell false)
+  (wo-set 0 :cursorline false)
+  (api.nvim_set_current_win old-winid))
 
 (fn execute [begin end compiler options]
   (let [lines (api.nvim_buf_get_lines 0 (dec begin) end true)
         text (fun.join lines "\n")]
     (tset options :compilerOptions {:executorRequest true})
     (local cmd (m> :godbolt.init :build-cmd compiler text options :exec))
-    (var output_arr [])
     (local _jobid
       (fun.jobstart cmd
         {:on_exit (fn [_ _ _]
@@ -43,6 +67,6 @@
                     (file:close)
                     (os.remove :godbolt_request_exec.json)
                     (os.remove :godbolt_response_exec.json)
-                    (echo-output (vim.json.decode response)))}))))
+                    (display-output (vim.json.decode response)))}))))
 
 {: execute}
