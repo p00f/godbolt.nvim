@@ -86,11 +86,14 @@
         source-bufnr (fun.bufnr)
         qflist (make-qflist (. response :stderr) source-bufnr)
         asm-buf (prepare-buf asm name)]
+    (var qf-winid nil)
     (when _G.godbolt_config.quickfix.enable
           (when qflist
                 (fun.setqflist qflist)
                 (when _G.godbolt_config.quickfix.auto_open
-                      (vim.cmd :copen))))
+                      (vim.cmd :copen)
+                      (set qf-winid (fun.win_getid))
+                      (api.nvim_set_current_win source-winid))))
     (if (= "<Compilation failed>"
            (. response :asm 1 :text))
         (vim.notify "godbolt.nvim: Compilation failed")
@@ -101,7 +104,9 @@
           (api.nvim_win_set_option 0 :relativenumber false)
           (api.nvim_win_set_option 0 :spell false)
           (api.nvim_win_set_option 0 :cursorline false)
-          (api.nvim_set_current_win source-winid)
+          (if qf-winid
+              (api.nvim_set_current_win qf-winid)
+              (api.nvim_set_current_win source-winid))
           (if (not (. source-asm-bufs source-bufnr))
               (tset source-asm-bufs source-bufnr {}))
           (tset source-asm-bufs source-bufnr asm-buf

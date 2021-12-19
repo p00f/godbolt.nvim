@@ -81,11 +81,14 @@ local function display(response, begin, name)
   local source_bufnr = fun.bufnr()
   local qflist = make_qflist(response.stderr, source_bufnr)
   local asm_buf = prepare_buf(asm, name)
+  local qf_winid = nil
   if _G.godbolt_config.quickfix.enable then
     if qflist then
       fun.setqflist(qflist)
       if _G.godbolt_config.quickfix.auto_open then
         vim.cmd("copen")
+        qf_winid = fun.win_getid()
+        api.nvim_set_current_win(source_winid)
       else
       end
     else
@@ -101,7 +104,11 @@ local function display(response, begin, name)
     api.nvim_win_set_option(0, "relativenumber", false)
     api.nvim_win_set_option(0, "spell", false)
     api.nvim_win_set_option(0, "cursorline", false)
-    api.nvim_set_current_win(source_winid)
+    if qf_winid then
+      api.nvim_set_current_win(qf_winid)
+    else
+      api.nvim_set_current_win(source_winid)
+    end
     if not source_asm_bufs[source_bufnr] then
       source_asm_bufs[source_bufnr] = {}
     else
@@ -119,7 +126,7 @@ local function pre_display(begin, _end, compiler, options, name)
   local min = time.min
   local sec = time.sec
   local _jobid
-  local function _12_(_, _0, _1)
+  local function _13_(_, _0, _1)
     local file = io.open("godbolt_response.json", "r")
     local response = file:read("*all")
     file:close()
@@ -127,7 +134,7 @@ local function pre_display(begin, _end, compiler, options, name)
     os.remove("godbolt_response.json")
     return display(vim.json.decode(response), begin, string.format("%s %02d:%02d:%02d", (name or compiler), hour, min, sec))
   end
-  _jobid = fun.jobstart(curl_cmd, {on_exit = _12_})
+  _jobid = fun.jobstart(curl_cmd, {on_exit = _13_})
   return nil
 end
 return {["pre-display"] = pre_display, clear = clear, ["smolck-update"] = smolck_update}
