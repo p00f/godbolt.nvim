@@ -19,6 +19,7 @@
 (local fun vim.fn)
 (local api vim.api)
 (local cmd vim.cmd)
+(local wo-set api.nvim_win_set_option)
 (var source-asm-bufs (. _G._private-gb-exports :bufmap))
 
 ; Helper functions
@@ -86,13 +87,14 @@
         source-bufnr (fun.bufnr)
         qflist (make-qflist (. response :stderr) source-bufnr)
         asm-buf (prepare-buf asm name)]
+    ;; Open quickfix
     (var qf-winid nil)
-    (when _G.godbolt_config.quickfix.enable
-          (when qflist
-                (fun.setqflist qflist)
-                (when _G.godbolt_config.quickfix.auto_open
-                      (vim.cmd :copen)
-                      (set qf-winid (fun.win_getid)))))
+    (when (and qflist _G.godbolt_config.quickfix.enable)
+          (fun.setqflist qflist)
+          (when _G.godbolt_config.quickfix.auto_open
+                (vim.cmd :copen)
+                (set qf-winid (fun.win_getid))))
+    ;; Open assembly
     (if (= "<Compilation failed>"
            (. response :asm 1 :text))
         (vim.notify "godbolt.nvim: Compilation failed")
@@ -100,10 +102,10 @@
           (api.nvim_set_current_win source-winid)
           (cmd :vsplit)
           (cmd (string.format "buffer %d" asm-buf))
-          (api.nvim_win_set_option 0 :number false)
-          (api.nvim_win_set_option 0 :relativenumber false)
-          (api.nvim_win_set_option 0 :spell false)
-          (api.nvim_win_set_option 0 :cursorline false)
+          (wo-set 0 :number false)
+          (wo-set 0 :relativenumber false)
+          (wo-set 0 :spell false)
+          (wo-set 0 :cursorline false)
           (if qf-winid
               (api.nvim_set_current_win qf-winid)
               (api.nvim_set_current_win source-winid))
