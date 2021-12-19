@@ -119,7 +119,7 @@
   "Prepare text for displaying and call display"
   (let [lines (api.nvim_buf_get_lines 0 (dec begin) end true)
         text (fun.join lines "\n")
-        curl-cmd (m> :godbolt.init :build-cmd compiler text options)
+        curl-cmd (m> :godbolt.init :build-cmd compiler text options :asm)
         time (os.date :*t)
         hour (. time :hour)
         min (. time :min)
@@ -127,11 +127,11 @@
     (local _jobid
       (fun.jobstart curl-cmd
         {:on_exit (fn [_ _ _]
-                    (local file (io.open :godbolt_response.json :r))
+                    (local file (io.open :godbolt_response_asm.json :r))
                     (local response (file:read "*all"))
                     (file:close)
-                    (os.remove :godbolt_request.json)
-                    (os.remove :godbolt_response.json)
+                    (os.remove :godbolt_request_asm.json)
+                    (os.remove :godbolt_response_asm.json)
                     (display (vim.json.decode response)
                              begin
                              (string.format "%s %02d:%02d:%02d"

@@ -37,18 +37,20 @@
             (set vim.g.godbolt_loaded true)))
       (api.nvim_err_writeln "neovim 0.6 is required")))
 
-(fn build-cmd [compiler text options]
+(fn build-cmd [compiler text options typ]
   "Build curl command from compiler, text and options"
   (var json (vim.json.encode {:source text : options}))
-  (local file (io.open :godbolt_request.json :w))
+  (local file (io.open (string.format :godbolt_request_%s.json typ) :w))
   (file:write json)
   (io.close file)
   (local ret (string.format (.. "curl https://godbolt.org/api/compiler/'%s'/compile"
-                                " --data-binary @godbolt_request.json"
+                                " --data-binary @godbolt_request_%s.json"
                                 " --header 'Accept: application/json'"
                                 " --header 'Content-Type: application/json'"
-                                " --output godbolt_response.json")
-                            compiler))
+                                " --output godbolt_response_%s.json")
+                            compiler
+                            typ
+                            typ))
   ret)
 
 (fn godbolt [begin end compiler-arg]

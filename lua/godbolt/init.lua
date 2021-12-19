@@ -22,12 +22,12 @@ local function setup(cfg)
     return api.nvim_err_writeln("neovim 0.6 is required")
   end
 end
-local function build_cmd(compiler, text, options)
+local function build_cmd(compiler, text, options, typ)
   local json = vim.json.encode({source = text, options = options})
-  local file = io.open("godbolt_request.json", "w")
+  local file = io.open(string.format("godbolt_request_%s.json", typ), "w")
   file:write(json)
   io.close(file)
-  local ret = string.format(("curl https://godbolt.org/api/compiler/'%s'/compile" .. " --data-binary @godbolt_request.json" .. " --header 'Accept: application/json'" .. " --header 'Content-Type: application/json'" .. " --output godbolt_response.json"), compiler)
+  local ret = string.format(("curl https://godbolt.org/api/compiler/'%s'/compile" .. " --data-binary @godbolt_request_%s.json" .. " --header 'Accept: application/json'" .. " --header 'Content-Type: application/json'" .. " --output godbolt_response_%s.json"), compiler, typ, typ)
   return ret
 end
 local function godbolt(begin, _end, compiler_arg)

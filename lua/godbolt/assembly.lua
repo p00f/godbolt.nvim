@@ -118,18 +118,18 @@ end
 local function pre_display(begin, _end, compiler, options, name)
   local lines = api.nvim_buf_get_lines(0, (begin - 1), _end, true)
   local text = fun.join(lines, "\n")
-  local curl_cmd = (require("godbolt.init"))["build-cmd"](compiler, text, options)
+  local curl_cmd = (require("godbolt.init"))["build-cmd"](compiler, text, options, "asm")
   local time = os.date("*t")
   local hour = time.hour
   local min = time.min
   local sec = time.sec
   local _jobid
   local function _12_(_, _0, _1)
-    local file = io.open("godbolt_response.json", "r")
+    local file = io.open("godbolt_response_asm.json", "r")
     local response = file:read("*all")
     file:close()
-    os.remove("godbolt_request.json")
-    os.remove("godbolt_response.json")
+    os.remove("godbolt_request_asm.json")
+    os.remove("godbolt_response_asm.json")
     return display(vim.json.decode(response), begin, string.format("%s %02d:%02d:%02d", (name or compiler), hour, min, sec))
   end
   _jobid = fun.jobstart(curl_cmd, {on_exit = _12_})

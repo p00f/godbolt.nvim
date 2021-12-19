@@ -33,16 +33,16 @@
   (let [lines (api.nvim_buf_get_lines 0 (dec begin) end true)
         text (fun.join lines "\n")]
     (tset options :compilerOptions {:executorRequest true})
-    (local cmd (m> :godbolt.init :build-cmd compiler text options))
+    (local cmd (m> :godbolt.init :build-cmd compiler text options :exec))
     (var output_arr [])
     (local _jobid
       (fun.jobstart cmd
-        {:on_stdout (fn [_ data _]
-                      (vim.list_extend output_arr data))
-         :on_exit (fn [_ _ _]
-                    (os.remove :godbolt_request.json)
-                    (echo-output (-> output_arr
-                                     (fun.join)
-                                     (vim.json.decode))))}))))
+        {:on_exit (fn [_ _ _]
+                    (local file (io.open :godbolt_response_exec.json :r))
+                    (local response (file:read "*all"))
+                    (file:close)
+                    (os.remove :godbolt_request_exec.json)
+                    (os.remove :godbolt_response_exec.json)
+                    (echo-output (vim.json.decode response)))}))))
 
 {: execute}
