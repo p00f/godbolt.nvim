@@ -92,14 +92,12 @@
                 (fun.setqflist qflist)
                 (when _G.godbolt_config.quickfix.auto_open
                       (vim.cmd :copen)
-                      (set qf-winid (fun.win_getid))
-                      (api.nvim_set_current_win source-winid))))
+                      (set qf-winid (fun.win_getid)))))
     (if (= "<Compilation failed>"
            (. response :asm 1 :text))
-        (when qf-winid
-              (vim.notify "godbolt.nvim: Compilation failed")
-              (api.nvim_set_current_win qf-winid))
+        (vim.notify "godbolt.nvim: Compilation failed")
         (do
+          (api.nvim_set_current_win source-winid)
           (cmd :vsplit)
           (cmd (string.format "buffer %d" asm-buf))
           (api.nvim_win_set_option 0 :number false)
