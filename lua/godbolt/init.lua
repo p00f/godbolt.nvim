@@ -19,16 +19,15 @@ local function setup(cfg)
       return nil
     end
   else
-    return api.nvim_err_writeln("neovim 0.6 is required")
+    return api.nvim_err_writeln("neovim 0.6+ is required")
   end
 end
-local function build_cmd(compiler, text, options, typ)
+local function build_cmd(compiler, text, options, exec_asm_3f)
   local json = vim.json.encode({source = text, options = options})
-  local file = io.open(string.format("godbolt_request_%s.json", typ), "w")
+  local file = io.open(string.format("godbolt_request_%s.json", exec_asm_3f), "w")
   file:write(json)
   io.close(file)
-  local ret = string.format(("curl https://godbolt.org/api/compiler/'%s'/compile" .. " --data-binary @godbolt_request_%s.json" .. " --header 'Accept: application/json'" .. " --header 'Content-Type: application/json'" .. " --output godbolt_response_%s.json"), compiler, typ, typ)
-  return ret
+  return string.format(("curl https://godbolt.org/api/compiler/'%s'/compile" .. " --data-binary @godbolt_request_%s.json" .. " --header 'Accept: application/json'" .. " --header 'Content-Type: application/json'" .. " --output godbolt_response_%s.json"), compiler, exec_asm_3f, exec_asm_3f)
 end
 local function godbolt(begin, _end, compiler_arg)
   if vim.g.godbolt_loaded then
@@ -64,10 +63,10 @@ local function godbolt(begin, _end, compiler_arg)
         return nil
       end
     else
-      local def_comp = _G.godbolt_config[ft].compiler
-      pre_display(begin, _end, def_comp, options)
+      local defined_compiler = _G.godbolt_config[ft].compiler
+      pre_display(begin, _end, defined_compiler, options)
       if vim.b.godbolt_exec then
-        return execute(begin, _end, def_comp, options)
+        return execute(begin, _end, defined_compiler, options)
       else
         return nil
       end

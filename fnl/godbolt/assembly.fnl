@@ -45,13 +45,12 @@
   (when (next err)
         (icollect [k v (ipairs err)]
             (do
-              (local entry {:text
-                            (-> v
-                                (. :text)
-                                (string.gsub
-                                  "[\27\155][][()#;?%d]*[A-PRZcf-ntqry=><~]"
-                                  ""))
-                            : bufnr})
+              (local entry
+                     {:text
+                      (-> v
+                          (. :text)
+                          (string.gsub "[\27\155][][()#;?%d]*[A-PRZcf-ntqry=><~]" ""))
+                      : bufnr})
               (when (. v :tag)
                     (tset entry :col (. v :tag :column))
                     (tset entry :lnum (. v :tag :line)))
@@ -74,8 +73,11 @@
     (each [k v (pairs asm-table)]
       (if (= (type (. v :source)) :table)
           (if (= linenum (. v :source :line))
-              (vim.highlight.range asm-buf (. _G._private-gb-exports :nsid) :Visual
-                                   [(dec k) 0] [(dec k) 100] :linewise true))))))
+              (vim.highlight.range asm-buf
+                                   (. _G._private-gb-exports :nsid)
+                                   :Visual
+                                   [(dec k) 0] [(dec k) 100]
+                                   :linewise true))))))
 
 ; Main
 (fn display [response begin name]
@@ -109,8 +111,8 @@
           (if qf-winid
               (api.nvim_set_current_win qf-winid)
               (api.nvim_set_current_win source-winid))
-          (if (not (. source-asm-bufs source-bufnr))
-              (tset source-asm-bufs source-bufnr {}))
+          (when (not (. source-asm-bufs source-bufnr))
+                (tset source-asm-bufs source-bufnr {}))
           (tset source-asm-bufs source-bufnr asm-buf
                 {:asm (. response :asm) :offset begin})
           (setup-aucmd source-bufnr asm-buf)))))

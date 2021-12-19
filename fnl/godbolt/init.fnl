@@ -25,8 +25,10 @@
       (if (not vim.g.godbolt_loaded)
           (do
             (tset _G :_private-gb-exports {})
-            (tset _G._private-gb-exports :bufmap {})
-            (tset _G._private-gb-exports :nsid (api.nvim_create_namespace :godbolt))
+            (tset _G._private-gb-exports
+                  :bufmap {})
+            (tset _G._private-gb-exports
+                  :nsid (api.nvim_create_namespace :godbolt))
             (set _G.godbolt_config
                  {:cpp {:compiler :g112 :options {}}
                   :c {:compiler :cg112 :options {}}
@@ -35,23 +37,24 @@
             (if cfg (each [k v (pairs cfg)]
                       (tset _G.godbolt_config k v)))
             (set vim.g.godbolt_loaded true)))
-      (api.nvim_err_writeln "neovim 0.6 is required")))
+      (api.nvim_err_writeln "neovim 0.6+ is required")))
 
-(fn build-cmd [compiler text options typ]
+(fn build-cmd [compiler text options exec-asm?]
   "Build curl command from compiler, text and options"
   (var json (vim.json.encode {:source text : options}))
-  (local file (io.open (string.format :godbolt_request_%s.json typ) :w))
+  (local file (-> :godbolt_request_%s.json
+                  (string.format exec-asm?)
+                  (io.open :w)))
   (file:write json)
   (io.close file)
-  (local ret (string.format (.. "curl https://godbolt.org/api/compiler/'%s'/compile"
-                                " --data-binary @godbolt_request_%s.json"
-                                " --header 'Accept: application/json'"
-                                " --header 'Content-Type: application/json'"
-                                " --output godbolt_response_%s.json")
-                            compiler
-                            typ
-                            typ))
-  ret)
+  (string.format (.. "curl https://godbolt.org/api/compiler/'%s'/compile"
+                     " --data-binary @godbolt_request_%s.json"
+                     " --header 'Accept: application/json'"
+                     " --header 'Content-Type: application/json'"
+                     " --output godbolt_response_%s.json")
+                 compiler
+                 exec-asm?
+                 exec-asm?))
 
 (fn godbolt [begin end compiler-arg]
   (if vim.g.godbolt_loaded
@@ -66,19 +69,22 @@
               (tset options :userArguments flags)
               (match compiler-arg
                 (where fuzzy
-                       (or (= :telescope fuzzy) (= :fzf fuzzy) (= :skim fuzzy)
-                           (= :fzy fuzzy)))
+                       (or (= :telescope fuzzy) (= :fzf fuzzy)
+                           (= :skim fuzzy) (= :fzy fuzzy)))
                 (m> :godbolt.fuzzy :fuzzy fuzzy ft begin end options
                     (= true vim.b.godbolt_exec))
                 _ (do
                     (pre-display begin end compiler-arg options)
                     (if vim.b.godbolt_exec
                         (execute begin end compiler-arg options)))))
+
             (do
-              (local def-comp (. _G.godbolt_config ft :compiler))
-              (pre-display begin end def-comp options)
-              (if vim.b.godbolt_exec
-                  (execute begin end def-comp options)))))
+              (local defined-compiler (. _G.godbolt_config ft :compiler))
+              (pre-display begin end defined-compiler options)
+              (when vim.b.godbolt_exec
+                    (execute begin end defined-compiler options)))))
+
+
       (api.nvim_err_writeln "setup function not called")))
 
 {: setup : build-cmd : godbolt}
