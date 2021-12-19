@@ -96,7 +96,12 @@ local function display(response, begin, name)
   else
   end
   if ("<Compilation failed>" == response.asm[1].text) then
-    return vim.notify("godbolt.nvim: Compilation failed")
+    if qf_winid then
+      vim.notify("godbolt.nvim: Compilation failed")
+      return api.nvim_set_current_win(qf_winid)
+    else
+      return nil
+    end
   else
     cmd("vsplit")
     cmd(string.format("buffer %d", asm_buf))
@@ -126,7 +131,7 @@ local function pre_display(begin, _end, compiler, options, name)
   local min = time.min
   local sec = time.sec
   local _jobid
-  local function _13_(_, _0, _1)
+  local function _14_(_, _0, _1)
     local file = io.open("godbolt_response.json", "r")
     local response = file:read("*all")
     file:close()
@@ -134,7 +139,7 @@ local function pre_display(begin, _end, compiler, options, name)
     os.remove("godbolt_response.json")
     return display(vim.json.decode(response), begin, string.format("%s %02d:%02d:%02d", (name or compiler), hour, min, sec))
   end
-  _jobid = fun.jobstart(curl_cmd, {on_exit = _13_})
+  _jobid = fun.jobstart(curl_cmd, {on_exit = _14_})
   return nil
 end
 return {["pre-display"] = pre_display, clear = clear, ["smolck-update"] = smolck_update}

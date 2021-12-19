@@ -96,7 +96,9 @@
                       (api.nvim_set_current_win source-winid))))
     (if (= "<Compilation failed>"
            (. response :asm 1 :text))
-        (vim.notify "godbolt.nvim: Compilation failed")
+        (when qf-winid
+              (vim.notify "godbolt.nvim: Compilation failed")
+              (api.nvim_set_current_win qf-winid))
         (do
           (cmd :vsplit)
           (cmd (string.format "buffer %d" asm-buf))
