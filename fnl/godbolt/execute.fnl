@@ -28,8 +28,7 @@
         sec (. time :sec)]
     (local buf (api.nvim_create_buf false true))
     (api.nvim_buf_set_lines buf 0 0 false lines)
-    (api.nvim_buf_set_name buf (string.format "%02d:%02d:%02d"
-                                              hour min sec))
+    (api.nvim_buf_set_name buf (string.format "%02d:%02d:%02d" hour min sec))
     buf))
 
 (fn display-output [response]
@@ -37,16 +36,14 @@
                   (. v :text)))
   (local stdout (icollect [k v (pairs (. response :stdout))]
                   (. v :text)))
-  (var lines [(->> :code
-                   (. response)
-                   (.. "exit code: "))])
+  (var lines [(->> :code (. response) (.. "exit code: "))])
   (table.insert lines "stdout:")
   (vim.list_extend lines stdout)
   (table.insert lines "stderr:")
   (vim.list_extend lines stderr)
   (local output-buf (prepare-buf lines))
   (local old-winid (fun.win_getid))
-  (vim.cmd "split")
+  (vim.cmd :split)
   (vim.cmd (.. "buffer " output-buf))
   (wo-set 0 :number false)
   (wo-set 0 :relativenumber false)

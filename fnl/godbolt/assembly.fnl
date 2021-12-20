@@ -43,18 +43,17 @@
 ;; https://stackoverflow.com/a/49209650
 (fn make-qflist [err bufnr]
   (when (next err)
-        (icollect [k v (ipairs err)]
-            (do
-              (local entry
-                     {:text
+    (icollect [k v (ipairs err)]
+      (do
+        (local entry {:text
                       (-> v
                           (. :text)
-                          (string.gsub "[\27\155][][()#;?%d]*[A-PRZcf-ntqry=><~]" ""))
+                          (string.gsub "[\027\155][][()#;?%d]*[A-PRZcf-ntqry=><~]" ""))
                       : bufnr})
-              (when (. v :tag)
-                    (tset entry :col (. v :tag :column))
-                    (tset entry :lnum (. v :tag :line)))
-              entry))))
+        (when (. v :tag)
+          (tset entry :col (. v :tag :column))
+          (tset entry :lnum (. v :tag :line)))
+        entry))))
 
 ; Highlighting
 (fn clear [source-buf]
@@ -93,13 +92,12 @@
     ;; Open quickfix
     (var qf-winid nil)
     (when (and qflist _G.godbolt_config.quickfix.enable)
-          (fun.setqflist qflist)
-          (when _G.godbolt_config.quickfix.auto_open
-                (vim.cmd :copen)
-                (set qf-winid (fun.win_getid))))
+      (fun.setqflist qflist)
+      (when _G.godbolt_config.quickfix.auto_open
+        (vim.cmd :copen)
+        (set qf-winid (fun.win_getid))))
     ;; Open assembly
-    (if (= "<Compilation failed>"
-           (. response :asm 1 :text))
+    (if (= "<Compilation failed>" (. response :asm 1 :text))
         (vim.notify "godbolt.nvim: Compilation failed")
         (do
           (api.nvim_set_current_win source-winid)
@@ -113,7 +111,7 @@
               (api.nvim_set_current_win qf-winid)
               (api.nvim_set_current_win source-winid))
           (when (not (. source-asm-bufs source-bufnr))
-                (tset source-asm-bufs source-bufnr {}))
+            (tset source-asm-bufs source-bufnr {}))
           (tset source-asm-bufs source-bufnr asm-buf
                 {:asm (. response :asm) :offset begin})
           (setup-aucmd source-bufnr asm-buf)))))

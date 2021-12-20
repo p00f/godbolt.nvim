@@ -19,7 +19,6 @@
 (local fun vim.fn)
 (local api vim.api)
 
-
 (fn setup [cfg]
   (if (fun.has :nvim-0.6)
       (if (not vim.g.godbolt_loaded)
@@ -52,9 +51,7 @@
                      " --header 'Accept: application/json'"
                      " --header 'Content-Type: application/json'"
                      " --output godbolt_response_%s.json")
-                 compiler
-                 exec-asm?
-                 exec-asm?))
+                 compiler exec-asm? exec-asm?))
 
 (fn godbolt [begin end compiler-arg]
   (if vim.g.godbolt_loaded
@@ -82,10 +79,9 @@
               (local defined-compiler (. _G.godbolt_config ft :compiler))
               (pre-display begin end defined-compiler options)
               (when vim.b.godbolt_exec
-                    (execute begin end defined-compiler options)))))
+                (execute begin end defined-compiler options)))))
 
 
       (api.nvim_err_writeln "setup function not called")))
 
 {: setup : build-cmd : godbolt}
-

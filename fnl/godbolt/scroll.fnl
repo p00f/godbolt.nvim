@@ -14,4 +14,3 @@
 ;
 ;  You should have received a copy of the GNU General Public License
 ;  along with godbolt.nvim.  If not, see <https://www.gnu.org/licenses/>.
-
