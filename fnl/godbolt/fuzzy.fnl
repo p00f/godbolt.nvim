@@ -94,19 +94,18 @@
              x x)
         cmd (string.format "curl https://godbolt.org/api/compilers/%s" ft)]
     (var output [])
-    (local jobid
-      (fun.jobstart cmd
-        {:on_stdout (fn [_ data _]
-                      (vim.list_extend output data))
-         :on_exit (fn [_ _ _]
-                    (let [final (icollect [k v (ipairs output)]
+    (fun.jobstart cmd
+      {:on_stdout (fn [_ data _]
+                    (vim.list_extend output data))
+       :on_exit (fn [_ _ _]
+                  (let [entries (icollect [k v (ipairs output)]
                                   (when (not= k 1) v))]
-                      ((match picker
-                         :fzf fzf
-                         :skim skim
-                         :telescope telescope
-                         :fzy fzy)
-                       final begin end options exec)))}))))
+                    ((match picker
+                       :fzf fzf
+                       :skim skim
+                       :telescope telescope
+                       :fzy fzy)
+                     entries begin end options exec)))})))
 
 {: fuzzy}
 

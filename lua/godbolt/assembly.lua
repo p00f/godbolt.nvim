@@ -124,7 +124,6 @@ local function pre_display(begin, _end, compiler, options, name)
   local hour = time.hour
   local min = time.min
   local sec = time.sec
-  local _jobid
   local function _12_(_, _0, _1)
     local file = io.open("godbolt_response_asm.json", "r")
     local response = file:read("*all")
@@ -133,7 +132,6 @@ local function pre_display(begin, _end, compiler, options, name)
     os.remove("godbolt_response_asm.json")
     return display(vim.json.decode(response), begin, string.format("%s %02d:%02d:%02d", (name or compiler), hour, min, sec))
   end
-  _jobid = fun.jobstart(curl_cmd, {on_exit = _12_})
-  return nil
+  return fun.jobstart(curl_cmd, {on_exit = _12_})
 end
 return {["pre-display"] = pre_display, clear = clear, ["smolck-update"] = smolck_update}

@@ -107,12 +107,11 @@ local function fuzzy(picker, ft, begin, _end, options, exec)
   end
   local cmd = string.format("curl https://godbolt.org/api/compilers/%s", ft0)
   local output = {}
-  local jobid
   local function _15_(_, data, _0)
     return vim.list_extend(output, data)
   end
   local function _16_(_, _0, _1)
-    local final
+    local entries
     do
       local tbl_15_auto = {}
       local i_16_auto = #tbl_15_auto
@@ -129,7 +128,7 @@ local function fuzzy(picker, ft, begin, _end, options, exec)
         else
         end
       end
-      final = tbl_15_auto
+      entries = tbl_15_auto
     end
     local _20_
     do
@@ -146,9 +145,8 @@ local function fuzzy(picker, ft, begin, _end, options, exec)
         _20_ = nil
       end
     end
-    return _20_(final, begin, _end, options, exec)
+    return _20_(entries, begin, _end, options, exec)
   end
-  jobid = fun.jobstart(cmd, {on_stdout = _15_, on_exit = _16_})
-  return nil
+  return fun.jobstart(cmd, {on_stdout = _15_, on_exit = _16_})
 end
 return {fuzzy = fuzzy}

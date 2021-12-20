@@ -130,19 +130,18 @@
         hour (. time :hour)
         min (. time :min)
         sec (. time :sec)]
-    (local _jobid
-      (fun.jobstart curl-cmd
-        {:on_exit (fn [_ _ _]
-                    (local file (io.open :godbolt_response_asm.json :r))
-                    (local response (file:read "*all"))
-                    (file:close)
-                    (os.remove :godbolt_request_asm.json)
-                    (os.remove :godbolt_response_asm.json)
-                    (display (vim.json.decode response)
-                             begin
-                             (string.format "%s %02d:%02d:%02d"
-                                            (or name compiler)
-                                            hour min sec)))}))))
+    (fun.jobstart curl-cmd
+      {:on_exit (fn [_ _ _]
+                  (local file (io.open :godbolt_response_asm.json :r))
+                  (local response (file:read "*all"))
+                  (file:close)
+                  (os.remove :godbolt_request_asm.json)
+                  (os.remove :godbolt_response_asm.json)
+                  (display (vim.json.decode response)
+                           begin
+                           (string.format "%s %02d:%02d:%02d"
+                                          (or name compiler)
+                                          hour min sec)))})))
 
 
 {: pre-display : clear : smolck-update}

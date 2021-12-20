@@ -60,7 +60,6 @@ local function execute(begin, _end, compiler, options)
   local text = fun.join(lines, "\n")
   do end (options)["compilerOptions"] = {executorRequest = true}
   local cmd = (require("godbolt.init"))["build-cmd"](compiler, text, options, "exec")
-  local _jobid
   local function _3_(_, _0, _1)
     local file = io.open("godbolt_response_exec.json", "r")
     local response = file:read("*all")
@@ -69,7 +68,6 @@ local function execute(begin, _end, compiler, options)
     os.remove("godbolt_response_exec.json")
     return display_output(vim.json.decode(response))
   end
-  _jobid = fun.jobstart(cmd, {on_exit = _3_})
-  return nil
+  return fun.jobstart(cmd, {on_exit = _3_})
 end
 return {execute = execute}
