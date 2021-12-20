@@ -73,14 +73,14 @@
                     (- offset)
                     (inc))]
     (each [k v (pairs asm-table)]
-      (if (= (type (. v :source)) :table)
-          (if (= linenum (. v :source :line))
-              (vim.highlight.range asm-buf
-                                   (. _G._private-gb-exports :nsid)
-                                   :Visual
-                                   ;; [start-row start-col] [end-row end-col]
-                                   [(dec k) 0] [(dec k) 100]
-                                   :linewise true))))))
+      (when (= (type (. v :source)) :table)
+        (when (= linenum (. v :source :line))
+          (vim.highlight.range asm-buf
+                               (. _G._private-gb-exports :nsid)
+                               :Visual
+                               ;; [start-row start-col] [end-row end-col]
+                               [(dec k) 0] [(dec k) 100]
+                               :linewise true))))))
 
 ; Main
 (fn display [response begin name]

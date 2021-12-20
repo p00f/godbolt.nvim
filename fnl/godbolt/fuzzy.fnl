@@ -22,8 +22,10 @@
 (local execute (. (require :godbolt.execute) :execute))
 
 (fn transform [entry]
-  "Get the compiler id from the selected entry"
-  {:value (. (vim.split entry " ") 1) :display entry :ordinal entry})
+  "Get the compiler id from the selected entry for telescope"
+  {:value (-> entry (vim.split " ") (first))
+   :display entry
+   :ordinal entry})
 
 (fn fzf [entries begin end options exec]
   (let [maxlen (accumulate [mlen -1 k v (pairs entries)]
@@ -33,10 +35,10 @@
     (fun.fzf#run {:source entries
                   :window {: width :height 0.6}
                   :sink (fn [choice]
-                          (local compiler (-> choice (vim.split " ") (. 1)))
+                          (local compiler (-> choice (vim.split " ") (first)))
                           (pre-display begin end compiler options)
-                          (if exec
-                              (execute begin end compiler options)))})))
+                          (when exec
+                            (execute begin end compiler options)))})))
 
 
 ; Same as fzf, just s/fzf/skim/g
@@ -50,8 +52,8 @@
                    :sink (fn [choice]
                            (local compiler (first (vim.split choice " ")))
                            (pre-display begin end compiler options)
-                           (if exec
-                               (execute begin end compiler options)))})))
+                           (when exec
+                             (execute begin end compiler options)))})))
 
 ;; fnlfmt: skip
 (fn telescope [entries begin end options exec]
@@ -71,8 +73,8 @@
                                  (actions.close prompt-bufnr)
                                  (local compiler (. (actions-state.get_selected_entry) :value))
                                  (pre-display begin end compiler options)
-                                 (if exec
-                                     (execute begin end compiler options)))))})
+                                 (when exec
+                                   (execute begin end compiler options)))))})
        :find)))
 
 (fn fzy [entries begin end options exec]
@@ -82,8 +84,8 @@
       (fn [choice]
         (local compiler (first (vim.split choice " ")))
         (pre-display begin end compiler options)
-        (if exec
-            (execute begin end compiler options)))))
+        (when exec
+          (execute begin end compiler options)))))
 
 ;; fnlfmt: skip
 (fn fuzzy [picker ft begin end options exec]

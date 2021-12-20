@@ -33,8 +33,8 @@
                   :c {:compiler :cg112 :options {}}
                   :rust {:compiler :r1560 :options {}}
                   :quickfix {:enable false :auto_open false}})
-            (if cfg (each [k v (pairs cfg)]
-                      (tset _G.godbolt_config k v)))
+            (when cfg (each [k v (pairs cfg)]
+                        (tset _G.godbolt_config k v)))
             (set vim.g.godbolt_loaded true)))
       (api.nvim_err_writeln "neovim 0.6+ is required")))
 
@@ -72,8 +72,8 @@
                     (= true vim.b.godbolt_exec))
                 _ (do
                     (pre-display begin end compiler-arg options)
-                    (if vim.b.godbolt_exec
-                        (execute begin end compiler-arg options)))))
+                    (when vim.b.godbolt_exec
+                      (execute begin end compiler-arg options)))))
 
             (do
               (local defined-compiler (. _G.godbolt_config ft :compiler))
