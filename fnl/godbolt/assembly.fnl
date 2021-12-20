@@ -42,6 +42,7 @@
 
 ;; https://stackoverflow.com/a/49209650
 (fn make-qflist [err bufnr]
+  "Transform compiler output into a form taken by vim's setqflist()"
   (when (next err)
     (icollect [k v (ipairs err)]
       (do
@@ -57,10 +58,12 @@
 
 ; Highlighting
 (fn clear [source-buf]
+  "Clear highlights: used when leaving the source buffer"
   (each [asm-buf _ (pairs (. source-asm-bufs source-buf))]
     (api.nvim_buf_clear_namespace asm-buf (. _G._private-gb-exports :nsid) 0 -1)))
 
 (fn smolck-update [source-buf asm-buf]
+  "Update highlights: used when the cursor moves in the source buffer"
   (api.nvim_buf_clear_namespace asm-buf (. _G._private-gb-exports :nsid) 0 -1)
   (let [entry (. source-asm-bufs source-buf asm-buf)
         offset (. entry :offset)
@@ -81,13 +84,14 @@
 
 ; Main
 (fn display [response begin name]
+  "Display the assembly in a split"
   (let [asm (accumulate [str "" k v (pairs (. response :asm))]
               (if (. v :text)
                   (.. str "\n" (. v :text))
                   str))
         source-winid (fun.win_getid)
-        source-bufnr (fun.bufnr)
-        qflist (make-qflist (. response :stderr) source-bufnr)
+        source-buf (fun.bufnr)
+        qflist (make-qflist (. response :stderr) source-buf)
         asm-buf (prepare-buf asm name)]
     ;; Open quickfix
     (var qf-winid nil)
@@ -110,11 +114,12 @@
           (if qf-winid
               (api.nvim_set_current_win qf-winid)
               (api.nvim_set_current_win source-winid))
-          (when (not (. source-asm-bufs source-bufnr))
-            (tset source-asm-bufs source-bufnr {}))
-          (tset source-asm-bufs source-bufnr asm-buf
+          (when (not (. source-asm-bufs source-buf))
+            (tset source-asm-bufs source-buf {}))
+          (tset source-asm-bufs source-buf asm-buf
                 {:asm (. response :asm) :offset begin})
-          (setup-aucmd source-bufnr asm-buf)))))
+          (smolck-update source-buf asm-buf)
+          (setup-aucmd source-buf asm-buf)))))
 
 (fn pre-display [begin end compiler options name]
   "Prepare text for displaying and call display"

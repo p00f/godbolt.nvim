@@ -32,6 +32,7 @@
     buf))
 
 (fn display-output [response]
+  "Display the program output in a split"
   (local stderr (icollect [k v (pairs (. response :stderr))]
                   (. v :text)))
   (local stdout (icollect [k v (pairs (. response :stdout))]
@@ -52,6 +53,7 @@
   (api.nvim_set_current_win old-winid))
 
 (fn execute [begin end compiler options]
+  "Make an execution request and call `display-output` with the response"
   (let [lines (api.nvim_buf_get_lines 0 (dec begin) end true)
         text (fun.join lines "\n")]
     (tset options :compilerOptions {:executorRequest true})

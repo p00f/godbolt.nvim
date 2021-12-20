@@ -22,7 +22,7 @@
 (local execute (. (require :godbolt.execute) :execute))
 
 (fn transform [entry]
-  "Get the compiler id"
+  "Get the compiler id from the selected entry"
   {:value (. (vim.split entry " ") 1) :display entry :ordinal entry})
 
 (fn fzf [entries begin end options exec]

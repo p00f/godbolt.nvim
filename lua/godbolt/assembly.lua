@@ -79,8 +79,8 @@ local function display(response, begin, name)
     asm = str
   end
   local source_winid = fun.win_getid()
-  local source_bufnr = fun.bufnr()
-  local qflist = make_qflist(response.stderr, source_bufnr)
+  local source_buf = fun.bufnr()
+  local qflist = make_qflist(response.stderr, source_buf)
   local asm_buf = prepare_buf(asm, name)
   local qf_winid = nil
   if (qflist and _G.godbolt_config.quickfix.enable) then
@@ -107,12 +107,13 @@ local function display(response, begin, name)
     else
       api.nvim_set_current_win(source_winid)
     end
-    if not source_asm_bufs[source_bufnr] then
-      source_asm_bufs[source_bufnr] = {}
+    if not source_asm_bufs[source_buf] then
+      source_asm_bufs[source_buf] = {}
     else
     end
-    source_asm_bufs[source_bufnr][asm_buf] = {asm = response.asm, offset = begin}
-    return setup_aucmd(source_bufnr, asm_buf)
+    source_asm_bufs[source_buf][asm_buf] = {asm = response.asm, offset = begin}
+    smolck_update(source_buf, asm_buf)
+    return setup_aucmd(source_buf, asm_buf)
   end
 end
 local function pre_display(begin, _end, compiler, options, name)
