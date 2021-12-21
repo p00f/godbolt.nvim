@@ -35,8 +35,8 @@ local function godbolt(begin, _end, compiler_arg)
     local execute = (require("godbolt.execute")).execute
     local ft = vim.bo.filetype
     local options
-    if _G.godbolt_config.ft then
-      options = vim.deepcopy(_G.godbolt_config.ft.options)
+    if _G.godbolt_config[ft] then
+      options = vim.deepcopy(_G.godbolt_config[ft].options)
     else
       options = {}
     end

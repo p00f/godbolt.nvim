@@ -58,8 +58,8 @@
       (let [pre-display (. (require :godbolt.assembly) :pre-display)
             execute (. (require :godbolt.execute) :execute)
             ft vim.bo.filetype]
-        (var options (if (. _G.godbolt_config :ft)
-                         (vim.deepcopy (. _G.godbolt_config :ft :options))
+        (var options (if (. _G.godbolt_config ft)
+                         (vim.deepcopy (. _G.godbolt_config ft :options))
                          {}))
         (if compiler-arg
             (let [flags (vim.fn.input {:prompt "Flags: " :default ""})]
