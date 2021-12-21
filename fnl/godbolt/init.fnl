@@ -20,7 +20,7 @@
 (local api vim.api)
 
 (fn setup [cfg]
-  (if (fun.has :nvim-0.6)
+  (if (= 1 (fun.has :nvim-0.6))
       (if (not vim.g.godbolt_loaded)
           (do
             (tset _G :_private-gb-exports {})

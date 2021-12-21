@@ -1,6 +1,7 @@
 local fun = vim.fn
 local api = vim.api
 local cmd = vim.cmd
+local term_escapes = "[\27\155][][()#;?%d]*[A-PRZcf-ntqry=><~]"
 local wo_set = api.nvim_win_set_option
 local source_asm_bufs = (_G["_private-gb-exports"]).bufmap
 local function prepare_buf(text, name)
@@ -23,7 +24,7 @@ local function make_qflist(err, bufnr)
     for k, v in ipairs(err) do
       local val_17_auto
       do
-        local entry = {text = string.gsub(v.text, "[\27\155][][()#;?%d]*[A-PRZcf-ntqry=><~]", ""), bufnr = bufnr}
+        local entry = {text = string.gsub(v.text, term_escapes, ""), bufnr = bufnr}
         if v.tag then
           entry["col"] = v.tag.column
           entry["lnum"] = v.tag.line

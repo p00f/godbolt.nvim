@@ -28,9 +28,10 @@
    :ordinal entry})
 
 (fn fzf [entries begin end options exec]
-  (let [maxlen (accumulate [mlen -1 k v (pairs entries)]
+  (let [maxlen (accumulate [current-maxlen -1
+                            k v (pairs entries)]
                  (let [len (fun.len v)]
-                   (if (> len mlen) len mlen)))
+                   (if (> len current-maxlen) len current-maxlen)))
         width (-> maxlen (/ vim.o.columns) (+ 0.05))]
     (fun.fzf#run {:source entries
                   :window {: width :height 0.6}
@@ -43,9 +44,10 @@
 
 ; Same as fzf, just s/fzf/skim/g
 (fn skim [entries begin end options exec]
-  (let [maxlen (accumulate [mlen -1 k v (pairs entries)]
+  (let [maxlen (accumulate [current-maxlen -1
+                            k v (pairs entries)]
                  (let [len (fun.len v)]
-                   (if (> len mlen) len mlen)))
+                   (if (> len current-maxlen) len current-maxlen)))
         width (-> maxlen (/ vim.o.columns) (+ 0.05))]
     (fun.skim#run {:source entries
                    :window {: width :height 0.6}
@@ -107,5 +109,6 @@
                        :fzy fzy)
                      entries begin end options exec)))})))
 
-{: fuzzy}
 
+
+{: fuzzy}

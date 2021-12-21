@@ -19,6 +19,7 @@
 (local fun vim.fn)
 (local api vim.api)
 (local cmd vim.cmd)
+(local term-escapes "[\027\155][][()#;?%d]*[A-PRZcf-ntqry=><~]")
 (local wo-set api.nvim_win_set_option)
 (var source-asm-bufs (. _G._private-gb-exports :bufmap))
 
@@ -46,10 +47,7 @@
   (when (next err)
     (icollect [k v (ipairs err)]
       (do
-        (local entry {:text
-                      (-> v
-                          (. :text)
-                          (string.gsub "[\027\155][][()#;?%d]*[A-PRZcf-ntqry=><~]" ""))
+        (local entry {:text (string.gsub (. v :text) term-escapes "")
                       : bufnr})
         (when (. v :tag)
           (tset entry :col (. v :tag :column))
@@ -85,7 +83,8 @@
 ; Main
 (fn display [response begin name]
   "Display the assembly in a split"
-  (let [asm (accumulate [str "" k v (pairs (. response :asm))]
+  (let [asm (accumulate [str ""
+                         k v (pairs (. response :asm))]
               (if (. v :text)
                   (.. str "\n" (. v :text))
                   str))

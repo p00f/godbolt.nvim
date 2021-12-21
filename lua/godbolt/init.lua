@@ -1,7 +1,7 @@
 local fun = vim.fn
 local api = vim.api
 local function setup(cfg)
-  if fun.has("nvim-0.6") then
+  if (1 == fun.has("nvim-0.6")) then
     if not vim.g.godbolt_loaded then
       _G["_private-gb-exports"] = {}
       _G["_private-gb-exports"]["bufmap"] = {}

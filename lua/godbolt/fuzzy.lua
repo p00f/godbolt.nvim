@@ -7,16 +7,16 @@ end
 local function fzf(entries, begin, _end, options, exec)
   local maxlen
   do
-    local mlen = -1
+    local current_maxlen = -1
     for k, v in pairs(entries) do
       local len = fun.len(v)
-      if (len > mlen) then
-        mlen = len
+      if (len > current_maxlen) then
+        current_maxlen = len
       else
-        mlen = mlen
+        current_maxlen = current_maxlen
       end
     end
-    maxlen = mlen
+    maxlen = current_maxlen
   end
   local width = ((maxlen / vim.o.columns) + 0.05)
   local function _2_(choice)
@@ -33,16 +33,16 @@ end
 local function skim(entries, begin, _end, options, exec)
   local maxlen
   do
-    local mlen = -1
+    local current_maxlen = -1
     for k, v in pairs(entries) do
       local len = fun.len(v)
-      if (len > mlen) then
-        mlen = len
+      if (len > current_maxlen) then
+        current_maxlen = len
       else
-        mlen = mlen
+        current_maxlen = current_maxlen
       end
     end
-    maxlen = mlen
+    maxlen = current_maxlen
   end
   local width = ((maxlen / vim.o.columns) + 0.05)
   local function _5_(choice)
