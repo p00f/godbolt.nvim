@@ -1,6 +1,7 @@
 local fun = vim.fn
 local api = vim.api
 local cmd = vim.cmd
+local fmt = string.format
 local term_escapes = "[\27\155][][()#;?%d]*[A-PRZcf-ntqry=><~]"
 local wo_set = api.nvim_win_set_option
 local source_asm_bufs = (_G["_private-gb-exports"]).bufmap
@@ -13,8 +14,8 @@ local function prepare_buf(text, name)
 end
 local function setup_aucmd(source_buf, asm_buf)
   cmd("augroup Godbolt")
-  cmd(string.format("autocmd CursorMoved <buffer=%s> lua require('godbolt.assembly')['smolck-update'](%s, %s)", source_buf, source_buf, asm_buf))
-  cmd(string.format("autocmd BufLeave <buffer=%s> lua require('godbolt.assembly').clear(%s)", source_buf, source_buf))
+  cmd(fmt("autocmd CursorMoved <buffer=%s> lua require('godbolt.assembly')['smolck-update'](%s, %s)", source_buf, source_buf, asm_buf))
+  cmd(fmt("autocmd BufLeave <buffer=%s> lua require('godbolt.assembly').clear(%s)", source_buf, source_buf))
   return cmd("augroup END")
 end
 local function make_qflist(err, bufnr)
@@ -98,7 +99,7 @@ local function display(response, begin, name)
   else
     api.nvim_set_current_win(source_winid)
     cmd("vsplit")
-    cmd(string.format("buffer %d", asm_buf))
+    cmd(fmt("buffer %d", asm_buf))
     wo_set(0, "number", false)
     wo_set(0, "relativenumber", false)
     wo_set(0, "spell", false)
@@ -131,7 +132,7 @@ local function pre_display(begin, _end, compiler, options, name)
     file:close()
     os.remove("godbolt_request_asm.json")
     os.remove("godbolt_response_asm.json")
-    return display(vim.json.decode(response), begin, string.format("%s %02d:%02d:%02d", (name or compiler), hour, min, sec))
+    return display(vim.json.decode(response), begin, fmt("%s %02d:%02d:%02d", (name or compiler), hour, min, sec))
   end
   return fun.jobstart(curl_cmd, {on_exit = _12_})
 end

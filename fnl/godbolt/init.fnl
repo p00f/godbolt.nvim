@@ -40,18 +40,18 @@
 
 (fn build-cmd [compiler text options exec-asm?]
   "Build curl command from compiler, text and options"
-  (var json (vim.json.encode {:source text : options}))
-  (local file (-> :godbolt_request_%s.json
-                  (string.format exec-asm?)
-                  (io.open :w)))
-  (file:write json)
-  (io.close file)
-  (string.format (.. "curl https://godbolt.org/api/compiler/'%s'/compile"
-                     " --data-binary @godbolt_request_%s.json"
-                     " --header 'Accept: application/json'"
-                     " --header 'Content-Type: application/json'"
-                     " --output godbolt_response_%s.json")
-                 compiler exec-asm? exec-asm?))
+  (let [json (vim.json.encode {:source text : options})
+        file (-> :godbolt_request_%s.json
+                 (string.format exec-asm?)
+                 (io.open :w))]
+    (file:write json)
+    (io.close file)
+    (string.format (.. "curl https://godbolt.org/api/compiler/'%s'/compile"
+                       " --data-binary @godbolt_request_%s.json"
+                       " --header 'Accept: application/json'"
+                       " --header 'Content-Type: application/json'"
+                       " --output godbolt_response_%s.json")
+                   compiler exec-asm? exec-asm?)))
 
 (fn godbolt [begin end compiler-arg]
   (if vim.g.godbolt_loaded

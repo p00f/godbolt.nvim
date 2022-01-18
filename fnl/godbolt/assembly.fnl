@@ -19,6 +19,7 @@
 (local fun vim.fn)
 (local api vim.api)
 (local cmd vim.cmd)
+(local fmt string.format)
 (local term-escapes "[\027\155][][()#;?%d]*[A-PRZcf-ntqry=><~]")
 (local wo-set api.nvim_win_set_option)
 (var source-asm-bufs (. _G._private-gb-exports :bufmap))
@@ -35,10 +36,10 @@
 (fn setup-aucmd [source-buf asm-buf]
   "Setup autocommands for updating highlights"
   (cmd "augroup Godbolt")
-  (cmd (string.format "autocmd CursorMoved <buffer=%s> lua require('godbolt.assembly')['smolck-update'](%s, %s)"
-                      source-buf source-buf asm-buf))
-  (cmd (string.format "autocmd BufLeave <buffer=%s> lua require('godbolt.assembly').clear(%s)"
-                      source-buf source-buf))
+  (cmd (fmt "autocmd CursorMoved <buffer=%s> lua require('godbolt.assembly')['smolck-update'](%s, %s)"
+            source-buf source-buf asm-buf))
+  (cmd (fmt "autocmd BufLeave <buffer=%s> lua require('godbolt.assembly').clear(%s)"
+            source-buf source-buf))
   (cmd "augroup END"))
 
 ;; https://stackoverflow.com/a/49209650
@@ -105,7 +106,7 @@
         (do
           (api.nvim_set_current_win source-winid)
           (cmd :vsplit)
-          (cmd (string.format "buffer %d" asm-buf))
+          (cmd (fmt "buffer %d" asm-buf))
           (wo-set 0 :number false)
           (wo-set 0 :relativenumber false)
           (wo-set 0 :spell false)
@@ -138,9 +139,9 @@
                   (os.remove :godbolt_response_asm.json)
                   (display (vim.json.decode response)
                            begin
-                           (string.format "%s %02d:%02d:%02d"
-                                          (or name compiler)
-                                          hour min sec)))})))
+                           (fmt "%s %02d:%02d:%02d"
+                                (or name compiler)
+                                hour min sec)))})))
 
 
 {: pre-display : clear : smolck-update}
