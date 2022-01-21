@@ -36,7 +36,7 @@
 (fn setup-aucmd [source-buf asm-buf]
   "Setup autocommands for updating highlights"
   (cmd "augroup Godbolt")
-  (cmd (fmt "autocmd CursorMoved <buffer=%s> lua require('godbolt.assembly')['smolck-update'](%s, %s)"
+  (cmd (fmt "autocmd CursorMoved <buffer=%s> lua require('godbolt.assembly')['update-hl'](%s, %s)"
             source-buf source-buf asm-buf))
   (cmd (fmt "autocmd BufLeave <buffer=%s> lua require('godbolt.assembly').clear(%s)"
             source-buf source-buf))
@@ -61,7 +61,7 @@
   (each [asm-buf _ (pairs (. source-asm-bufs source-buf))]
     (api.nvim_buf_clear_namespace asm-buf (. _G._private-gb-exports :nsid) 0 -1)))
 
-(fn smolck-update [source-buf asm-buf]
+(fn update-hl [source-buf asm-buf]
   "Update highlights: used when the cursor moves in the source buffer"
   (api.nvim_buf_clear_namespace asm-buf (. _G._private-gb-exports :nsid) 0 -1)
   (let [entry (. source-asm-bufs source-buf asm-buf)
@@ -79,7 +79,8 @@
                                :Visual
                                ;; [start-row start-col] [end-row end-col]
                                [(dec k) 0] [(dec k) 100]
-                               :linewise true))))))
+                               :linewise
+                               true))))))
 
 ; Main
 (fn display [response begin name]
@@ -118,7 +119,7 @@
             (tset source-asm-bufs source-buf {}))
           (tset source-asm-bufs source-buf asm-buf
                 {:asm (. response :asm) :offset begin})
-          (smolck-update source-buf asm-buf)
+          (update-hl source-buf asm-buf)
           (setup-aucmd source-buf asm-buf)))))
 
 (fn pre-display [begin end compiler options name]
@@ -144,4 +145,4 @@
                                 hour min sec)))})))
 
 
-{: pre-display : clear : smolck-update}
+{: pre-display : clear : update-hl}

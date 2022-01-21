@@ -14,7 +14,7 @@ local function prepare_buf(text, name)
 end
 local function setup_aucmd(source_buf, asm_buf)
   cmd("augroup Godbolt")
-  cmd(fmt("autocmd CursorMoved <buffer=%s> lua require('godbolt.assembly')['smolck-update'](%s, %s)", source_buf, source_buf, asm_buf))
+  cmd(fmt("autocmd CursorMoved <buffer=%s> lua require('godbolt.assembly')['update-hl'](%s, %s)", source_buf, source_buf, asm_buf))
   cmd(fmt("autocmd BufLeave <buffer=%s> lua require('godbolt.assembly').clear(%s)", source_buf, source_buf))
   return cmd("augroup END")
 end
@@ -50,7 +50,7 @@ local function clear(source_buf)
   end
   return nil
 end
-local function smolck_update(source_buf, asm_buf)
+local function update_hl(source_buf, asm_buf)
   api.nvim_buf_clear_namespace(asm_buf, (_G["_private-gb-exports"]).nsid, 0, -1)
   local entry = source_asm_bufs[source_buf][asm_buf]
   local offset = entry.offset
@@ -114,7 +114,7 @@ local function display(response, begin, name)
     else
     end
     source_asm_bufs[source_buf][asm_buf] = {asm = response.asm, offset = begin}
-    smolck_update(source_buf, asm_buf)
+    update_hl(source_buf, asm_buf)
     return setup_aucmd(source_buf, asm_buf)
   end
 end
@@ -136,4 +136,4 @@ local function pre_display(begin, _end, compiler, options, name)
   end
   return fun.jobstart(curl_cmd, {on_exit = _12_})
 end
-return {["pre-display"] = pre_display, clear = clear, ["smolck-update"] = smolck_update}
+return {["pre-display"] = pre_display, clear = clear, ["update-hl"] = update_hl}
