@@ -107,7 +107,8 @@
                        :skim skim
                        :telescope telescope
                        :fzy fzy)
-                     entries begin end options exec)))})))
+                     entries begin end options exec)))
+       :stdout_buffered true})))
 
 
 

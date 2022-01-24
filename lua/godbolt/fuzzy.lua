@@ -147,6 +147,6 @@ local function fuzzy(picker, ft, begin, _end, options, exec)
     end
     return _20_(entries, begin, _end, options, exec)
   end
-  return fun.jobstart(cmd, {on_stdout = _15_, on_exit = _16_})
+  return fun.jobstart(cmd, {on_stdout = _15_, on_exit = _16_, stdout_buffered = true})
 end
 return {fuzzy = fuzzy}
