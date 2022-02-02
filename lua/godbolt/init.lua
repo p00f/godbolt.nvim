@@ -3,9 +3,7 @@ local api = vim.api
 local function setup(cfg)
   if (1 == fun.has("nvim-0.6")) then
     if not vim.g.godbolt_loaded then
-      _G["_private-gb-exports"] = {}
-      _G["_private-gb-exports"]["bufmap"] = {}
-      _G["_private-gb-exports"]["nsid"] = api.nvim_create_namespace("godbolt")
+      _G["_private-gb-exports"] = {bufmap = {}, nsid = api.nvim_create_namespace("godbolt")}
       _G.godbolt_config = {cpp = {compiler = "g112", options = {}}, c = {compiler = "cg112", options = {}}, rust = {compiler = "r1560", options = {}}, quickfix = {enable = false, auto_open = false}}
       if cfg then
         for k, v in pairs(cfg) do
@@ -29,10 +27,11 @@ local function build_cmd(compiler, text, options, exec_asm_3f)
   io.close(file)
   return string.format(("curl https://godbolt.org/api/compiler/'%s'/compile" .. " --data-binary @godbolt_request_%s.json" .. " --header 'Accept: application/json'" .. " --header 'Content-Type: application/json'" .. " --output godbolt_response_%s.json"), compiler, exec_asm_3f, exec_asm_3f)
 end
-local function godbolt(begin, _end, reuse, compiler)
+local function godbolt(begin, _end, reuse_3f, compiler)
   if vim.g.godbolt_loaded then
     local pre_display = (require("godbolt.assembly"))["pre-display"]
     local execute = (require("godbolt.execute")).execute
+    local fuzzy = (require("godbolt.fuzzy")).fuzzy
     local ft = vim.bo.filetype
     local compiler0 = (compiler or _G.godbolt_config[ft].compiler)
     local options
@@ -43,24 +42,27 @@ local function godbolt(begin, _end, reuse, compiler)
     end
     local flags = vim.fn.input({prompt = "Flags: ", default = (options.userArguments or "")})
     do end (options)["userArguments"] = flags
-    local _5_ = compiler0
-    local function _6_()
-      local fuzzy = _5_
-      return (("telescope" == fuzzy) or ("fzf" == fuzzy) or ("skim" == fuzzy) or ("fzy" == fuzzy))
+    local fuzzy_3f
+    do
+      local matches = false
+      for k, v in pairs({"telescope", "fzf", "skim", "fzy"}) do
+        if (v == compiler0) then
+          matches = true
+        else
+          matches = matches
+        end
+      end
+      fuzzy_3f = matches
     end
-    if ((nil ~= _5_) and _6_()) then
-      local fuzzy = _5_
-      return (require("godbolt.fuzzy")).fuzzy(fuzzy, ft, begin, _end, options, (true == vim.b.godbolt_exec), reuse)
-    elseif true then
-      local _ = _5_
-      pre_display(begin, _end, compiler0, options, reuse)
+    if fuzzy_3f then
+      return fuzzy(ft, begin, _end, options, (true == vim.b.godbolt_exec), reuse_3f)
+    else
+      pre_display(begin, _end, compiler0, options, reuse_3f)
       if vim.b.godbolt_exec then
         return execute(begin, _end, compiler0, options)
       else
         return nil
       end
-    else
-      return nil
     end
   else
     return api.nvim_err_writeln("setup function not called")

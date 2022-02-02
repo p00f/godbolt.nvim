@@ -23,9 +23,9 @@
 (fn prepare-buf [lines]
   "Prepare the output buffer: set buffer options and add text"
   (let [time (os.date :*t)
-        hour (. time :hour)
-        min (. time :min)
-        sec (. time :sec)]
+        hour time.hour
+        min time.min
+        sec time.sec]
     (local buf (api.nvim_create_buf false true))
     (api.nvim_buf_set_lines buf 0 0 false lines)
     (api.nvim_buf_set_name buf (string.format "%02d:%02d:%02d" hour min sec))
@@ -33,11 +33,11 @@
 
 (fn display-output [response]
   "Display the program output in a split"
-  (local stderr (icollect [k v (pairs (. response :stderr))]
-                  (. v :text)))
-  (local stdout (icollect [k v (pairs (. response :stdout))]
-                  (. v :text)))
-  (var lines [(->> :code (. response) (.. "exit code: "))])
+  (local stderr (icollect [k v (pairs response.stderr)]
+                  v.text))
+  (local stdout (icollect [k v (pairs response.stdout)]
+                  v.text))
+  (var lines [(.. "exit code: " response.code)])
   (table.insert lines "stdout:")
   (vim.list_extend lines stdout)
   (table.insert lines "stderr:")

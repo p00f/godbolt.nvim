@@ -23,11 +23,9 @@
   (if (= 1 (fun.has :nvim-0.6))
       (if (not vim.g.godbolt_loaded)
           (do
-            (tset _G :_private-gb-exports {})
-            (tset _G._private-gb-exports
-                  :bufmap {})
-            (tset _G._private-gb-exports
-                  :nsid (api.nvim_create_namespace :godbolt))
+            (set _G._private-gb-exports
+                 {:bufmap {}
+                  :nsid (api.nvim_create_namespace :godbolt)})
             (set _G.godbolt_config
                  {:cpp {:compiler :g112 :options {}}
                   :c {:compiler :cg112 :options {}}
@@ -53,30 +51,31 @@
                        " --output godbolt_response_%s.json")
                    compiler exec-asm? exec-asm?)))
 
-(fn godbolt [begin end reuse compiler]
+(fn godbolt [begin end reuse? compiler]
   (if vim.g.godbolt_loaded
       (let [pre-display (. (require :godbolt.assembly) :pre-display)
             execute (. (require :godbolt.execute) :execute)
+            fuzzy (. (require :godbolt.fuzzy) :fuzzy)
             ft vim.bo.filetype
             compiler (or compiler (. _G.godbolt_config ft :compiler))]
         (var options (if (. _G.godbolt_config ft)
                          (vim.deepcopy (. _G.godbolt_config ft :options))
                          {}))
-        (let [flags (vim.fn.input {:prompt "Flags: "
-                                   :default (or options.userArguments "")})]
+        (let [flags (vim.fn.input
+                      {:prompt "Flags: "
+                       :default (or options.userArguments "")})]
           (tset options :userArguments flags)
-          (match compiler
-            (where fuzzy
-                   (or (= :telescope fuzzy) (= :fzf fuzzy)
-                       (= :skim fuzzy) (= :fzy fuzzy)))
-            (m> :godbolt.fuzzy :fuzzy
-                fuzzy ft begin end options
-                (= true vim.b.godbolt_exec)
-                reuse)
-            _ (do
-                (pre-display begin end compiler options reuse)
-                (when vim.b.godbolt_exec
-                  (execute begin end compiler options))))))
+          (let [fuzzy? (accumulate [matches false
+                                    k v (pairs [:telescope :fzf :skim :fzy])]
+                         (if (= v compiler) true matches))]
+            (if fuzzy?
+                (fuzzy ft begin end options
+                       (= true vim.b.godbolt_exec)
+                       reuse?)
+                (do
+                  (pre-display begin end compiler options reuse?)
+                  (when vim.b.godbolt_exec
+                    (execute begin end compiler options)))))))
 
       (api.nvim_err_writeln "setup function not called")))
 

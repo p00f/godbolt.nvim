@@ -4,7 +4,7 @@ local execute = (require("godbolt.execute")).execute
 local function transform(entry)
   return {value = (vim.split(entry, " "))[1], display = entry, ordinal = entry}
 end
-local function fzf(entries, begin, _end, options, exec)
+local function fzf(entries, begin, _end, options, exec, reuse_3f)
   local maxlen
   do
     local current_maxlen = -1
@@ -21,7 +21,7 @@ local function fzf(entries, begin, _end, options, exec)
   local width = ((maxlen / vim.o.columns) + 0.05)
   local function _2_(choice)
     local compiler = (vim.split(choice, " "))[1]
-    pre_display(begin, _end, compiler, options)
+    pre_display(begin, _end, compiler, options, reuse_3f)
     if exec then
       return execute(begin, _end, compiler, options)
     else
@@ -30,7 +30,7 @@ local function fzf(entries, begin, _end, options, exec)
   end
   return fun["fzf#run"]({source = entries, window = {width = width, height = 0.6}, sink = _2_})
 end
-local function skim(entries, begin, _end, options, exec)
+local function skim(entries, begin, _end, options, exec, reuse_3f)
   local maxlen
   do
     local current_maxlen = -1
@@ -47,7 +47,7 @@ local function skim(entries, begin, _end, options, exec)
   local width = ((maxlen / vim.o.columns) + 0.05)
   local function _5_(choice)
     local compiler = (vim.split(choice, " "))[1]
-    pre_display(begin, _end, compiler, options)
+    pre_display(begin, _end, compiler, options, reuse_3f)
     if exec then
       return execute(begin, _end, compiler, options)
     else
@@ -56,7 +56,7 @@ local function skim(entries, begin, _end, options, exec)
   end
   return fun["skim#run"]({source = entries, window = {width = width, height = 0.6}, sink = _5_})
 end
-local function telescope(entries, begin, _end, options, exec)
+local function telescope(entries, begin, _end, options, exec, reuse_3f)
   local pickers = require("telescope.pickers")
   local finders = require("telescope.finders")
   local conf = (require("telescope.config")).values
@@ -66,7 +66,7 @@ local function telescope(entries, begin, _end, options, exec)
     local function _8_()
       actions.close(prompt_bufnr)
       local compiler = actions_state.get_selected_entry().value
-      pre_display(begin, _end, compiler, options)
+      pre_display(begin, _end, compiler, options, reuse_3f)
       if exec then
         return execute(begin, _end, compiler, options)
       else
@@ -77,13 +77,13 @@ local function telescope(entries, begin, _end, options, exec)
   end
   return pickers.new({}, {prompt_title = "Choose compiler", finder = finders.new_table({results = entries, entry_maker = transform}), sorter = conf.generic_sorter(nil), attach_mappings = _7_}):find()
 end
-local function fzy(entries, begin, _end, options, exec)
+local function fzy(entries, begin, _end, options, exec, reuse_3f)
   local function _10_(text)
     return text
   end
   local function _11_(choice)
     local compiler = (vim.split(choice, " "))[1]
-    pre_display(begin, _end, compiler, options)
+    pre_display(begin, _end, compiler, options, reuse_3f)
     if exec then
       return execute(begin, _end, compiler, options)
     else
@@ -92,7 +92,7 @@ local function fzy(entries, begin, _end, options, exec)
   end
   return (require("fzy")).pick_one(entries, "Choose compiler: ", _10_, _11_)
 end
-local function fuzzy(picker, ft, begin, _end, options, exec)
+local function fuzzy(picker, ft, begin, _end, options, exec, reuse_3f)
   local ft0
   do
     local _13_ = ft
@@ -145,7 +145,7 @@ local function fuzzy(picker, ft, begin, _end, options, exec)
         _20_ = nil
       end
     end
-    return _20_(entries, begin, _end, options, exec)
+    return _20_(entries, begin, _end, options, exec, reuse_3f)
   end
   return fun.jobstart(cmd, {on_stdout = _15_, on_exit = _16_, stdout_buffered = true})
 end
