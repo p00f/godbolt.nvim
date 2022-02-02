@@ -5,10 +5,15 @@ local fmt = string.format
 local term_escapes = "[\27\155][][()#;?%d]*[A-PRZcf-ntqry=><~]"
 local wo_set = api.nvim_win_set_option
 local source_asm_bufs = (_G["_private-gb-exports"]).bufmap
-local function prepare_buf(text, name)
-  local buf = api.nvim_create_buf(false, true)
+local function prepare_buf(text, name, reuse, source_buf)
+  local buf
+  if (reuse and (type(source_asm_bufs[source_buf]) == "table")) then
+    buf = table.maxn(source_asm_bufs[source_buf])
+  else
+    buf = api.nvim_create_buf(false, true)
+  end
   api.nvim_buf_set_option(buf, "filetype", "asm")
-  api.nvim_buf_set_lines(buf, 0, 0, false, vim.split(text, "\n", {trimempty = true}))
+  api.nvim_buf_set_lines(buf, 0, -1, true, vim.split(text, "\n", {trimempty = true}))
   api.nvim_buf_set_name(buf, name)
   return buf
 end
@@ -67,7 +72,7 @@ local function update_hl(source_buf, asm_buf)
   end
   return nil
 end
-local function display(response, begin, name)
+local function display(response, begin, name, reuse)
   local asm
   do
     local str = ""
@@ -83,7 +88,7 @@ local function display(response, begin, name)
   local source_winid = fun.win_getid()
   local source_buf = fun.bufnr()
   local qflist = make_qflist(response.stderr, source_buf)
-  local asm_buf = prepare_buf(asm, name)
+  local asm_buf = prepare_buf(asm, name, reuse, source_buf)
   local qf_winid = nil
   if (qflist and _G.godbolt_config.quickfix.enable) then
     fun.setqflist(qflist)
@@ -98,12 +103,19 @@ local function display(response, begin, name)
     return vim.notify("godbolt.nvim: Compilation failed")
   else
     api.nvim_set_current_win(source_winid)
-    cmd("vsplit")
-    cmd(fmt("buffer %d", asm_buf))
-    wo_set(0, "number", false)
-    wo_set(0, "relativenumber", false)
-    wo_set(0, "spell", false)
-    wo_set(0, "cursorline", false)
+    local asm_winid
+    if (reuse and source_asm_bufs[source_buf]) then
+      asm_winid = source_asm_bufs[source_buf][asm_buf].winid
+    else
+      cmd("vsplit")
+      asm_winid = api.nvim_get_current_win()
+    end
+    api.nvim_set_current_win(asm_winid)
+    api.nvim_win_set_buf(asm_winid, asm_buf)
+    wo_set(asm_winid, "number", false)
+    wo_set(asm_winid, "relativenumber", false)
+    wo_set(asm_winid, "spell", false)
+    wo_set(asm_winid, "cursorline", false)
     if qf_winid then
       api.nvim_set_current_win(qf_winid)
     else
@@ -113,12 +125,12 @@ local function display(response, begin, name)
       source_asm_bufs[source_buf] = {}
     else
     end
-    source_asm_bufs[source_buf][asm_buf] = {asm = response.asm, offset = begin}
+    source_asm_bufs[source_buf][asm_buf] = {asm = response.asm, offset = begin, winid = asm_winid}
     update_hl(source_buf, asm_buf)
     return setup_aucmd(source_buf, asm_buf)
   end
 end
-local function pre_display(begin, _end, compiler, options, name)
+local function pre_display(begin, _end, compiler, options, reuse)
   local lines = api.nvim_buf_get_lines(0, (begin - 1), _end, true)
   local text = fun.join(lines, "\n")
   local curl_cmd = (require("godbolt.init"))["build-cmd"](compiler, text, options, "asm")
@@ -126,14 +138,14 @@ local function pre_display(begin, _end, compiler, options, name)
   local hour = time.hour
   local min = time.min
   local sec = time.sec
-  local function _12_(_, _0, _1)
+  local function _14_(_, _0, _1)
     local file = io.open("godbolt_response_asm.json", "r")
     local response = file:read("*all")
     file:close()
     os.remove("godbolt_request_asm.json")
     os.remove("godbolt_response_asm.json")
-    return display(vim.json.decode(response), begin, fmt("%s %02d:%02d:%02d", (name or compiler), hour, min, sec))
+    return display(vim.json.decode(response), begin, fmt("%s %02d:%02d:%02d", compiler, hour, min, sec), reuse)
   end
-  return fun.jobstart(curl_cmd, {on_exit = _12_})
+  return fun.jobstart(curl_cmd, {on_exit = _14_})
 end
 return {["pre-display"] = pre_display, clear = clear, ["update-hl"] = update_hl}

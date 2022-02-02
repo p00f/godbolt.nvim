@@ -25,11 +25,16 @@
 (var source-asm-bufs (. _G._private-gb-exports :bufmap))
 
 ; Helper functions
-(fn prepare-buf [text name]
+(fn prepare-buf [text name reuse source-buf]
   "Prepare the assembly buffer: set buffer options and add text"
-  (local buf (api.nvim_create_buf false true))
+  (local buf (if (and reuse (-> source-asm-bufs
+                                (. source-buf)
+                                (type)
+                                (= :table)))
+                 (table.maxn (. source-asm-bufs source-buf))
+                 (api.nvim_create_buf false true)))
   (api.nvim_buf_set_option buf :filetype :asm)
-  (api.nvim_buf_set_lines buf 0 0 false (vim.split text "\n" {:trimempty true}))
+  (api.nvim_buf_set_lines buf 0 -1 true (vim.split text "\n" {:trimempty true}))
   (api.nvim_buf_set_name buf name)
   buf)
 
@@ -83,7 +88,7 @@
                                true))))))
 
 ; Main
-(fn display [response begin name]
+(fn display [response begin name reuse]
   "Display the assembly in a split"
   (let [asm (accumulate [str ""
                          k v (pairs (. response :asm))]
@@ -93,7 +98,7 @@
         source-winid (fun.win_getid)
         source-buf (fun.bufnr)
         qflist (make-qflist (. response :stderr) source-buf)
-        asm-buf (prepare-buf asm name)]
+        asm-buf (prepare-buf asm name reuse source-buf)]
     ;; Open quickfix
     (var qf-winid nil)
     (when (and qflist _G.godbolt_config.quickfix.enable)
@@ -106,23 +111,33 @@
         (vim.notify "godbolt.nvim: Compilation failed")
         (do
           (api.nvim_set_current_win source-winid)
-          (cmd :vsplit)
-          (cmd (fmt "buffer %d" asm-buf))
-          (wo-set 0 :number false)
-          (wo-set 0 :relativenumber false)
-          (wo-set 0 :spell false)
-          (wo-set 0 :cursorline false)
+          (local asm-winid (if (and reuse (. source-asm-bufs source-buf))
+                               (. source-asm-bufs
+                                  source-buf
+                                  asm-buf
+                                  :winid)
+                               (do
+                                 (cmd :vsplit)
+                                 (api.nvim_get_current_win))))
+          (api.nvim_set_current_win asm-winid)
+          (api.nvim_win_set_buf asm-winid asm-buf)
+          (wo-set asm-winid :number false)
+          (wo-set asm-winid :relativenumber false)
+          (wo-set asm-winid :spell false)
+          (wo-set asm-winid :cursorline false)
           (if qf-winid
               (api.nvim_set_current_win qf-winid)
               (api.nvim_set_current_win source-winid))
           (when (not (. source-asm-bufs source-buf))
             (tset source-asm-bufs source-buf {}))
           (tset source-asm-bufs source-buf asm-buf
-                {:asm (. response :asm) :offset begin})
+                {:asm (. response :asm)
+                 :offset begin
+                 :winid asm-winid})
           (update-hl source-buf asm-buf)
           (setup-aucmd source-buf asm-buf)))))
 
-(fn pre-display [begin end compiler options name]
+(fn pre-display [begin end compiler options reuse]
   "Prepare text for displaying and call display"
   (let [lines (api.nvim_buf_get_lines 0 (dec begin) end true)
         text (fun.join lines "\n")
@@ -141,8 +156,8 @@
                   (display (vim.json.decode response)
                            begin
                            (fmt "%s %02d:%02d:%02d"
-                                (or name compiler)
-                                hour min sec)))})))
+                                compiler hour min sec)
+                           reuse))})))
 
 
 {: pre-display : clear : update-hl}

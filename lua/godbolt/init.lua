@@ -29,47 +29,38 @@ local function build_cmd(compiler, text, options, exec_asm_3f)
   io.close(file)
   return string.format(("curl https://godbolt.org/api/compiler/'%s'/compile" .. " --data-binary @godbolt_request_%s.json" .. " --header 'Accept: application/json'" .. " --header 'Content-Type: application/json'" .. " --output godbolt_response_%s.json"), compiler, exec_asm_3f, exec_asm_3f)
 end
-local function godbolt(begin, _end, compiler_arg)
+local function godbolt(begin, _end, reuse, compiler)
   if vim.g.godbolt_loaded then
     local pre_display = (require("godbolt.assembly"))["pre-display"]
     local execute = (require("godbolt.execute")).execute
     local ft = vim.bo.filetype
+    local compiler0 = (compiler or _G.godbolt_config[ft].compiler)
     local options
     if _G.godbolt_config[ft] then
       options = vim.deepcopy(_G.godbolt_config[ft].options)
     else
       options = {}
     end
-    if compiler_arg then
-      local flags = vim.fn.input({prompt = "Flags: ", default = ""})
-      do end (options)["userArguments"] = flags
-      local _5_ = compiler_arg
-      local function _6_()
-        local fuzzy = _5_
-        return (("telescope" == fuzzy) or ("fzf" == fuzzy) or ("skim" == fuzzy) or ("fzy" == fuzzy))
-      end
-      if ((nil ~= _5_) and _6_()) then
-        local fuzzy = _5_
-        return (require("godbolt.fuzzy")).fuzzy(fuzzy, ft, begin, _end, options, (true == vim.b.godbolt_exec))
-      elseif true then
-        local _ = _5_
-        pre_display(begin, _end, compiler_arg, options)
-        if vim.b.godbolt_exec then
-          return execute(begin, _end, compiler_arg, options)
-        else
-          return nil
-        end
+    local flags = vim.fn.input({prompt = "Flags: ", default = (options.userArguments or "")})
+    do end (options)["userArguments"] = flags
+    local _5_ = compiler0
+    local function _6_()
+      local fuzzy = _5_
+      return (("telescope" == fuzzy) or ("fzf" == fuzzy) or ("skim" == fuzzy) or ("fzy" == fuzzy))
+    end
+    if ((nil ~= _5_) and _6_()) then
+      local fuzzy = _5_
+      return (require("godbolt.fuzzy")).fuzzy(fuzzy, ft, begin, _end, options, (true == vim.b.godbolt_exec), reuse)
+    elseif true then
+      local _ = _5_
+      pre_display(begin, _end, compiler0, options, reuse)
+      if vim.b.godbolt_exec then
+        return execute(begin, _end, compiler0, options)
       else
         return nil
       end
     else
-      local defined_compiler = _G.godbolt_config[ft].compiler
-      pre_display(begin, _end, defined_compiler, options)
-      if vim.b.godbolt_exec then
-        return execute(begin, _end, defined_compiler, options)
-      else
-        return nil
-      end
+      return nil
     end
   else
     return api.nvim_err_writeln("setup function not called")
