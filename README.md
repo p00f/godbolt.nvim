@@ -48,17 +48,17 @@ You can get the list of compiler ids by visiting or `curl`ing `https://godbolt.o
 
  - To use the default/setup compiler for the entire buffer:
 
-  `:Godbolt`
+  `:Godbolt` and type in compiler flags in the prompt if needed
  - To use the default/setup compiler for a visual selection: Select the function(s) you want and
 
   `:'<,'>Godbolt`
- - To use a custom compiler with flags for the entire buffer:
+ - To use a custom compiler for the entire buffer:
 
-  `:GodboltCompiler <compiler>` and type in your flags in the prompt.
+  `:GodboltCompiler <compiler>`.
 
- - Similarly, to use a custom compiler with flags for a visual selection: Select the function you want and
+ - Similarly, to use a custom compiler for a visual selection: Select the function you want and
 
-  `:'<,'>GodboltCompiler <compiler>` and type in your flags in the prompt.
+  `:'<,'>GodboltCompiler <compiler>`.
 
  - Adding a bang (`!`) to either command (`:Godbolt!`, `GodboltCompiler!`) will reuse the last assembly window for the current source buffer.
 
