@@ -1,4 +1,4 @@
-![clangd](https://user-images.githubusercontent.com/36493671/152692205-837ec826-54d0-4257-9894-cc1a7ac8a114.svg)
+![alt text](https://user-images.githubusercontent.com/36493671/143468676-089f623f-f913-4af6-bc78-dbfaa1e92c69.png)
 
 
 # godbolt.nvim
