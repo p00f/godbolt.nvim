@@ -19,24 +19,24 @@
 (local fun vim.fn)
 (local api vim.api)
 
-(fn setup [cfg]
+(local M {})
+
+(fn M.setup [cfg]
   (if (= 1 (fun.has :nvim-0.6))
       (if (not vim.g.godbolt_loaded)
           (do
-            (set _G._private-gb-exports
-                 {:bufmap {}
-                  :nsid (api.nvim_create_namespace :godbolt)})
-            (set _G.godbolt_config
+            (m> :godbolt.assembly :init)
+            (set M.config
                  {:cpp {:compiler :g112 :options {}}
                   :c {:compiler :cg112 :options {}}
                   :rust {:compiler :r1560 :options {}}
                   :quickfix {:enable false :auto_open false}})
             (when cfg (each [k v (pairs cfg)]
-                        (tset _G.godbolt_config k v)))
+                        (tset M.config k v)))
             (set vim.g.godbolt_loaded true)))
       (api.nvim_err_writeln "neovim 0.6+ is required")))
 
-(fn build-cmd [compiler text options exec-asm?]
+(fn M.build-cmd [compiler text options exec-asm?]
   "Build curl command from compiler, text and options"
   (let [json (vim.json.encode {:source text : options})
         file (-> :godbolt_request_%s.json
@@ -51,15 +51,15 @@
                        " --output godbolt_response_%s.json")
                    compiler exec-asm? exec-asm?)))
 
-(fn godbolt [begin end reuse? compiler]
+(fn M.godbolt [begin end reuse? compiler]
   (if vim.g.godbolt_loaded
       (let [pre-display (. (require :godbolt.assembly) :pre-display)
             execute (. (require :godbolt.execute) :execute)
             fuzzy (. (require :godbolt.fuzzy) :fuzzy)
             ft vim.bo.filetype
-            compiler (or compiler (. _G.godbolt_config ft :compiler))]
-        (var options (if (. _G.godbolt_config ft)
-                         (vim.deepcopy (. _G.godbolt_config ft :options))
+            compiler (or compiler (. M.config ft :compiler))]
+        (var options (if (. M.config ft)
+                         (vim.deepcopy (. M.config ft :options))
                          {}))
         (let [flags (vim.fn.input
                       {:prompt "Flags: "
@@ -79,4 +79,4 @@
 
       (api.nvim_err_writeln "setup function not called")))
 
-{: setup : build-cmd : godbolt}
+M

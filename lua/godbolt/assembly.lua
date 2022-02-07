@@ -4,11 +4,12 @@ local cmd = vim.cmd
 local fmt = string.format
 local term_escapes = "[\27\155][][()#;?%d]*[A-PRZcf-ntqry=><~]"
 local wo_set = api.nvim_win_set_option
-local source_asm_bufs = (_G["_private-gb-exports"]).bufmap
+local config = (require("godbolt")).config
+local M = {}
 local function prepare_buf(text, name, reuse_3f, source_buf)
   local buf
-  if (reuse_3f and (type(source_asm_bufs[source_buf]) == "table")) then
-    buf = table.maxn(source_asm_bufs[source_buf])
+  if (reuse_3f and (type(M.map[source_buf]) == "table")) then
+    buf = table.maxn(M.map[source_buf])
   else
     buf = api.nvim_create_buf(false, true)
   end
@@ -49,22 +50,22 @@ local function make_qflist(err, bufnr)
     return nil
   end
 end
-local function clear(source_buf)
-  for asm_buf, _ in pairs(source_asm_bufs[source_buf]) do
-    api.nvim_buf_clear_namespace(asm_buf, _G["_private-gb-exports"].nsid, 0, -1)
+M.clear = function(source_buf)
+  for asm_buf, _ in pairs(M.map[source_buf]) do
+    api.nvim_buf_clear_namespace(asm_buf, M.nsid, 0, -1)
   end
   return nil
 end
-local function update_hl(source_buf, asm_buf)
-  api.nvim_buf_clear_namespace(asm_buf, _G["_private-gb-exports"].nsid, 0, -1)
-  local entry = source_asm_bufs[source_buf][asm_buf]
+M["update-hl"] = function(source_buf, asm_buf)
+  api.nvim_buf_clear_namespace(asm_buf, M.nsid, 0, -1)
+  local entry = M.map[source_buf][asm_buf]
   local offset = entry.offset
   local asm_table = entry.asm
   local linenum = ((fun.getcurpos()[2] - offset) + 1)
   for k, v in pairs(asm_table) do
     if (type(v.source) == "table") then
       if (linenum == v.source.line) then
-        vim.highlight.range(asm_buf, _G["_private-gb-exports"].nsid, "Visual", {(k - 1), 0}, {(k - 1), 100}, "linewise", true)
+        vim.highlight.range(asm_buf, M.nsid, "Visual", {(k - 1), 0}, {(k - 1), 100}, "linewise", true)
       else
       end
     else
@@ -89,10 +90,11 @@ local function display(response, begin, name, reuse_3f)
   local source_buf = fun.bufnr()
   local qflist = make_qflist(response.stderr, source_buf)
   local asm_buf = prepare_buf(asm, name, reuse_3f, source_buf)
+  local quickfix_cfg = (require("godbolt")).config.quickfix
   local qf_winid = nil
-  if (qflist and _G.godbolt_config.quickfix.enable) then
+  if (qflist and quickfix_cfg.enable) then
     fun.setqflist(qflist)
-    if _G.godbolt_config.quickfix.auto_open then
+    if quickfix_cfg.auto_open then
       vim.cmd("copen")
       qf_winid = fun.win_getid()
     else
@@ -104,8 +106,8 @@ local function display(response, begin, name, reuse_3f)
   else
     api.nvim_set_current_win(source_winid)
     local asm_winid
-    if (reuse_3f and source_asm_bufs[source_buf]) then
-      asm_winid = source_asm_bufs[source_buf][asm_buf].winid
+    if (reuse_3f and M.map[source_buf]) then
+      asm_winid = M.map[source_buf][asm_buf].winid
     else
       cmd("vsplit")
       asm_winid = api.nvim_get_current_win()
@@ -121,16 +123,16 @@ local function display(response, begin, name, reuse_3f)
     else
       api.nvim_set_current_win(source_winid)
     end
-    if not source_asm_bufs[source_buf] then
-      source_asm_bufs[source_buf] = {}
+    if not M.map[source_buf] then
+      M.map[source_buf] = {}
     else
     end
-    source_asm_bufs[source_buf][asm_buf] = {asm = response.asm, offset = begin, winid = asm_winid}
-    update_hl(source_buf, asm_buf)
+    M.map[source_buf][asm_buf] = {asm = response.asm, offset = begin, winid = asm_winid}
+    M["update-hl"](source_buf, asm_buf)
     return setup_aucmd(source_buf, asm_buf)
   end
 end
-local function pre_display(begin, _end, compiler, options, reuse_3f)
+M["pre-display"] = function(begin, _end, compiler, options, reuse_3f)
   local lines = api.nvim_buf_get_lines(0, (begin - 1), _end, true)
   local text = fun.join(lines, "\n")
   local curl_cmd = (require("godbolt.init"))["build-cmd"](compiler, text, options, "asm")
@@ -148,4 +150,9 @@ local function pre_display(begin, _end, compiler, options, reuse_3f)
   end
   return fun.jobstart(curl_cmd, {on_exit = _14_})
 end
-return {["pre-display"] = pre_display, clear = clear, ["update-hl"] = update_hl}
+M.init = function()
+  M.map = {}
+  M.nsid = api.nvim_create_namespace("godbolt")
+  return nil
+end
+return M
