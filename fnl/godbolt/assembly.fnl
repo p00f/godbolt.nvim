@@ -1,4 +1,4 @@
-;  Copyright (C) 2021 Chinmay Dalal
+;  Copyright (C) 2021-2022 Chinmay Dalal
 ;
 ;  This file is part of godbolt.nvim.
 ;
@@ -16,9 +16,8 @@
 ;  along with godbolt.nvim.  If not, see <https://www.gnu.org/licenses/>.
 
 (import-macros {: m> : dec : second : inc} :godbolt.macros)
+(local {: api : cmd} vim)
 (local fun vim.fn)
-(local api vim.api)
-(local cmd vim.cmd)
 (local fmt string.format)
 (local term-escapes "[\027\155][][()#;?%d]*[A-PRZcf-ntqry=><~]")
 (local wo-set api.nvim_win_set_option)

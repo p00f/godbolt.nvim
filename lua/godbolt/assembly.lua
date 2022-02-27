@@ -1,6 +1,7 @@
+local _local_1_ = vim
+local api = _local_1_["api"]
+local cmd = _local_1_["cmd"]
 local fun = vim.fn
-local api = vim.api
-local cmd = vim.cmd
 local fmt = string.format
 local term_escapes = "[\27\155][][()#;?%d]*[A-PRZcf-ntqry=><~]"
 local wo_set = api.nvim_win_set_option
@@ -140,7 +141,7 @@ M["pre-display"] = function(begin, _end, compiler, options, reuse_3f)
   local hour = time.hour
   local min = time.min
   local sec = time.sec
-  local function _14_(_, _0, _1)
+  local function _15_(_, _0, _1)
     local file = io.open("godbolt_response_asm.json", "r")
     local response = file:read("*all")
     file:close()
@@ -148,7 +149,7 @@ M["pre-display"] = function(begin, _end, compiler, options, reuse_3f)
     os.remove("godbolt_response_asm.json")
     return display(vim.json.decode(response), begin, fmt("%s %02d:%02d:%02d", compiler, hour, min, sec), reuse_3f)
   end
-  return fun.jobstart(curl_cmd, {on_exit = _14_})
+  return fun.jobstart(curl_cmd, {on_exit = _15_})
 end
 M.init = function()
   M.map = {}
