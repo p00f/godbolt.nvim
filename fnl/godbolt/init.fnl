@@ -27,10 +27,10 @@
           (do
             (m> :godbolt.assembly :init)
             (set config
-                 {:cpp {:compiler :g112 :options {}}
-                  :c {:compiler :cg112 :options {}}
-                  :rust {:compiler :r1560 :options {}}
-                  :quickfix {:enable false :auto_open false}})
+                 {:cpp      {:compiler :g112  :options {}}
+                  :c        {:compiler :cg112 :options {}}
+                  :rust     {:compiler :r1560 :options {}}
+                  :quickfix {:enable false    :auto_open false}})
             (when cfg (each [k v (pairs cfg)]
                         (tset config k v)))
             (set vim.g.godbolt_loaded true)))
