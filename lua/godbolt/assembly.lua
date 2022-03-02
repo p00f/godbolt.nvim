@@ -6,11 +6,12 @@ local fmt = string.format
 local term_escapes = "[\27\155][][()#;?%d]*[A-PRZcf-ntqry=><~]"
 local wo_set = api.nvim_win_set_option
 local config = (require("godbolt")).config
-local M = {}
+local map = nil
+local nsid = nil
 local function prepare_buf(text, name, reuse_3f, source_buf)
   local buf
-  if (reuse_3f and (type(M.map[source_buf]) == "table")) then
-    buf = table.maxn(M.map[source_buf])
+  if (reuse_3f and (type(map[source_buf]) == "table")) then
+    buf = table.maxn(map[source_buf])
   else
     buf = api.nvim_create_buf(false, true)
   end
@@ -51,22 +52,22 @@ local function make_qflist(err, bufnr)
     return nil
   end
 end
-M.clear = function(source_buf)
-  for asm_buf, _ in pairs(M.map[source_buf]) do
-    api.nvim_buf_clear_namespace(asm_buf, M.nsid, 0, -1)
+local function clear(source_buf)
+  for asm_buf, _ in pairs(map[source_buf]) do
+    api.nvim_buf_clear_namespace(asm_buf, nsid, 0, -1)
   end
   return nil
 end
-M["update-hl"] = function(source_buf, asm_buf)
-  api.nvim_buf_clear_namespace(asm_buf, M.nsid, 0, -1)
-  local entry = M.map[source_buf][asm_buf]
+local function update_hl(source_buf, asm_buf)
+  api.nvim_buf_clear_namespace(asm_buf, nsid, 0, -1)
+  local entry = map[source_buf][asm_buf]
   local offset = entry.offset
   local asm_table = entry.asm
   local linenum = ((fun.getcurpos()[2] - offset) + 1)
   for k, v in pairs(asm_table) do
     if (type(v.source) == "table") then
       if (linenum == v.source.line) then
-        vim.highlight.range(asm_buf, M.nsid, "Visual", {(k - 1), 0}, {(k - 1), 100}, "linewise", true)
+        vim.highlight.range(asm_buf, nsid, "Visual", {(k - 1), 0}, {(k - 1), 100}, "linewise", true)
       else
       end
     else
@@ -107,8 +108,8 @@ local function display(response, begin, name, reuse_3f)
   else
     api.nvim_set_current_win(source_winid)
     local asm_winid
-    if (reuse_3f and M.map[source_buf]) then
-      asm_winid = M.map[source_buf][asm_buf].winid
+    if (reuse_3f and map[source_buf]) then
+      asm_winid = map[source_buf][asm_buf].winid
     else
       cmd("vsplit")
       asm_winid = api.nvim_get_current_win()
@@ -124,16 +125,16 @@ local function display(response, begin, name, reuse_3f)
     else
       api.nvim_set_current_win(source_winid)
     end
-    if not M.map[source_buf] then
-      M.map[source_buf] = {}
+    if not map[source_buf] then
+      map[source_buf] = {}
     else
     end
-    M.map[source_buf][asm_buf] = {asm = response.asm, offset = begin, winid = asm_winid}
-    M["update-hl"](source_buf, asm_buf)
+    map[source_buf][asm_buf] = {asm = response.asm, offset = begin, winid = asm_winid}
+    update_hl(source_buf, asm_buf)
     return setup_aucmd(source_buf, asm_buf)
   end
 end
-M["pre-display"] = function(begin, _end, compiler, options, reuse_3f)
+local function pre_display(begin, _end, compiler, options, reuse_3f)
   local lines = api.nvim_buf_get_lines(0, (begin - 1), _end, true)
   local text = fun.join(lines, "\n")
   local curl_cmd = (require("godbolt.init"))["build-cmd"](compiler, text, options, "asm")
@@ -151,9 +152,9 @@ M["pre-display"] = function(begin, _end, compiler, options, reuse_3f)
   end
   return fun.jobstart(curl_cmd, {on_exit = _15_})
 end
-M.init = function()
-  M.map = {}
-  M.nsid = api.nvim_create_namespace("godbolt")
+local function init()
+  map = {}
+  nsid = api.nvim_create_namespace("godbolt")
   return nil
 end
-return M
+return {init = init, map = map, nsid = nsid, ["pre-display"] = pre_display, ["update-hl"] = update_hl, clear = clear}

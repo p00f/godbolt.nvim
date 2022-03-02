@@ -22,17 +22,17 @@
 (local term-escapes "[\027\155][][()#;?%d]*[A-PRZcf-ntqry=><~]")
 (local wo-set api.nvim_win_set_option)
 (local config (. (require :godbolt) :config))
-
-(local M {})
+(var map nil)
+(var nsid nil)
 
 ; Helper functions
 (fn prepare-buf [text name reuse? source-buf]
   "Prepare the assembly buffer: set buffer options and add text"
-  (local buf (if (and reuse? (-> M.map
+  (local buf (if (and reuse? (-> map
                                  (. source-buf)
                                  (type)
                                  (= :table)))
-                 (table.maxn (. M.map source-buf))
+                 (table.maxn (. map source-buf))
                  (api.nvim_create_buf false true)))
   (api.nvim_buf_set_option buf :filetype :asm)
   (api.nvim_buf_set_lines buf 0 -1 true (vim.split text "\n" {:trimempty true}))
@@ -62,15 +62,15 @@
         entry))))
 
 ; Highlighting
-(fn M.clear [source-buf]
+(fn clear [source-buf]
   "Clear highlights: used when leaving the source buffer"
-  (each [asm-buf _ (pairs (. M.map source-buf))]
-    (api.nvim_buf_clear_namespace asm-buf M.nsid 0 -1)))
+  (each [asm-buf _ (pairs (. map source-buf))]
+    (api.nvim_buf_clear_namespace asm-buf nsid 0 -1)))
 
-(fn M.update-hl [source-buf asm-buf]
+(fn update-hl [source-buf asm-buf]
   "Update highlights: used when the cursor moves in the source buffer"
-  (api.nvim_buf_clear_namespace asm-buf M.nsid 0 -1)
-  (let [entry (. M.map source-buf asm-buf)
+  (api.nvim_buf_clear_namespace asm-buf nsid 0 -1)
+  (let [entry (. map source-buf asm-buf)
         offset entry.offset
         asm-table entry.asm
         linenum (-> (fun.getcurpos)
@@ -81,7 +81,7 @@
       (when (= (type v.source) :table)
         (when (= linenum v.source.line)
           (vim.highlight.range asm-buf
-                               M.nsid
+                               nsid
                                :Visual
                                ;; [start-row start-col] [end-row end-col]
                                [(dec k) 0] [(dec k) 100]
@@ -113,8 +113,8 @@
         (vim.notify "godbolt.nvim: Compilation failed")
         (do
           (api.nvim_set_current_win source-winid)
-          (local asm-winid (if (and reuse? (. M.map source-buf))
-                               (. M.map
+          (local asm-winid (if (and reuse? (. map source-buf))
+                               (. map
                                   source-buf
                                   asm-buf
                                   :winid)
@@ -130,16 +130,16 @@
           (if qf-winid
               (api.nvim_set_current_win qf-winid)
               (api.nvim_set_current_win source-winid))
-          (when (not (. M.map source-buf))
-            (tset M.map source-buf {}))
-          (tset M.map source-buf asm-buf
+          (when (not (. map source-buf))
+            (tset map source-buf {}))
+          (tset map source-buf asm-buf
                 {:asm response.asm
                  :offset begin
                  :winid asm-winid})
-          (M.update-hl source-buf asm-buf)
+          (update-hl source-buf asm-buf)
           (setup-aucmd source-buf asm-buf)))))
 
-(fn M.pre-display [begin end compiler options reuse?]
+(fn pre-display [begin end compiler options reuse?]
   "Prepare text for displaying and call display"
   (let [lines (api.nvim_buf_get_lines 0 (dec begin) end true)
         text (fun.join lines "\n")
@@ -161,8 +161,8 @@
                                 compiler hour min sec)
                            reuse?))})))
 
-(fn M.init []
-  (set M.map {})
-  (set M.nsid (api.nvim_create_namespace :godbolt)))
+(fn init []
+  (set map {})
+  (set nsid (api.nvim_create_namespace :godbolt)))
 
-M
+{: init : map : nsid : pre-display : update-hl : clear}

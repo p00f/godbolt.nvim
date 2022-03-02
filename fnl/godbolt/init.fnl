@@ -19,24 +19,24 @@
 (local fun vim.fn)
 (local api vim.api)
 
-(local M {})
+(var config nil)
 
-(fn M.setup [cfg]
+(fn setup [cfg]
   (if (= 1 (fun.has :nvim-0.6))
       (if (not vim.g.godbolt_loaded)
           (do
             (m> :godbolt.assembly :init)
-            (set M.config
+            (set config
                  {:cpp {:compiler :g112 :options {}}
                   :c {:compiler :cg112 :options {}}
                   :rust {:compiler :r1560 :options {}}
                   :quickfix {:enable false :auto_open false}})
             (when cfg (each [k v (pairs cfg)]
-                        (tset M.config k v)))
+                        (tset config k v)))
             (set vim.g.godbolt_loaded true)))
       (api.nvim_err_writeln "neovim 0.6+ is required")))
 
-(fn M.build-cmd [compiler text options exec-asm?]
+(fn build-cmd [compiler text options exec-asm?]
   "Build curl command from compiler, text and options"
   (let [json (vim.json.encode {:source text : options})
         file (-> :godbolt_request_%s.json
@@ -51,15 +51,15 @@
                        " --output godbolt_response_%s.json")
                    compiler exec-asm? exec-asm?)))
 
-(fn M.godbolt [begin end reuse? compiler]
+(fn godbolt [begin end reuse? compiler]
   (if vim.g.godbolt_loaded
       (let [pre-display (. (require :godbolt.assembly) :pre-display)
             execute (. (require :godbolt.execute) :execute)
             fuzzy (. (require :godbolt.fuzzy) :fuzzy)
             ft vim.bo.filetype
-            compiler (or compiler (. M.config ft :compiler))]
-        (var options (if (. M.config ft)
-                         (vim.deepcopy (. M.config ft :options))
+            compiler (or compiler (. config ft :compiler))]
+        (var options (if (. config ft)
+                         (vim.deepcopy (. config ft :options))
                          {}))
         (let [flags (vim.fn.input
                       {:prompt "Flags: "
@@ -79,4 +79,4 @@
 
       (api.nvim_err_writeln "setup function not called")))
 
-M
+{: config : setup : build-cmd : godbolt}

@@ -1,14 +1,14 @@
 local fun = vim.fn
 local api = vim.api
-local M = {}
-M.setup = function(cfg)
+local config = nil
+local function setup(cfg)
   if (1 == fun.has("nvim-0.6")) then
     if not vim.g.godbolt_loaded then
       do end (require("godbolt.assembly")).init()
-      M.config = {cpp = {compiler = "g112", options = {}}, c = {compiler = "cg112", options = {}}, rust = {compiler = "r1560", options = {}}, quickfix = {enable = false, auto_open = false}}
+      config = {cpp = {compiler = "g112", options = {}}, c = {compiler = "cg112", options = {}}, rust = {compiler = "r1560", options = {}}, quickfix = {enable = false, auto_open = false}}
       if cfg then
         for k, v in pairs(cfg) do
-          M.config[k] = v
+          config[k] = v
         end
       else
       end
@@ -21,23 +21,23 @@ M.setup = function(cfg)
     return api.nvim_err_writeln("neovim 0.6+ is required")
   end
 end
-M["build-cmd"] = function(compiler, text, options, exec_asm_3f)
+local function build_cmd(compiler, text, options, exec_asm_3f)
   local json = vim.json.encode({source = text, options = options})
   local file = io.open(string.format("godbolt_request_%s.json", exec_asm_3f), "w")
   file:write(json)
   io.close(file)
   return string.format(("curl https://godbolt.org/api/compiler/'%s'/compile" .. " --data-binary @godbolt_request_%s.json" .. " --header 'Accept: application/json'" .. " --header 'Content-Type: application/json'" .. " --output godbolt_response_%s.json"), compiler, exec_asm_3f, exec_asm_3f)
 end
-M.godbolt = function(begin, _end, reuse_3f, compiler)
+local function godbolt(begin, _end, reuse_3f, compiler)
   if vim.g.godbolt_loaded then
     local pre_display = (require("godbolt.assembly"))["pre-display"]
     local execute = (require("godbolt.execute")).execute
     local fuzzy = (require("godbolt.fuzzy")).fuzzy
     local ft = vim.bo.filetype
-    local compiler0 = (compiler or M.config[ft].compiler)
+    local compiler0 = (compiler or config[ft].compiler)
     local options
-    if M.config[ft] then
-      options = vim.deepcopy(M.config[ft].options)
+    if config[ft] then
+      options = vim.deepcopy(config[ft].options)
     else
       options = {}
     end
@@ -69,4 +69,4 @@ M.godbolt = function(begin, _end, reuse_3f, compiler)
     return api.nvim_err_writeln("setup function not called")
   end
 end
-return M
+return {config = config, setup = setup, ["build-cmd"] = build_cmd, godbolt = godbolt}
