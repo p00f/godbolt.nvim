@@ -19,21 +19,18 @@
 (local fun vim.fn)
 (local api vim.api)
 
-(var config nil)
+(var config
+     {:cpp      {:compiler :g112  :options {}}
+      :c        {:compiler :cg112 :options {}}
+      :rust     {:compiler :r1560 :options {}}
+      :quickfix {:enable false    :auto_open false}})
 
 (fn setup [cfg]
-  (if (= 1 (fun.has :nvim-0.6))
-      (if (not vim.g.godbolt_loaded)
-          (do
-            (m> :godbolt.assembly :init)
-            (set config
-                 {:cpp      {:compiler :g112  :options {}}
-                  :c        {:compiler :cg112 :options {}}
-                  :rust     {:compiler :r1560 :options {}}
-                  :quickfix {:enable false    :auto_open false}})
-            (when cfg (each [k v (pairs cfg)]
-                        (tset config k v)))
-            (set vim.g.godbolt_loaded true)))
+  (if (= 1 (fun.has :nvim-0.6)
+           (do
+             (m> :godbolt.assembly :init)
+             (when cfg (each [k v (pairs cfg)]
+                         (tset config k v)))))
       (api.nvim_err_writeln "neovim 0.6+ is required")))
 
 (fn build-cmd [compiler text options exec-asm?]
@@ -52,31 +49,28 @@
                    compiler exec-asm? exec-asm?)))
 
 (fn godbolt [begin end reuse? compiler]
-  (if vim.g.godbolt_loaded
-      (let [pre-display (. (require :godbolt.assembly) :pre-display)
-            execute (. (require :godbolt.execute) :execute)
-            fuzzy (. (require :godbolt.fuzzy) :fuzzy)
-            ft vim.bo.filetype
-            compiler (or compiler (. config ft :compiler))]
-        (var options (if (. config ft)
-                         (vim.deepcopy (. config ft :options))
-                         {}))
-        (let [flags (vim.fn.input
-                      {:prompt "Flags: "
-                       :default (or options.userArguments "")})]
-          (tset options :userArguments flags)
-          (let [fuzzy? (accumulate [matches false
-                                    k v (pairs [:telescope :fzf :skim :fzy])]
-                         (if (= v compiler) true matches))]
-            (if fuzzy?
-                (fuzzy ft begin end options
-                       (= true vim.b.godbolt_exec)
-                       reuse?)
-                (do
-                  (pre-display begin end compiler options reuse?)
-                  (when vim.b.godbolt_exec
-                    (execute begin end compiler options)))))))
-
-      (api.nvim_err_writeln "setup function not called")))
+  (let [pre-display (. (require :godbolt.assembly) :pre-display)
+        execute (. (require :godbolt.execute) :execute)
+        fuzzy (. (require :godbolt.fuzzy) :fuzzy)
+        ft vim.bo.filetype
+        compiler (or compiler (. config ft :compiler))]
+    (var options (if (. config ft)
+                     (vim.deepcopy (. config ft :options))
+                     {}))
+    (let [flags (vim.fn.input
+                  {:prompt "Flags: "
+                   :default (or options.userArguments "")})]
+      (tset options :userArguments flags)
+      (let [fuzzy? (accumulate [matches false
+                                k v (pairs [:telescope :fzf :skim :fzy])]
+                     (if (= v compiler) true matches))]
+        (if fuzzy?
+            (fuzzy ft begin end options
+                   (= true vim.b.godbolt_exec)
+                   reuse?)
+            (do
+              (pre-display begin end compiler options reuse?)
+              (when vim.b.godbolt_exec
+                (execute begin end compiler options))))))))
 
 {: config : setup : build-cmd : godbolt}
