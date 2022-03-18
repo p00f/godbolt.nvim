@@ -1,10 +1,9 @@
 local fun = vim.fn
 local api = vim.api
-local config = {cpp = {compiler = "g112", options = {}}, c = {compiler = "cg112", options = {}}, rust = {compiler = "r1560", options = {}}, quickfix = {enable = false, auto_open = false}}
+local config = {languages = {cpp = {compiler = "g112", options = {}}, c = {compiler = "cg112", options = {}}, rust = {compiler = "r1560", options = {}}}, quickfix = {enable = false, auto_open = false}, url = "https://godbolt.org"}
 local function setup(cfg)
   local _4_
   do
-    do end (require("godbolt.assembly")).init()
     if cfg then
       for k, v in pairs(cfg) do
         config[k] = v
@@ -25,17 +24,17 @@ local function build_cmd(compiler, text, options, exec_asm_3f)
   local file = io.open(string.format("godbolt_request_%s.json", exec_asm_3f), "w")
   file:write(json)
   io.close(file)
-  return string.format(("curl https://godbolt.org/api/compiler/'%s'/compile" .. " --data-binary @godbolt_request_%s.json" .. " --header 'Accept: application/json'" .. " --header 'Content-Type: application/json'" .. " --output godbolt_response_%s.json"), compiler, exec_asm_3f, exec_asm_3f)
+  return string.format(("curl %s/api/compiler/'%s'/compile" .. " --data-binary @godbolt_request_%s.json" .. " --header 'Accept: application/json'" .. " --header 'Content-Type: application/json'" .. " --output godbolt_response_%s.json"), config.url, compiler, exec_asm_3f, exec_asm_3f)
 end
 local function godbolt(begin, _end, reuse_3f, compiler)
   local pre_display = (require("godbolt.assembly"))["pre-display"]
   local execute = (require("godbolt.execute")).execute
   local fuzzy = (require("godbolt.fuzzy")).fuzzy
   local ft = vim.bo.filetype
-  local compiler0 = (compiler or config[ft].compiler)
+  local compiler0 = (compiler or config.languages[ft].compiler)
   local options
-  if config[ft] then
-    options = vim.deepcopy(config[ft].options)
+  if config.languages[ft] then
+    options = vim.deepcopy(config.languages[ft].options)
   else
     options = {}
   end

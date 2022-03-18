@@ -94,7 +94,8 @@
   (let [ft (match ft
              :cpp :c++
              x x)
-        cmd (string.format "curl https://godbolt.org/api/compilers/%s" ft)]
+        url (. (require :godbolt) :config :url)
+        cmd (string.format "curl %s/api/compilers/%s" url ft)]
     (var output [])
     (fun.jobstart cmd
       {:on_stdout (fn [_ data _]

@@ -20,15 +20,15 @@
 (local api vim.api)
 
 (var config
-     {:cpp      {:compiler :g112  :options {}}
-      :c        {:compiler :cg112 :options {}}
-      :rust     {:compiler :r1560 :options {}}
-      :quickfix {:enable false    :auto_open false}})
+     {:languages {:cpp      {:compiler :g112  :options {}}
+                  :c        {:compiler :cg112 :options {}}
+                  :rust     {:compiler :r1560 :options {}}}
+      :quickfix {:enable false    :auto_open false}
+      :url "https://godbolt.org"})
 
 (fn setup [cfg]
   (if (= 1 (fun.has :nvim-0.6)
            (do
-             (m> :godbolt.assembly :init)
              (when cfg (each [k v (pairs cfg)]
                          (tset config k v)))))
       (api.nvim_err_writeln "neovim 0.6+ is required")))
@@ -41,21 +41,21 @@
                  (io.open :w))]
     (file:write json)
     (io.close file)
-    (string.format (.. "curl https://godbolt.org/api/compiler/'%s'/compile"
+    (string.format (.. "curl %s/api/compiler/'%s'/compile"
                        " --data-binary @godbolt_request_%s.json"
                        " --header 'Accept: application/json'"
                        " --header 'Content-Type: application/json'"
                        " --output godbolt_response_%s.json")
-                   compiler exec-asm? exec-asm?)))
+                   config.url compiler exec-asm? exec-asm?)))
 
 (fn godbolt [begin end reuse? compiler]
   (let [pre-display (. (require :godbolt.assembly) :pre-display)
         execute (. (require :godbolt.execute) :execute)
         fuzzy (. (require :godbolt.fuzzy) :fuzzy)
         ft vim.bo.filetype
-        compiler (or compiler (. config ft :compiler))]
-    (var options (if (. config ft)
-                     (vim.deepcopy (. config ft :options))
+        compiler (or compiler (. config.languages ft :compiler))]
+    (var options (if (. config.languages ft)
+                     (vim.deepcopy (. config.languages ft :options))
                      {}))
     (let [flags (vim.fn.input
                   {:prompt "Flags: "

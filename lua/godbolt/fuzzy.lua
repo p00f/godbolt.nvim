@@ -105,7 +105,8 @@ local function fuzzy(picker, ft, begin, _end, options, exec, reuse_3f)
       ft0 = nil
     end
   end
-  local cmd = string.format("curl https://godbolt.org/api/compilers/%s", ft0)
+  local url = (require("godbolt")).config.url
+  local cmd = string.format("curl %s/api/compilers/%s", url, ft0)
   local output = {}
   local function _15_(_, data, _0)
     return vim.list_extend(output, data)

@@ -100,7 +100,7 @@
         source-buf (fun.bufnr)
         qflist (make-qflist response.stderr source-buf)
         asm-buf (prepare-buf asm name reuse? source-buf)
-        quickfix-cfg (. (require :godbolt) :config :quickfix)]
+        quickfix-cfg config.quickfix]
     ;; Open quickfix
     (var qf-winid nil)
     (when (and qflist quickfix-cfg.enable)
