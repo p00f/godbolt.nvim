@@ -21,7 +21,6 @@
 (local fmt string.format)
 (local term-escapes "[\027\155][][()#;?%d]*[A-PRZcf-ntqry=><~]")
 (local wo-set api.nvim_win_set_option)
-(local config (. (require :godbolt) :config))
 (var map nil)
 (var nsid nil)
 
@@ -95,6 +94,7 @@
               (if v.text
                   (.. str "\n" v.text)
                   str))
+        config (. (require :godbolt) :config)
         source-winid (fun.win_getid)
         source-buf (fun.bufnr)
         qflist (make-qflist response.stderr source-buf)

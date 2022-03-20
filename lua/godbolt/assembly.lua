@@ -5,7 +5,6 @@ local fun = vim.fn
 local fmt = string.format
 local term_escapes = "[\27\155][][()#;?%d]*[A-PRZcf-ntqry=><~]"
 local wo_set = api.nvim_win_set_option
-local config = (require("godbolt")).config
 local map = nil
 local nsid = nil
 local function prepare_buf(text, name, reuse_3f, source_buf)
@@ -88,6 +87,7 @@ local function display(response, begin, name, reuse_3f)
     end
     asm = str
   end
+  local config = (require("godbolt")).config
   local source_winid = fun.win_getid()
   local source_buf = fun.bufnr()
   local qflist = make_qflist(response.stderr, source_buf)

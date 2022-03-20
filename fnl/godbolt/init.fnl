@@ -36,6 +36,7 @@
 (fn build-cmd [compiler text options exec-asm?]
   "Build curl command from compiler, text and options"
   (let [json (vim.json.encode {:source text : options})
+        config (. (require :godbolt) :config)
         file (-> :godbolt_request_%s.json
                  (string.format exec-asm?)
                  (io.open :w))]
@@ -46,13 +47,14 @@
                        " --header 'Accept: application/json'"
                        " --header 'Content-Type: application/json'"
                        " --output godbolt_response_%s.json")
-                   (. (require :godbolt) :config :url) compiler exec-asm? exec-asm?)))
+                   config.url compiler exec-asm? exec-asm?)))
 
 (fn godbolt [begin end reuse? compiler]
   (let [pre-display (. (require :godbolt.assembly) :pre-display)
         execute (. (require :godbolt.execute) :execute)
         fuzzy (. (require :godbolt.fuzzy) :fuzzy)
         ft vim.bo.filetype
+        config (. (require :godbolt) :config)
         compiler (or compiler (. config.languages ft :compiler))]
     (var options (if (. config.languages ft)
                      (vim.deepcopy (. config.languages ft :options))
