@@ -15,7 +15,7 @@ require("godbolt").setup({
     langauges = {
         c = { compiler = "cg112", options = {} },
         cpp = { compiler = "g112", options = {} },
-        rust = { compiler = "r1560", options = {} },
+        rust = { compiler = "r1590", options = {} },
         -- any_additional_filetype = { compiler = ..., options = ... },
     },
     quickfix = {
