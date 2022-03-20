@@ -3,7 +3,7 @@
 
 # godbolt.nvim
 
-Display assembly for the current buffer or visual selection from https://godbolt.org
+Display assembly for the current buffer or visual selection from https://godbolt.org (or any godbolt instance)
 
 Requires neovim 0.6 and curl
 
@@ -22,7 +22,7 @@ require("godbolt").setup({
         enable = false, -- whether to populate the quickfix list in case of errors
         auto_open = false -- whether to open the quickfix list if the compiler outputs errors
     },
-    url = "https://godbolt.org"
+    url = "https://godbolt.org" -- can be changed to a different godbolt instance
 })
 ```
 
