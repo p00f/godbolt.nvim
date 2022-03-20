@@ -59,12 +59,13 @@
     (tset options :compilerOptions {:executorRequest true})
     (local cmd (m> :godbolt.init :build-cmd compiler text options :exec))
     (fun.jobstart cmd
-      {:on_exit (fn [_ _ _]
-                  (local file (io.open :godbolt_response_exec.json :r))
-                  (local response (file:read "*all"))
-                  (file:close)
-                  (os.remove :godbolt_request_exec.json)
-                  (os.remove :godbolt_response_exec.json)
-                  (display-output (vim.json.decode response)))})))
+                  {:on_exit (fn [_ _ _]
+                              (local file
+                                     (io.open :godbolt_response_exec.json :r))
+                              (local response (file:read :*all))
+                              (file:close)
+                              (os.remove :godbolt_request_exec.json)
+                              (os.remove :godbolt_response_exec.json)
+                              (display-output (vim.json.decode response)))})))
 
 {: execute}

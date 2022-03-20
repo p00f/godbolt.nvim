@@ -54,8 +54,7 @@
   (when (next err)
     (icollect [k v (ipairs err)]
       (do
-        (local entry {:text (string.gsub v.text term-escapes "")
-                      : bufnr})
+        (local entry {:text (string.gsub v.text term-escapes "") : bufnr})
         (when v.tag
           (tset entry :col v.tag.column)
           (tset entry :lnum v.tag.line))
@@ -113,14 +112,12 @@
         (vim.notify "godbolt.nvim: Compilation failed")
         (do
           (api.nvim_set_current_win source-winid)
-          (local asm-winid (if (and reuse? (. map source-buf))
-                               (. map
-                                  source-buf
-                                  asm-buf
-                                  :winid)
-                               (do
-                                 (cmd :vsplit)
-                                 (api.nvim_get_current_win))))
+          (local asm-winid
+                 (if (and reuse? (. map source-buf))
+                     (. map source-buf asm-buf :winid)
+                     (do
+                       (cmd :vsplit)
+                       (api.nvim_get_current_win))))
           (api.nvim_set_current_win asm-winid)
           (api.nvim_win_set_buf asm-winid asm-buf)
           (wo-set asm-winid :number false)
@@ -149,17 +146,17 @@
         min time.min
         sec time.sec]
     (fun.jobstart curl-cmd
-      {:on_exit (fn [_ _ _]
-                  (local file (io.open :godbolt_response_asm.json :r))
-                  (local response (file:read "*all"))
-                  (file:close)
-                  (os.remove :godbolt_request_asm.json)
-                  (os.remove :godbolt_response_asm.json)
-                  (display (vim.json.decode response)
-                           begin
-                           (fmt "%s %02d:%02d:%02d"
-                                compiler hour min sec)
-                           reuse?))})))
+                  {:on_exit (fn [_ _ _]
+                              (local file
+                                     (io.open :godbolt_response_asm.json :r))
+                              (local response (file:read :*all))
+                              (file:close)
+                              (os.remove :godbolt_request_asm.json)
+                              (os.remove :godbolt_response_asm.json)
+                              (display (vim.json.decode response) begin
+                                       (fmt "%s %02d:%02d:%02d" compiler hour
+                                            min sec)
+                                       reuse?))})))
 
 (fn init []
   (set map {})
