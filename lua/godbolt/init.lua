@@ -24,7 +24,7 @@ local function build_cmd(compiler, text, options, exec_asm_3f)
   local file = io.open(string.format("godbolt_request_%s.json", exec_asm_3f), "w")
   file:write(json)
   io.close(file)
-  return string.format(("curl %s/api/compiler/'%s'/compile" .. " --data-binary @godbolt_request_%s.json" .. " --header 'Accept: application/json'" .. " --header 'Content-Type: application/json'" .. " --output godbolt_response_%s.json"), config.url, compiler, exec_asm_3f, exec_asm_3f)
+  return string.format(("curl %s/api/compiler/'%s'/compile" .. " --data-binary @godbolt_request_%s.json" .. " --header 'Accept: application/json'" .. " --header 'Content-Type: application/json'" .. " --output godbolt_response_%s.json"), (require("godbolt")).config.url, compiler, exec_asm_3f, exec_asm_3f)
 end
 local function godbolt(begin, _end, reuse_3f, compiler)
   local pre_display = (require("godbolt.assembly"))["pre-display"]

@@ -46,7 +46,7 @@
                        " --header 'Accept: application/json'"
                        " --header 'Content-Type: application/json'"
                        " --output godbolt_response_%s.json")
-                   config.url compiler exec-asm? exec-asm?)))
+                   (. (require :godbolt) :config :url) compiler exec-asm? exec-asm?)))
 
 (fn godbolt [begin end reuse? compiler]
   (let [pre-display (. (require :godbolt.assembly) :pre-display)
