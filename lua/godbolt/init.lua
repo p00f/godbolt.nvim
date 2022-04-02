@@ -55,7 +55,7 @@ local function godbolt(begin, _end, reuse_3f, compiler)
     fuzzy_3f = matches
   end
   if fuzzy_3f then
-    return fuzzy(ft, begin, _end, options, (true == vim.b.godbolt_exec), reuse_3f)
+    return fuzzy(compiler0, ft, begin, _end, options, (true == vim.b.godbolt_exec), reuse_3f)
   else
     pre_display(begin, _end, compiler0, options, reuse_3f)
     if vim.b.godbolt_exec then
