@@ -67,7 +67,7 @@
                                 k v (pairs [:telescope :fzf :skim :fzy])]
                      (if (= v compiler) true matches))]
         (if fuzzy?
-            (fuzzy ft begin end options
+            (fuzzy compiler ft begin end options
                    (= true vim.b.godbolt_exec)
                    reuse?)
             (do
