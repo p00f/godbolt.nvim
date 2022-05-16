@@ -13,9 +13,9 @@ You can call the setup function in your config to override these default values:
 ```lua
 require("godbolt").setup({
     languages = {
-        c = { compiler = "cg112", options = {} },
-        cpp = { compiler = "g112", options = {} },
-        rust = { compiler = "r1590", options = {} },
+        c = { compiler = "cg121", options = {} },
+        cpp = { compiler = "g121", options = {} },
+        rust = { compiler = "r1600", options = {} },
         -- any_additional_filetype = { compiler = ..., options = ... },
     },
     quickfix = {
