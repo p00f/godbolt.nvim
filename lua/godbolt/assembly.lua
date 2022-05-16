@@ -9,7 +9,10 @@ local map = nil
 local nsid = nil
 local function prepare_buf(text, name, reuse_3f, source_buf)
   local buf
-  if (reuse_3f and (type(map[source_buf]) == "table")) then
+  local function _2_()
+    return (type(map[source_buf]) == "table")
+  end
+  if (reuse_3f and _2_()) then
     buf = table.maxn(map[source_buf])
   else
     buf = api.nvim_create_buf(false, true)
@@ -76,7 +79,9 @@ local function update_hl(source_buf, asm_buf)
 end
 local function display(response, begin, name, reuse_3f)
   local asm
-  do
+  if vim.tbl_isempty(response.asm) then
+    asm = fmt("No assembly to display (~%d lines filtered)", response.filteredCount)
+  else
     local str = ""
     for k, v in pairs(response.asm) do
       if v.text then
@@ -103,7 +108,7 @@ local function display(response, begin, name, reuse_3f)
     end
   else
   end
-  if ("<Compilation failed>" == response.asm[1].text) then
+  if (not vim.tbl_isempty(response.asm) and ("<Compilation failed>" == response.asm[1].text)) then
     return vim.notify("godbolt.nvim: Compilation failed")
   else
     api.nvim_set_current_win(source_winid)
@@ -130,8 +135,12 @@ local function display(response, begin, name, reuse_3f)
     else
     end
     map[source_buf][asm_buf] = {asm = response.asm, offset = begin, winid = asm_winid}
-    update_hl(source_buf, asm_buf)
-    return setup_aucmd(source_buf, asm_buf)
+    if not vim.tbl_isempty(response.asm) then
+      update_hl(source_buf, asm_buf)
+      return setup_aucmd(source_buf, asm_buf)
+    else
+      return nil
+    end
   end
 end
 local function pre_display(begin, _end, compiler, options, reuse_3f)
@@ -142,7 +151,7 @@ local function pre_display(begin, _end, compiler, options, reuse_3f)
   local hour = time.hour
   local min = time.min
   local sec = time.sec
-  local function _15_(_, _0, _1)
+  local function _18_(_, _0, _1)
     local file = io.open("godbolt_response_asm.json", "r")
     local response = file:read("*all")
     file:close()
@@ -150,7 +159,7 @@ local function pre_display(begin, _end, compiler, options, reuse_3f)
     os.remove("godbolt_response_asm.json")
     return display(vim.json.decode(response), begin, fmt("%s %02d:%02d:%02d", compiler, hour, min, sec), reuse_3f)
   end
-  return fun.jobstart(curl_cmd, {on_exit = _15_})
+  return fun.jobstart(curl_cmd, {on_exit = _18_})
 end
 local function init()
   map = {}

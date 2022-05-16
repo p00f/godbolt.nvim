@@ -89,11 +89,13 @@
 ; Main
 (fn display [response begin name reuse?]
   "Display the assembly in a split"
-  (let [asm (accumulate [str ""
-                         k v (pairs response.asm)]
-              (if v.text
-                  (.. str "\n" v.text)
-                  str))
+  (let [asm (if (vim.tbl_isempty response.asm)
+                (fmt "No assembly to display (~%d lines filtered)" response.filteredCount)
+                (accumulate [str ""
+                             k v (pairs response.asm)]
+                  (if v.text
+                      (.. str "\n" v.text)
+                      str)))
         config (. (require :godbolt) :config)
         source-winid (fun.win_getid)
         source-buf (fun.bufnr)
@@ -108,7 +110,8 @@
         (vim.cmd :copen)
         (set qf-winid (fun.win_getid))))
     ;; Open assembly
-    (if (= "<Compilation failed>" (. response.asm 1 :text))
+    (if (and (not (vim.tbl_isempty response.asm))
+             (= "<Compilation failed>" (. response.asm 1 :text)))
         (vim.notify "godbolt.nvim: Compilation failed")
         (do
           (api.nvim_set_current_win source-winid)
@@ -133,8 +136,9 @@
                 {:asm response.asm
                  :offset begin
                  :winid asm-winid})
-          (update-hl source-buf asm-buf)
-          (setup-aucmd source-buf asm-buf)))))
+          (when (not (vim.tbl_isempty response.asm))
+            (update-hl source-buf asm-buf)
+            (setup-aucmd source-buf asm-buf))))))
 
 (fn pre-display [begin end compiler options reuse?]
   "Prepare text for displaying and call display"
