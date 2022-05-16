@@ -20,7 +20,7 @@ require("godbolt").setup({
     },
     quickfix = {
         enable = false, -- whether to populate the quickfix list in case of errors
-        auto_open = false -- whether to open the quickfix list if the compiler outputs errors
+        auto_open = false -- whether to open the quickfix list in case of errors
     },
     url = "https://godbolt.org" -- can be changed to a different godbolt instance
 })
