@@ -63,7 +63,7 @@ You can get the list of compiler ids by visiting or `curl`ing `https://godbolt.o
 
   `:'<,'>GodboltCompiler <compiler>`.
 
- - Adding a bang (`!`) to either command (`:Godbolt!`, `GodboltCompiler!`) will reuse the last assembly window for the current source buffer.
+ - Adding a bang (`!`) to either command (`:Godbolt!`, `:GodboltCompiler!`) will reuse the last assembly window for the current source buffer.
 
 ### Fuzzy finder integration
 
