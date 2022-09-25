@@ -20,9 +20,9 @@
 (local api vim.api)
 
 (var config
-     {:languages {:cpp      {:compiler :g121  :options {}}
-                  :c        {:compiler :cg121 :options {}}
-                  :rust     {:compiler :r1600 :options {}}}
+     {:languages {:cpp      {:compiler :g122  :options {}}
+                  :c        {:compiler :cg122 :options {}}
+                  :rust     {:compiler :r1640 :options {}}}
       :quickfix {:enable false    :auto_open false}
       :url "https://godbolt.org"})
 
