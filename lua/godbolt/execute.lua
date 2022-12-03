@@ -14,31 +14,31 @@ end
 local function display_output(response)
   local stderr
   do
-    local tbl_15_auto = {}
-    local i_16_auto = #tbl_15_auto
+    local tbl_17_auto = {}
+    local i_18_auto = #tbl_17_auto
     for k, v in pairs(response.stderr) do
-      local val_17_auto = v.text
-      if (nil ~= val_17_auto) then
-        i_16_auto = (i_16_auto + 1)
-        do end (tbl_15_auto)[i_16_auto] = val_17_auto
+      local val_19_auto = v.text
+      if (nil ~= val_19_auto) then
+        i_18_auto = (i_18_auto + 1)
+        do end (tbl_17_auto)[i_18_auto] = val_19_auto
       else
       end
     end
-    stderr = tbl_15_auto
+    stderr = tbl_17_auto
   end
   local stdout
   do
-    local tbl_15_auto = {}
-    local i_16_auto = #tbl_15_auto
+    local tbl_17_auto = {}
+    local i_18_auto = #tbl_17_auto
     for k, v in pairs(response.stdout) do
-      local val_17_auto = v.text
-      if (nil ~= val_17_auto) then
-        i_16_auto = (i_16_auto + 1)
-        do end (tbl_15_auto)[i_16_auto] = val_17_auto
+      local val_19_auto = v.text
+      if (nil ~= val_19_auto) then
+        i_18_auto = (i_18_auto + 1)
+        do end (tbl_17_auto)[i_18_auto] = val_19_auto
       else
       end
     end
-    stdout = tbl_15_auto
+    stdout = tbl_17_auto
   end
   local lines = {("exit code: " .. response.code)}
   table.insert(lines, "stdout:")

@@ -30,10 +30,10 @@ local function setup_aucmd(source_buf, asm_buf)
 end
 local function make_qflist(err, bufnr)
   if next(err) then
-    local tbl_15_auto = {}
-    local i_16_auto = #tbl_15_auto
+    local tbl_17_auto = {}
+    local i_18_auto = #tbl_17_auto
     for k, v in ipairs(err) do
-      local val_17_auto
+      local val_19_auto
       do
         local entry = {text = string.gsub(v.text, term_escapes, ""), bufnr = bufnr}
         if v.tag then
@@ -41,15 +41,15 @@ local function make_qflist(err, bufnr)
           entry["lnum"] = v.tag.line
         else
         end
-        val_17_auto = entry
+        val_19_auto = entry
       end
-      if (nil ~= val_17_auto) then
-        i_16_auto = (i_16_auto + 1)
-        do end (tbl_15_auto)[i_16_auto] = val_17_auto
+      if (nil ~= val_19_auto) then
+        i_18_auto = (i_18_auto + 1)
+        do end (tbl_17_auto)[i_18_auto] = val_19_auto
       else
       end
     end
-    return tbl_15_auto
+    return tbl_17_auto
   else
     return nil
   end

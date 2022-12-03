@@ -114,22 +114,22 @@ local function fuzzy(picker, ft, begin, _end, options, exec, reuse_3f)
   local function _16_(_, _0, _1)
     local entries
     do
-      local tbl_15_auto = {}
-      local i_16_auto = #tbl_15_auto
+      local tbl_17_auto = {}
+      local i_18_auto = #tbl_17_auto
       for k, v in ipairs(output) do
-        local val_17_auto
+        local val_19_auto
         if (k ~= 1) then
-          val_17_auto = v
+          val_19_auto = v
         else
-          val_17_auto = nil
+          val_19_auto = nil
         end
-        if (nil ~= val_17_auto) then
-          i_16_auto = (i_16_auto + 1)
-          do end (tbl_15_auto)[i_16_auto] = val_17_auto
+        if (nil ~= val_19_auto) then
+          i_18_auto = (i_18_auto + 1)
+          do end (tbl_17_auto)[i_18_auto] = val_19_auto
         else
         end
       end
-      entries = tbl_15_auto
+      entries = tbl_17_auto
     end
     local _20_
     do
