@@ -79,6 +79,3 @@ Screencast:
 
 ## Demo
 [![asciicast](https://asciinema.org/a/451832.svg)](https://asciinema.org/a/451832)
-
-## TODO
- - [ ] Update default compilers using Github Actions.
