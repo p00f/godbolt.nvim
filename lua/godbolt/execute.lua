@@ -59,7 +59,7 @@ local function execute(begin, _end, compiler, options)
   local lines = api.nvim_buf_get_lines(0, (begin - 1), _end, true)
   local text = fun.join(lines, "\n")
   do end (options)["compilerOptions"] = {executorRequest = true}
-  local cmd = (require("godbolt.init"))["build-cmd"](compiler, text, options, "exec")
+  local cmd = (require("godbolt.cmd"))["build-cmd"](compiler, text, options, "exec")
   local function _3_(_, _0, _1)
     local file = io.open("godbolt_response_exec.json", "r")
     local response = file:read("*all")

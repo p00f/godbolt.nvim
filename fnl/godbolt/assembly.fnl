@@ -21,8 +21,8 @@
 (local fmt string.format)
 (local term-escapes "[\027\155][][()#;?%d]*[A-PRZcf-ntqry=><~]")
 (local wo-set api.nvim_win_set_option)
-(var map nil)
-(var nsid nil)
+(var map _G.__godbolt_map)
+(var nsid _G.__godbolt_nsid)
 
 ; Helper functions
 (fn prepare-buf [text name reuse? source-buf]
@@ -144,7 +144,7 @@
   "Prepare text for displaying and call display"
   (let [lines (api.nvim_buf_get_lines 0 (dec begin) end true)
         text (fun.join lines "\n")
-        curl-cmd (m> :godbolt.init :build-cmd compiler text options :asm)
+        curl-cmd (m> :godbolt.cmd :build-cmd compiler text options :asm)
         time (os.date :*t)
         hour time.hour
         min time.min
@@ -162,8 +162,5 @@
                                             min sec)
                                        reuse?))})))
 
-(fn init []
-  (set map {})
-  (set nsid (api.nvim_create_namespace :godbolt)))
 
-{: init : map : nsid : pre-display : update-hl : clear}
+{: map : nsid : pre-display : update-hl : clear}

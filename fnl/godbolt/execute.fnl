@@ -57,7 +57,7 @@
   (let [lines (api.nvim_buf_get_lines 0 (dec begin) end true)
         text (fun.join lines "\n")]
     (tset options :compilerOptions {:executorRequest true})
-    (local cmd (m> :godbolt.init :build-cmd compiler text options :exec))
+    (local cmd (m> :godbolt.cmd :build-cmd compiler text options :exec))
     (fun.jobstart cmd
                   {:on_exit (fn [_ _ _]
                               (local file

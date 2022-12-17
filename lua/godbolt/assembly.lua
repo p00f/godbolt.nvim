@@ -5,8 +5,8 @@ local fun = vim.fn
 local fmt = string.format
 local term_escapes = "[\27\155][][()#;?%d]*[A-PRZcf-ntqry=><~]"
 local wo_set = api.nvim_win_set_option
-local map = nil
-local nsid = nil
+local map = _G.__godbolt_map
+local nsid = _G.__godbolt_nsid
 local function prepare_buf(text, name, reuse_3f, source_buf)
   local buf
   local function _2_()
@@ -146,7 +146,7 @@ end
 local function pre_display(begin, _end, compiler, options, reuse_3f)
   local lines = api.nvim_buf_get_lines(0, (begin - 1), _end, true)
   local text = fun.join(lines, "\n")
-  local curl_cmd = (require("godbolt.init"))["build-cmd"](compiler, text, options, "asm")
+  local curl_cmd = (require("godbolt.cmd"))["build-cmd"](compiler, text, options, "asm")
   local time = os.date("*t")
   local hour = time.hour
   local min = time.min
@@ -161,9 +161,4 @@ local function pre_display(begin, _end, compiler, options, reuse_3f)
   end
   return fun.jobstart(curl_cmd, {on_exit = _18_})
 end
-local function init()
-  map = {}
-  nsid = api.nvim_create_namespace("godbolt")
-  return nil
-end
-return {init = init, map = map, nsid = nsid, ["pre-display"] = pre_display, ["update-hl"] = update_hl, clear = clear}
+return {map = map, nsid = nsid, ["pre-display"] = pre_display, ["update-hl"] = update_hl, clear = clear}

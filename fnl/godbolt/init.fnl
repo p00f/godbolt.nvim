@@ -33,46 +33,4 @@
                          (tset config k v)))))
       (api.nvim_err_writeln "neovim 0.6+ is required")))
 
-(fn build-cmd [compiler text options exec-asm?]
-  "Build curl command from compiler, text and options"
-  (let [json (vim.json.encode {:source text : options})
-        config (. (require :godbolt) :config)
-        file (-> :godbolt_request_%s.json
-                 (string.format exec-asm?)
-                 (io.open :w))]
-    (file:write json)
-    (io.close file)
-    (string.format (.. "curl %s/api/compiler/'%s'/compile"
-                       " --data-binary @godbolt_request_%s.json"
-                       " --header 'Accept: application/json'"
-                       " --header 'Content-Type: application/json'"
-                       " --output godbolt_response_%s.json")
-                   config.url compiler exec-asm? exec-asm?)))
-
-(fn godbolt [begin end reuse? compiler]
-  (let [pre-display (. (require :godbolt.assembly) :pre-display)
-        execute (. (require :godbolt.execute) :execute)
-        fuzzy (. (require :godbolt.fuzzy) :fuzzy)
-        ft vim.bo.filetype
-        config (. (require :godbolt) :config)
-        compiler (or compiler (. config.languages ft :compiler))]
-    (var options (if (. config.languages ft)
-                     (vim.deepcopy (. config.languages ft :options))
-                     {}))
-    (let [flags (vim.fn.input
-                  {:prompt "Flags: "
-                   :default (or options.userArguments "")})]
-      (tset options :userArguments flags)
-      (let [fuzzy? (accumulate [matches false
-                                k v (pairs [:telescope :fzf :skim :fzy])]
-                     (if (= v compiler) true matches))]
-        (if fuzzy?
-            (fuzzy compiler ft begin end options
-                   (= true vim.b.godbolt_exec)
-                   reuse?)
-            (do
-              (pre-display begin end compiler options reuse?)
-              (when vim.b.godbolt_exec
-                (execute begin end compiler options))))))))
-
-{: config : setup : build-cmd : godbolt}
+{: config : setup}
