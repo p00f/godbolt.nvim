@@ -24,10 +24,10 @@
                  (io.open :w))]
     (file:write json)
     (io.close file)
-    (string.format (.. "curl %s/api/compiler/'%s'/compile"
+    (string.format (.. "curl %s/api/compiler/\"%s\"/compile"
                        " --data-binary @godbolt_request_%s.json"
-                       " --header 'Accept: application/json'"
-                       " --header 'Content-Type: application/json'"
+                       " --header \"Accept: application/json\""
+                       " --header \"Content-Type: application/json\""
                        " --output godbolt_response_%s.json")
                    config.url compiler exec-asm? exec-asm?)))
 
