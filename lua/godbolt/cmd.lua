@@ -5,8 +5,8 @@ local function build_cmd(compiler, text, options, exec_asm_3f)
   file:write(json)
   io.close(file)
   local request = string.format(("curl %s/api/compiler/%s/compile" .. " --data-binary @godbolt_request_%s.json" .. " --header 'Accept: application/json'" .. " --header 'Content-Type: application/json'" .. " --output godbolt_response_%s.json"), config.url, compiler, exec_asm_3f, exec_asm_3f)
-  if vim.loop.os_uname().sysname == 'Windows_NT' then
-    request = request:gsub('\'', '"')
+  if vim.loop.os_uname().sysname == "Windows_NT" then
+    request = request:gsub("'", "\"")
   end
   return request
 end
