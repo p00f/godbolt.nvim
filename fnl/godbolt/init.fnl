@@ -22,7 +22,7 @@
 (var config
      {:languages {:cpp      {:compiler :g122  :options {}}
                   :c        {:compiler :cg122 :options {}}
-                  :rust     {:compiler :r1650 :options {}}}
+                  :rust     {:compiler :r1680 :options {}}}
       :quickfix {:enable false    :auto_open false}
       :url "https://godbolt.org"})
 
