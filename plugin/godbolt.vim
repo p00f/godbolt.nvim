@@ -9,6 +9,7 @@ if get(g:, 'godbolt_loaded', 0) != 1
     let g:godbolt_loaded = 1
 lua << EOF
     _G.__godbolt_map = {}
+    _G.__godbolt_exec_buf_map = {}
     _G.__godbolt_nsid = vim.api.nvim_create_namespace("godbolt")
 EOF
 endif

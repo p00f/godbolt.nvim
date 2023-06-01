@@ -55,6 +55,6 @@
             (do
               (pre-display begin end compiler options reuse?)
               (when vim.b.godbolt_exec
-                (execute begin end compiler options))))))))
+                  (execute begin end compiler options reuse?))))))))
 
 {: build-cmd : godbolt}

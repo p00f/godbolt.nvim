@@ -38,7 +38,7 @@ local function godbolt(begin, _end, reuse_3f, compiler)
   else
     pre_display(begin, _end, compiler0, options, reuse_3f)
     if vim.b.godbolt_exec then
-      return execute(begin, _end, compiler0, options)
+      return execute(begin, _end, compiler0, options, reuse_3f)
     else
       return nil
     end

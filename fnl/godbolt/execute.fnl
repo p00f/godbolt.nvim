@@ -19,19 +19,23 @@
 (local api vim.api)
 (local wo-set api.nvim_win_set_option)
 (import-macros {: m> : dec} :godbolt.macros)
+(var exec-buf-map _G.__godbolt_exec_buf_map)
 
-(fn prepare-buf [lines]
+(fn prepare-buf [lines source-buf reuse?]
   "Prepare the output buffer: set buffer options and add text"
   (let [time (os.date :*t)
         hour time.hour
         min time.min
         sec time.sec]
-    (local buf (api.nvim_create_buf false true))
+    (local buf (if (and reuse? (. exec-buf-map source-buf))
+                   (. exec-buf-map source-buf)
+                   (api.nvim_create_buf false true)))
+    (tset exec-buf-map source-buf buf)
     (api.nvim_buf_set_lines buf 0 0 false lines)
     (api.nvim_buf_set_name buf (string.format "%02d:%02d:%02d" hour min sec))
     buf))
 
-(fn display-output [response]
+(fn display-output [response source-buf reuse?]
   "Display the program output in a split"
   (local stderr (icollect [k v (pairs response.stderr)]
                   v.text))
@@ -42,7 +46,7 @@
   (vim.list_extend lines stdout)
   (table.insert lines "stderr:")
   (vim.list_extend lines stderr)
-  (local output-buf (prepare-buf lines))
+  (local output-buf (prepare-buf lines source-buf reuse?))
   (local old-winid (fun.win_getid))
   (vim.cmd :split)
   (vim.cmd (.. "buffer " output-buf))
@@ -52,10 +56,11 @@
   (wo-set 0 :cursorline false)
   (api.nvim_set_current_win old-winid))
 
-(fn execute [begin end compiler options]
+(fn execute [begin end compiler options reuse?]
   "Make an execution request and call `display-output` with the response"
   (let [lines (api.nvim_buf_get_lines 0 (dec begin) end true)
-        text (fun.join lines "\n")]
+        text (fun.join lines "\n")
+        source-buf (fun.bufnr)]
     (tset options :compilerOptions {:executorRequest true})
     (local cmd (m> :godbolt.cmd :build-cmd compiler text options :exec))
     (fun.jobstart cmd
@@ -66,6 +71,6 @@
                               (file:close)
                               (os.remove :godbolt_request_exec.json)
                               (os.remove :godbolt_response_exec.json)
-                              (display-output (vim.json.decode response)))})))
+                              (display-output (vim.json.decode response) source-buf reuse?))})))
 
 {: execute}
