@@ -14,4 +14,7 @@
 (fn inc [n]
   `(+ ,n 1))
 
-{: m> : first : second : dec : inc}
+(fn defcmd [from to opts]
+  `(vim.api.nvim_create_user_command ,from ,to ,(or opts {})))
+
+{: m> : first : second : dec : inc : defcmd}
