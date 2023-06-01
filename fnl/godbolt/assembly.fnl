@@ -27,16 +27,16 @@
 ; Helper functions
 (fn prepare-buf [text name reuse? source-buf]
   "Prepare the assembly buffer: set buffer options and add text"
-  (local buf (if (and reuse? (-> map
-                                 (. source-buf)
-                                 (type)
-                                 (= :table)))
-                 (table.maxn (. map source-buf))
-                 (api.nvim_create_buf false true)))
-  (api.nvim_buf_set_option buf :filetype :asm)
-  (api.nvim_buf_set_lines buf 0 -1 true (vim.split text "\n" {:trimempty true}))
-  (api.nvim_buf_set_name buf name)
-  buf)
+  (let [buf (if (and reuse? (-> map
+                                (. source-buf)
+                                (type)
+                                (= :table)))
+                (table.maxn (. map source-buf))
+                (api.nvim_create_buf false true))]
+    (api.nvim_buf_set_option buf :filetype :asm)
+    (api.nvim_buf_set_lines buf 0 -1 true (vim.split text "\n" {:trimempty true}))
+    (api.nvim_buf_set_name buf name)
+    buf))
 
 (fn setup-aucmd [source-buf asm-buf]
   "Setup autocommands for updating highlights"
@@ -52,8 +52,7 @@
   "Transform compiler output into a form taken by vim's setqflist()"
   (when (next err)
     (icollect [k v (ipairs err)]
-      (do
-        (local entry {:text (string.gsub v.text term-escapes "") : bufnr})
+      (let [entry {:text (string.gsub v.text term-escapes "") : bufnr}]
         (when v.tag
           (tset entry :col v.tag.column)
           (tset entry :lnum v.tag.line))
@@ -151,16 +150,15 @@
         sec time.sec]
     (fun.jobstart curl-cmd
                   {:on_exit (fn [_ _ _]
-                              (local file
-                                     (io.open :godbolt_response_asm.json :r))
-                              (local response (file:read :*all))
-                              (file:close)
-                              (os.remove :godbolt_request_asm.json)
-                              (os.remove :godbolt_response_asm.json)
-                              (display (vim.json.decode response) begin
-                                       (fmt "%s %02d:%02d:%02d" compiler hour
-                                            min sec)
-                                       reuse?))})))
+                              (let [file (io.open :godbolt_response_asm.json :r)
+                                    response (file:read :*all)]
+                                (file:close)
+                                (os.remove :godbolt_request_asm.json)
+                                (os.remove :godbolt_response_asm.json)
+                                (display (vim.json.decode response) begin
+                                         (fmt "%s %02d:%02d:%02d" compiler hour
+                                              min sec)
+                                         reuse?)))})))
 
 
 {: map : nsid : pre-display : update-hl : clear}

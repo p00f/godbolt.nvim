@@ -36,10 +36,10 @@
     (fun.fzf#run {:source entries
                   :window {: width :height 0.6}
                   :sink (fn [choice]
-                          (local compiler (-> choice (vim.split " ") (first)))
-                          (pre-display begin end compiler options reuse?)
-                          (when exec
-                            (execute begin end compiler options)))})))
+                          (let [ compiler (-> choice (vim.split " ") (first))]
+                            (pre-display begin end compiler options reuse?)
+                            (when exec
+                              (execute begin end compiler options))))})))
 
 
 ; Same as fzf, just s/fzf/skim/g
@@ -52,10 +52,10 @@
     (fun.skim#run {:source entries
                    :window {: width :height 0.6}
                    :sink (fn [choice]
-                           (local compiler (first (vim.split choice " ")))
-                           (pre-display begin end compiler options reuse?)
-                           (when exec
-                             (execute begin end compiler options)))})))
+                           (let [compiler (first (vim.split choice " "))]
+                             (pre-display begin end compiler options reuse?)
+                             (when exec
+                               (execute begin end compiler options))))})))
 
 ;; fnlfmt: skip
 (fn telescope [entries begin end options exec reuse?]
@@ -73,10 +73,10 @@
                              (actions.select_default:replace
                                (fn []
                                  (actions.close prompt-bufnr)
-                                 (local compiler (. (actions-state.get_selected_entry) :value))
-                                 (pre-display begin end compiler options reuse?)
-                                 (when exec
-                                   (execute begin end compiler options)))))})
+                                 (let [compiler (. (actions-state.get_selected_entry) :value)]
+                                   (pre-display begin end compiler options reuse?)
+                                   (when exec
+                                     (execute begin end compiler options))))))})
        :find)))
 
 (fn fzy [entries begin end options exec reuse?]
@@ -84,10 +84,10 @@
       "Choose compiler: "
       (fn [text] text)
       (fn [choice]
-        (local compiler (first (vim.split choice " ")))
-        (pre-display begin end compiler options reuse?)
-        (when exec
-          (execute begin end compiler options)))))
+        (let [compiler (first (vim.split choice " "))]
+          (pre-display begin end compiler options reuse?)
+          (when exec
+            (execute begin end compiler options))))))
 
 ;; fnlfmt: skip
 (fn fuzzy [picker ft begin end options exec reuse?]

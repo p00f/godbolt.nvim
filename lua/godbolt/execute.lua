@@ -14,7 +14,7 @@ local function prepare_buf(lines, source_buf, reuse_3f)
     buf = api.nvim_create_buf(false, true)
   end
   exec_buf_map[source_buf] = buf
-  api.nvim_buf_set_lines(buf, 0, 0, false, lines)
+  api.nvim_buf_set_lines(buf, 0, -1, false, lines)
   api.nvim_buf_set_name(buf, string.format("%02d:%02d:%02d", hour, min, sec))
   return buf
 end
@@ -52,14 +52,18 @@ local function display_output(response, source_buf, reuse_3f)
   vim.list_extend(lines, stdout)
   table.insert(lines, "stderr:")
   vim.list_extend(lines, stderr)
+  local exists = (nil ~= exec_buf_map[source_buf])
   local output_buf = prepare_buf(lines, source_buf, reuse_3f)
   local old_winid = fun.win_getid()
-  vim.cmd("split")
-  vim.cmd(("buffer " .. output_buf))
-  wo_set(0, "number", false)
-  wo_set(0, "relativenumber", false)
-  wo_set(0, "spell", false)
-  wo_set(0, "cursorline", false)
+  if not (reuse_3f and exists) then
+    vim.cmd("split")
+    vim.cmd(("buffer " .. output_buf))
+    wo_set(0, "number", false)
+    wo_set(0, "relativenumber", false)
+    wo_set(0, "spell", false)
+    wo_set(0, "cursorline", false)
+  else
+  end
   return api.nvim_set_current_win(old_winid)
 end
 local function execute(begin, _end, compiler, options, reuse_3f)
@@ -68,7 +72,7 @@ local function execute(begin, _end, compiler, options, reuse_3f)
   local source_buf = fun.bufnr()
   do end (options)["compilerOptions"] = {executorRequest = true}
   local cmd = (require("godbolt.cmd"))["build-cmd"](compiler, text, options, "exec")
-  local function _4_(_, _0, _1)
+  local function _5_(_, _0, _1)
     local file = io.open("godbolt_response_exec.json", "r")
     local response = file:read("*all")
     file:close()
@@ -76,6 +80,6 @@ local function execute(begin, _end, compiler, options, reuse_3f)
     os.remove("godbolt_response_exec.json")
     return display_output(vim.json.decode(response), source_buf, reuse_3f)
   end
-  return fun.jobstart(cmd, {on_exit = _4_})
+  return fun.jobstart(cmd, {on_exit = _5_})
 end
 return {execute = execute}

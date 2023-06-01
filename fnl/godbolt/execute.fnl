@@ -26,35 +26,38 @@
   (let [time (os.date :*t)
         hour time.hour
         min time.min
-        sec time.sec]
-    (local buf (if (and reuse? (. exec-buf-map source-buf))
-                   (. exec-buf-map source-buf)
-                   (api.nvim_create_buf false true)))
+        sec time.sec
+        buf (if (and reuse? (. exec-buf-map source-buf))
+                (. exec-buf-map source-buf)
+                (api.nvim_create_buf false true))]
     (tset exec-buf-map source-buf buf)
-    (api.nvim_buf_set_lines buf 0 0 false lines)
+    (api.nvim_buf_set_lines buf 0 -1 false lines)
     (api.nvim_buf_set_name buf (string.format "%02d:%02d:%02d" hour min sec))
     buf))
 
 (fn display-output [response source-buf reuse?]
   "Display the program output in a split"
-  (local stderr (icollect [k v (pairs response.stderr)]
-                  v.text))
-  (local stdout (icollect [k v (pairs response.stdout)]
-                  v.text))
-  (var lines [(.. "exit code: " response.code)])
-  (table.insert lines "stdout:")
-  (vim.list_extend lines stdout)
-  (table.insert lines "stderr:")
-  (vim.list_extend lines stderr)
-  (local output-buf (prepare-buf lines source-buf reuse?))
-  (local old-winid (fun.win_getid))
-  (vim.cmd :split)
-  (vim.cmd (.. "buffer " output-buf))
-  (wo-set 0 :number false)
-  (wo-set 0 :relativenumber false)
-  (wo-set 0 :spell false)
-  (wo-set 0 :cursorline false)
-  (api.nvim_set_current_win old-winid))
+  (let [stderr (icollect [k v (pairs response.stderr)] v.text)
+        stdout (icollect [k v (pairs response.stdout)]
+                 v.text)
+        lines [(.. "exit code: " response.code)]]
+    ;; fill output buffer
+    (table.insert lines "stdout:")
+    (vim.list_extend lines stdout)
+    (table.insert lines "stderr:")
+    (vim.list_extend lines stderr)
+    ;; display output window
+    (let [exists (not= nil (. exec-buf-map source-buf))
+          output-buf (prepare-buf lines source-buf reuse?)
+          old-winid (fun.win_getid)]
+     (when (not (and reuse? exists))
+       (vim.cmd :split)
+       (vim.cmd (.. "buffer " output-buf))
+       (wo-set 0 :number false)
+       (wo-set 0 :relativenumber false)
+       (wo-set 0 :spell false)
+       (wo-set 0 :cursorline false))
+     (api.nvim_set_current_win old-winid))))
 
 (fn execute [begin end compiler options reuse?]
   "Make an execution request and call `display-output` with the response"
@@ -62,15 +65,14 @@
         text (fun.join lines "\n")
         source-buf (fun.bufnr)]
     (tset options :compilerOptions {:executorRequest true})
-    (local cmd (m> :godbolt.cmd :build-cmd compiler text options :exec))
-    (fun.jobstart cmd
-                  {:on_exit (fn [_ _ _]
-                              (local file
-                                     (io.open :godbolt_response_exec.json :r))
-                              (local response (file:read :*all))
-                              (file:close)
-                              (os.remove :godbolt_request_exec.json)
-                              (os.remove :godbolt_response_exec.json)
-                              (display-output (vim.json.decode response) source-buf reuse?))})))
+    (let [cmd (m> :godbolt.cmd :build-cmd compiler text options :exec)]
+      (fun.jobstart cmd
+                    {:on_exit (fn [_ _ _]
+                                (let [file (io.open :godbolt_response_exec.json :r)
+                                      response (file:read :*all)]
+                                  (file:close)
+                                  (os.remove :godbolt_request_exec.json)
+                                  (os.remove :godbolt_response_exec.json)
+                                  (display-output (vim.json.decode response) source-buf reuse?)))}))))
 
 {: execute}
