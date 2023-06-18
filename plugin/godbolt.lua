@@ -6,7 +6,7 @@ local function _1_(opts)
 end
 vim.api.nvim_create_user_command("Godbolt", _1_, {bang = true, nargs = 0, range = "%"})
 local function _2_(opts)
-  return (require("godbolt.cmd")).godbolt(opts.line1, opts.line2, opts.bang, opts.fargs)
+  return (require("godbolt.cmd")).godbolt(opts.line1, opts.line2, opts.bang, opts.fargs[1])
 end
 vim.api.nvim_create_user_command("GodboltCompiler", _2_, {bang = true, nargs = 1, complete = complete, range = "%"})
 if not (1 == vim.g.godbolt_loaded) then

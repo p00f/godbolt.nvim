@@ -15,7 +15,7 @@
 ;  You should have received a copy of the GNU General Public License
 ;  along with godbolt.nvim.  If not, see <https://www.gnu.org/licenses/>.
 
-(import-macros {: defcmd} :godbolt.macros)
+(import-macros {: defcmd : first} :godbolt.macros)
 
 (fn complete [_ _ _]
   [:fzf :fzy :skim :telescope])
@@ -31,7 +31,7 @@
 (defcmd :GodboltCompiler
   (fn [opts]
     ((. (require :godbolt.cmd) :godbolt)
-     opts.line1 opts.line2 opts.bang opts.fargs))
+     opts.line1 opts.line2 opts.bang (first opts.fargs)))
   {:bang true
    :nargs 1
    : complete
