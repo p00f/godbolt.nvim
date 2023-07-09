@@ -94,24 +94,21 @@ local function fzy(entries, begin, _end, options, exec, reuse_3f)
 end
 local function fuzzy(picker, ft, begin, _end, options, exec, reuse_3f)
   local ft0
-  do
-    local _13_ = ft
-    if (_13_ == "cpp") then
-      ft0 = "c++"
-    elseif (nil ~= _13_) then
-      local x = _13_
-      ft0 = x
-    else
-      ft0 = nil
-    end
+  if (ft == "cpp") then
+    ft0 = "c++"
+  elseif (nil ~= ft) then
+    local x = ft
+    ft0 = x
+  else
+    ft0 = nil
   end
   local url = (require("godbolt")).config.url
   local cmd = string.format("curl %s/api/compilers/%s", url, ft0)
   local output = {}
-  local function _15_(_, data, _0)
+  local function _14_(_, data, _0)
     return vim.list_extend(output, data)
   end
-  local function _16_(_, _0, _1)
+  local function _15_(_, _0, _1)
     local entries
     do
       local tbl_17_auto = {}
@@ -131,23 +128,20 @@ local function fuzzy(picker, ft, begin, _end, options, exec, reuse_3f)
       end
       entries = tbl_17_auto
     end
-    local _20_
-    do
-      local _19_ = picker
-      if (_19_ == "fzf") then
-        _20_ = fzf
-      elseif (_19_ == "skim") then
-        _20_ = skim
-      elseif (_19_ == "telescope") then
-        _20_ = telescope
-      elseif (_19_ == "fzy") then
-        _20_ = fzy
-      else
-        _20_ = nil
-      end
+    local _18_
+    if (picker == "fzf") then
+      _18_ = fzf
+    elseif (picker == "skim") then
+      _18_ = skim
+    elseif (picker == "telescope") then
+      _18_ = telescope
+    elseif (picker == "fzy") then
+      _18_ = fzy
+    else
+      _18_ = nil
     end
-    return _20_(entries, begin, _end, options, exec, reuse_3f)
+    return _18_(entries, begin, _end, options, exec, reuse_3f)
   end
-  return fun.jobstart(cmd, {on_stdout = _15_, on_exit = _16_, stdout_buffered = true})
+  return fun.jobstart(cmd, {on_stdout = _14_, on_exit = _15_, stdout_buffered = true})
 end
 return {fuzzy = fuzzy}

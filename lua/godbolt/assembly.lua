@@ -32,7 +32,7 @@ local function make_qflist(err, bufnr)
   if next(err) then
     local tbl_17_auto = {}
     local i_18_auto = #tbl_17_auto
-    for k, v in ipairs(err) do
+    for _, v in ipairs(err) do
       local val_19_auto
       do
         local entry = {text = string.gsub(v.text, term_escapes, ""), bufnr = bufnr}

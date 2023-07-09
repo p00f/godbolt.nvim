@@ -51,7 +51,7 @@
 (fn make-qflist [err bufnr]
   "Transform compiler output into a form taken by vim's setqflist()"
   (when (next err)
-    (icollect [k v (ipairs err)]
+    (icollect [_ v (ipairs err)]
       (let [entry {:text (string.gsub v.text term-escapes "") : bufnr}]
         (when v.tag
           (tset entry :col v.tag.column)
