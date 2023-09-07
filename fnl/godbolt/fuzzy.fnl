@@ -29,7 +29,7 @@
 
 (fn fzf [entries begin end options exec reuse?]
   (let [maxlen (accumulate [current-maxlen -1
-                            k v (pairs entries)]
+                            _ v (pairs entries)]
                  (let [len (fun.len v)]
                    (if (> len current-maxlen) len current-maxlen)))
         width (-> maxlen (/ vim.o.columns) (+ 0.05))]
@@ -45,7 +45,7 @@
 ; Same as fzf, just s/fzf/skim/g
 (fn skim [entries begin end options exec reuse?]
   (let [maxlen (accumulate [current-maxlen -1
-                            k v (pairs entries)]
+                            _ v (pairs entries)]
                  (let [len (fun.len v)]
                    (if (> len current-maxlen) len current-maxlen)))
         width (-> maxlen (/ vim.o.columns) (+ 0.05))]
@@ -69,7 +69,7 @@
           :finder (finders.new_table {:results entries
                                       :entry_maker transform})
           :sorter (conf.generic_sorter nil)
-          :attach_mappings (fn [prompt-bufnr map]
+          :attach_mappings (fn [prompt-bufnr _map]
                              (actions.select_default:replace
                                (fn []
                                  (actions.close prompt-bufnr)

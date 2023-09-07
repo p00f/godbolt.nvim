@@ -91,7 +91,7 @@
   (let [asm (if (vim.tbl_isempty response.asm)
                 (fmt "No assembly to display (~%d lines filtered)" response.filteredCount)
                 (accumulate [str ""
-                             k v (pairs response.asm)]
+                             _ v (pairs response.asm)]
                   (if v.text
                       (.. str "\n" v.text)
                       str)))

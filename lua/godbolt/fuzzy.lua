@@ -8,7 +8,7 @@ local function fzf(entries, begin, _end, options, exec, reuse_3f)
   local maxlen
   do
     local current_maxlen = -1
-    for k, v in pairs(entries) do
+    for _, v in pairs(entries) do
       local len = fun.len(v)
       if (len > current_maxlen) then
         current_maxlen = len

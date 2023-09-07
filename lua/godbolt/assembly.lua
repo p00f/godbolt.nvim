@@ -83,7 +83,7 @@ local function display(response, begin, name, reuse_3f)
     asm = fmt("No assembly to display (~%d lines filtered)", response.filteredCount)
   else
     local str = ""
-    for k, v in pairs(response.asm) do
+    for _, v in pairs(response.asm) do
       if v.text then
         str = (str .. "\n" .. v.text)
       else
