@@ -99,14 +99,13 @@
         source-winid (fun.win_getid)
         source-buf (fun.bufnr)
         qflist (make-qflist response.stderr source-buf)
-        asm-buf (prepare-buf asm name reuse? source-buf)
-        quickfix-cfg config.quickfix]
+        asm-buf (prepare-buf asm name reuse? source-buf)]
     ;; Open quickfix
     (var qf-winid nil)
-    (when (and qflist quickfix-cfg.enable)
+    (when (and qflist config.quickfix.enable)
       (fun.setqflist qflist)
-      (when quickfix-cfg.auto_open
-        (vim.cmd :copen)
+      (when config.quickfix.auto_open
+        (vim.cmd.copen)
         (set qf-winid (fun.win_getid))))
     ;; Open assembly
     (if (and (not (vim.tbl_isempty response.asm))

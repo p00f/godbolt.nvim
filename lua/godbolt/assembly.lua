@@ -97,12 +97,11 @@ local function display(response, begin, name, reuse_3f)
   local source_buf = fun.bufnr()
   local qflist = make_qflist(response.stderr, source_buf)
   local asm_buf = prepare_buf(asm, name, reuse_3f, source_buf)
-  local quickfix_cfg = config.quickfix
   local qf_winid = nil
-  if (qflist and quickfix_cfg.enable) then
+  if (qflist and config.quickfix.enable) then
     fun.setqflist(qflist)
-    if quickfix_cfg.auto_open then
-      vim.cmd("copen")
+    if config.quickfix.auto_open then
+      vim.cmd.copen()
       qf_winid = fun.win_getid()
     else
     end

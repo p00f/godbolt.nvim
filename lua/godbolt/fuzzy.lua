@@ -34,7 +34,7 @@ local function skim(entries, begin, _end, options, exec, reuse_3f)
   local maxlen
   do
     local current_maxlen = -1
-    for k, v in pairs(entries) do
+    for _, v in pairs(entries) do
       local len = fun.len(v)
       if (len > current_maxlen) then
         current_maxlen = len
@@ -62,7 +62,7 @@ local function telescope(entries, begin, _end, options, exec, reuse_3f)
   local conf = (require("telescope.config")).values
   local actions = require("telescope.actions")
   local actions_state = require("telescope.actions.state")
-  local function _7_(prompt_bufnr, map)
+  local function _7_(prompt_bufnr, _map)
     local function _8_()
       actions.close(prompt_bufnr)
       local compiler = actions_state.get_selected_entry().value
