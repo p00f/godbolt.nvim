@@ -7,8 +7,9 @@ lua/%.lua: fnl/%.fnl
 	fennel --globals vim --add-macro-path ./fnl/?.fnl --compile $< > $@
 plugin/godbolt.lua: plugin/godbolt.fnl
 	fennel --globals vim --add-macro-path ./fnl/?.fnl --compile $< > $@
+
 clean:
 	rm -f lua/godbolt/* plugin/godbolt.lua
 format:
 	@./format fnl/godbolt/*
-	@./format fnl/macros.fnl
+	@./format plugin/godbolt.fnl
