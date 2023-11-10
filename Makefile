@@ -1,13 +1,14 @@
-.PHONY: format clean
-default:
-	fennel --globals vim --add-macro-path fnl/godbolt/macros.fnl --compile fnl/godbolt/init.fnl > lua/godbolt/init.lua
-	fennel --globals vim --add-macro-path fnl/godbolt/macros.fnl --compile fnl/godbolt/cmd.fnl > lua/godbolt/cmd.lua
-	fennel --globals vim --add-macro-path fnl/godbolt/macros.fnl --compile fnl/godbolt/assembly.fnl > lua/godbolt/assembly.lua
-	fennel --globals vim --add-macro-path fnl/godbolt/macros.fnl --compile fnl/godbolt/execute.fnl > lua/godbolt/execute.lua
-	fennel --globals vim --add-macro-path fnl/godbolt/macros.fnl --compile fnl/godbolt/fuzzy.fnl > lua/godbolt/fuzzy.lua
-	fennel --globals vim --add-macro-path fnl/godbolt/macros.fnl --compile plugin/godbolt.fnl > plugin/godbolt.lua
+.PHONY: format clean all
+FNL_FILES = $(filter-out fnl/godbolt/macros.fnl,$(wildcard fnl/godbolt/*.fnl))
+LUA_FILES = $(subst fnl,lua,$(FNL_FILES))
+
+all: $(LUA_FILES) plugin/godbolt.lua
+lua/%.lua: fnl/%.fnl
+	fennel --globals vim --add-macro-path ./fnl/?.fnl --compile $< > $@
+plugin/godbolt.lua: plugin/godbolt.fnl
+	fennel --globals vim --add-macro-path ./fnl/?.fnl --compile $< > $@
 clean:
-	rm lua/godbolt/*
+	rm -f lua/godbolt/* plugin/godbolt.lua
 format:
 	@./format fnl/godbolt/*
 	@./format fnl/macros.fnl
