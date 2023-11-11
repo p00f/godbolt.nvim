@@ -21,6 +21,7 @@
 (local pre-display (. (require :godbolt.assembly) :pre-display))
 (local execute (. (require :godbolt.execute) :execute))
 
+;; fnlfmt: skip
 (fn transform [entry]
   "Get the compiler id from the selected entry for telescope"
   {:value (-> entry (vim.split " ") (first))
