@@ -19,18 +19,18 @@
 (local fun vim.fn)
 (local api vim.api)
 
-(var config
-     {:languages {:cpp      {:compiler :g132  :options {}}
-                  :c        {:compiler :cg132 :options {}}
-                  :rust     {:compiler :r1730 :options {}}}
-      :quickfix {:enable false    :auto_open false}
-      :url "https://godbolt.org"})
+(var config {:languages {:cpp {:compiler :g132 :options {}}
+                         :c {:compiler :cg132 :options {}}
+                         :rust {:compiler :r1730 :options {}}}
+             :quickfix {:enable false :auto_open false}
+             :url "https://godbolt.org"})
 
 (fn setup [cfg]
   (if (= 1 (fun.has :nvim-0.6)
-           (do
-             (when cfg (each [k v (pairs cfg)]
-                         (tset config k v)))))
+         (do
+           (when cfg
+             (each [k v (pairs cfg)]
+               (tset config k v)))))
       (api.nvim_err_writeln "neovim 0.6+ is required")))
 
 {: config : setup}

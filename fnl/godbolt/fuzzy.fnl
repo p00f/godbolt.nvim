@@ -28,24 +28,21 @@
    :ordinal entry})
 
 (fn fzf [entries begin end options exec reuse?]
-  (let [maxlen (accumulate [current-maxlen -1
-                            _ v (pairs entries)]
+  (let [maxlen (accumulate [current-maxlen -1 _ v (pairs entries)]
                  (let [len (fun.len v)]
                    (if (> len current-maxlen) len current-maxlen)))
         width (-> maxlen (/ vim.o.columns) (+ 0.05))]
     (fun.fzf#run {:source entries
                   :window {: width :height 0.6}
                   :sink (fn [choice]
-                          (let [ compiler (-> choice (vim.split " ") (first))]
+                          (let [compiler (-> choice (vim.split " ") (first))]
                             (pre-display begin end compiler options reuse?)
                             (when exec
                               (execute begin end compiler options))))})))
 
-
 ; Same as fzf, just s/fzf/skim/g
 (fn skim [entries begin end options exec reuse?]
-  (let [maxlen (accumulate [current-maxlen -1
-                            _ v (pairs entries)]
+  (let [maxlen (accumulate [current-maxlen -1 _ v (pairs entries)]
                  (let [len (fun.len v)]
                    (if (> len current-maxlen) len current-maxlen)))
         width (-> maxlen (/ vim.o.columns) (+ 0.05))]
@@ -80,9 +77,7 @@
        :find)))
 
 (fn fzy [entries begin end options exec reuse?]
-  (m> :fzy :pick_one entries
-      "Choose compiler: "
-      (fn [text] text)
+  (m> :fzy :pick_one entries "Choose compiler: " (fn [text] text)
       (fn [choice]
         (let [compiler (first (vim.split choice " "))]
           (pre-display begin end compiler options reuse?)
@@ -110,7 +105,5 @@
                        :fzy fzy)
                      entries begin end options exec reuse?)))
        :stdout_buffered true})))
-
-
 
 {: fuzzy}

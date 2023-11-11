@@ -50,14 +50,14 @@
     (let [exists (not= nil (. exec-buf-map source-buf))
           output-buf (prepare-buf lines source-buf reuse?)
           old-winid (fun.win_getid)]
-     (when (not (and reuse? exists))
-       (vim.cmd :split)
-       (vim.cmd (.. "buffer " output-buf))
-       (wo-set 0 :number false)
-       (wo-set 0 :relativenumber false)
-       (wo-set 0 :spell false)
-       (wo-set 0 :cursorline false))
-     (api.nvim_set_current_win old-winid))))
+      (when (not (and reuse? exists))
+        (vim.cmd :split)
+        (vim.cmd (.. "buffer " output-buf))
+        (wo-set 0 :number false)
+        (wo-set 0 :relativenumber false)
+        (wo-set 0 :spell false)
+        (wo-set 0 :cursorline false))
+      (api.nvim_set_current_win old-winid))))
 
 (fn execute [begin end compiler options reuse?]
   "Make an execution request and call `display-output` with the response"
@@ -68,11 +68,13 @@
     (let [cmd (m> :godbolt.cmd :build-cmd compiler text options :exec)]
       (fun.jobstart cmd
                     {:on_exit (fn [_ _ _]
-                                (let [file (io.open :godbolt_response_exec.json :r)
+                                (let [file (io.open :godbolt_response_exec.json
+                                                    :r)
                                       response (file:read :*all)]
                                   (file:close)
                                   (os.remove :godbolt_request_exec.json)
                                   (os.remove :godbolt_response_exec.json)
-                                  (display-output (vim.json.decode response) source-buf reuse?)))}))))
+                                  (display-output (vim.json.decode response)
+                                                  source-buf reuse?)))}))))
 
 {: execute}

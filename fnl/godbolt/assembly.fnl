@@ -34,7 +34,8 @@
                 (table.maxn (. map source-buf))
                 (api.nvim_create_buf false true))]
     (api.nvim_buf_set_option buf :filetype :asm)
-    (api.nvim_buf_set_lines buf 0 -1 true (vim.split text "\n" {:trimempty true}))
+    (api.nvim_buf_set_lines buf 0 -1 true
+                            (vim.split text "\n" {:trimempty true}))
     (api.nvim_buf_set_name buf name)
     buf))
 
@@ -77,21 +78,17 @@
     (each [k v (pairs asm-table)]
       (when (= (type v.source) :table)
         (when (= linenum v.source.line)
-          (vim.highlight.range asm-buf
-                               nsid
-                               :Visual
+          (vim.highlight.range asm-buf nsid :Visual
                                ;; [start-row start-col] [end-row end-col]
-                               [(dec k) 0] [(dec k) 100]
-                               :linewise
-                               true))))))
+                               [(dec k) 0] [(dec k) 100] :linewise true))))))
 
 ; Main
 (fn display [response begin name reuse?]
   "Display the assembly in a split"
   (let [asm (if (vim.tbl_isempty response.asm)
-                (fmt "No assembly to display (~%d lines filtered)" response.filteredCount)
-                (accumulate [str ""
-                             _ v (pairs response.asm)]
+                (fmt "No assembly to display (~%d lines filtered)"
+                     response.filteredCount)
+                (accumulate [str "" _ v (pairs response.asm)]
                   (if v.text
                       (.. str "\n" v.text)
                       str)))
@@ -131,9 +128,7 @@
           (when (not (. map source-buf))
             (tset map source-buf {}))
           (tset map source-buf asm-buf
-                {:asm response.asm
-                 :offset begin
-                 :winid asm-winid})
+                {:asm response.asm :offset begin :winid asm-winid})
           (when (not (vim.tbl_isempty response.asm))
             (update-hl source-buf asm-buf)
             (setup-aucmd source-buf asm-buf))))))
@@ -158,6 +153,5 @@
                                          (fmt "%s %02d:%02d:%02d" compiler hour
                                               min sec)
                                          reuse?)))})))
-
 
 {: map : nsid : pre-display : update-hl : clear}

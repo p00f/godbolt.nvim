@@ -1,5 +1,5 @@
-#!/usr/bin/fish
-for file in $argv
+#!/bin/sh
+for file in "$@"; do
     echo "formatting $file"
-    fnlfmt --fix $file
-end
+    fnlfmt --fix "$file"
+done

@@ -22,20 +22,14 @@
 
 (defcmd :Godbolt
   (fn [opts]
-    ((. (require :godbolt.cmd) :godbolt)
-     opts.line1 opts.line2 opts.bang))
-  {:bang true
-   :nargs 0
-   :range "%"})
+    ((. (require :godbolt.cmd) :godbolt) opts.line1 opts.line2 opts.bang))
+  {:bang true :nargs 0 :range "%"})
 
 (defcmd :GodboltCompiler
   (fn [opts]
-    ((. (require :godbolt.cmd) :godbolt)
-     opts.line1 opts.line2 opts.bang (first opts.fargs)))
-  {:bang true
-   :nargs 1
-   : complete
-   :range "%"})
+    ((. (require :godbolt.cmd) :godbolt) opts.line1 opts.line2 opts.bang
+                                         (first opts.fargs)))
+  {:bang true :nargs 1 : complete :range "%"})
 
 (when (not (= 1 vim.g.godbolt_loaded))
   (set vim.g.godbolt_loaded 1)

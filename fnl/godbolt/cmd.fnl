@@ -19,7 +19,7 @@
   "Build curl command from compiler, text and options"
   (let [json (vim.json.encode {:source text : options})
         config (. (require :godbolt) :config)
-        file (-> :godbolt_request_%s.json
+        file (-> "godbolt_request_%s.json"
                  (string.format exec-asm?)
                  (io.open :w))]
     (file:write json)
@@ -41,20 +41,20 @@
     (var options (if (. config.languages ft)
                      (vim.deepcopy (. config.languages ft :options))
                      {}))
-    (let [flags (vim.fn.input
-                  {:prompt "Flags: "
-                   :default (or options.userArguments "")})]
+    (let [flags (vim.fn.input {:prompt "Flags: "
+                               :default (or options.userArguments "")})]
       (tset options :userArguments flags)
-      (let [fuzzy? (accumulate [matches false
-                                k v (pairs [:telescope :fzf :skim :fzy])]
+      (let [fuzzy? (accumulate [matches false k v (pairs [:telescope
+                                                          :fzf
+                                                          :skim
+                                                          :fzy])]
                      (if (= v compiler) true matches))]
         (if fuzzy?
-            (fuzzy compiler ft begin end options
-                   (= true vim.b.godbolt_exec)
+            (fuzzy compiler ft begin end options (= true vim.b.godbolt_exec)
                    reuse?)
             (do
               (pre-display begin end compiler options reuse?)
               (when vim.b.godbolt_exec
-                  (execute begin end compiler options reuse?))))))))
+                (execute begin end compiler options reuse?))))))))
 
 {: build-cmd : godbolt}
