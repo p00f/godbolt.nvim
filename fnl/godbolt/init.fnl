@@ -15,22 +15,40 @@
 ;  You should have received a copy of the GNU General Public License
 ;  along with godbolt.nvim.  If not, see <https://www.gnu.org/licenses/>.
 
-(import-macros {: m>} :godbolt.macros)
+(import-macros {: m> : first} :godbolt.macros)
 (local fun vim.fn)
 (local api vim.api)
 
 (var config {:languages {:cpp {:compiler :g132 :options {}}
                          :c {:compiler :cg132 :options {}}
                          :rust {:compiler :r1730 :options {}}}
+             :highlights [
+                "#222222"
+                "#333333"
+                "#444444"
+                "#555555"
+                "#444444"
+                "#333333"
+                ]
              :quickfix {:enable false :auto_open false}
              :url "https://godbolt.org"})
 
+(fn setup-highlights [highlights]
+  "Setup highlight groups"
+  (icollect [i v (ipairs highlights)]
+    (if (= (type v) :string)
+           (let [group-name (.. "Godbolt" i)]
+             (if (= (string.sub v 1 1) :#)
+                   (vim.cmd.highlight group-name (.. "guibg=" v))
+                 (pcall fun.execute (.. "highlight " v))
+                   (vim.cmd.highlight group-name :link v))
+             group-name))))
+
 (fn setup [cfg]
-  (if (= 1 (fun.has :nvim-0.6)
+  (if (= 1 (fun.has :nvim-0.6))
          (do
-           (when cfg
-             (each [k v (pairs cfg)]
-               (tset config k v)))))
+           (vim.tbl_extend :force config cfg)
+           (set config.highlights (setup-highlights config.highlights)))
       (api.nvim_err_writeln "neovim 0.6+ is required")))
 
 {: config : setup}

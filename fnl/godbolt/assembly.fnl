@@ -42,12 +42,14 @@
 
 (fn setup-aucmd [source-buf asm-buf]
   "Setup autocommands for updating highlights"
-  (cmd "augroup Godbolt")
-  (cmd (fmt "autocmd CursorMoved <buffer=%s> lua require('godbolt.assembly')['update-hl'](%s, %s)"
-            source-buf source-buf asm-buf))
-  (cmd (fmt "autocmd BufLeave <buffer=%s> lua require('godbolt.assembly').clear(%s)"
-            source-buf source-buf))
-  (cmd "augroup END"))
+  (fn loc-update-hl [] (m> :godbolt.assembly :update-hl source-buf asm-buf))
+  (fn loc-clear [] (m> :godbolt.assembly :clear source-buf))
+  (let [group (api.nvim_create_augroup :Godbolt { :clear true })]
+    (api.nvim_create_autocmd [ :CursorMoved :BufEnter :BufLeave ] { :callback loc-update-hl :buffer source-buf :group group })
+    (api.nvim_create_autocmd [ :CursorMoved :BufEnter :BufLeave ] { :callback loc-update-hl :buffer asm-buf :group group })
+    (api.nvim_create_autocmd :BufUnload { :callback loc-clear :buffer source-buf :group group })
+    (api.nvim_create_autocmd :BufUnload { :callback loc-clear :buffer asm-buf :group group }))
+  nil)
 
 ;; https://stackoverflow.com/a/49209650
 (fn make-qflist [err bufnr]
@@ -63,25 +65,47 @@
 ; Highlighting
 (fn clear [source-buf]
   "Clear highlights: used when leaving the source buffer"
+  (api.nvim_buf_clear_namespace source-buf nsid 0 -1)
+  (api.nvim_del_augroup_by_name "Godbolt")
   (each [asm-buf _ (pairs (. map source-buf))]
-    (api.nvim_buf_clear_namespace asm-buf nsid 0 -1)))
+    (api.nvim_buf_clear_namespace asm-buf nsid 0 -1))
+  (tset map source-buf nil))
 
 (fn update-hl [source-buf asm-buf]
   "Update highlights: used when the cursor moves in the source buffer"
   (api.nvim_buf_clear_namespace asm-buf nsid 0 -1)
+  (api.nvim_buf_clear_namespace source-buf nsid 0 -1)
   (let [entry (. map source-buf asm-buf)
-        offset entry.offset
+        offset (dec entry.offset)
         asm-table entry.asm
-        linenum (-> (fun.getcurpos)
-                    (second)
-                    (- offset)
-                    (inc))]
+        config (. (require :godbolt) :config)
+        hlgroup-map {}]
+    (var source-highlighted false)
+    (var linenum (-> (fun.getcurpos) (second) (- offset)))
+    (when (= (fun.bufnr) asm-buf)
+      (set linenum
+        (if (and (= (type (. asm-table linenum)) :table) (= (type (. asm-table linenum :source)) :table))
+          (. asm-table linenum :source :line)
+          nil)))
     (each [k v (pairs asm-table)]
       (when (= (type v.source) :table)
+        (when (= (. hlgroup-map v.source.line) nil)
+          (tset hlgroup-map v.source.line (. config.highlights (-> v.source.line (% (length config.highlights)) (inc))))
+          (vim.highlight.range source-buf nsid (. hlgroup-map v.source.line)
+                             ;; [start-row start-col] [end-row end-col]
+                             [(dec v.source.line) 0] [(dec v.source.line) 100] :linewise true))
+        (vim.highlight.range asm-buf nsid (. hlgroup-map v.source.line)
+                             ;; [start-row start-col] [end-row end-col]
+                             [(dec k) 0] [(dec k) 100] :linewise true)
         (when (= linenum v.source.line)
           (vim.highlight.range asm-buf nsid :Visual
                                ;; [start-row start-col] [end-row end-col]
-                               [(dec k) 0] [(dec k) 100] :linewise true))))))
+                               [(dec k) 0] [(dec k) 100] :linewise true)
+          (when (not source-highlighted) ; not to spam with highlights
+            (vim.highlight.range source-buf nsid :Visual
+                               ;; [start-row start-col] [end-row end-col]
+                               [(dec v.source.line) 0] [(dec v.source.line) 100] :linewise true)
+            (set source-highlighted true)))))))
 
 ; Main
 (fn display [response begin name reuse?]
