@@ -21,8 +21,21 @@
 (local fmt string.format)
 (local term-escapes "[\027\155][][()#;?%d]*[A-PRZcf-ntqry=><~]")
 (local wo-set api.nvim_win_set_option)
-(var map _G.__godbolt_map)
-(var nsid _G.__godbolt_nsid)
+(var map {})
+(var nsid (vim.api.nvim_create_namespace :godbolt))
+
+(fn get-highlight-groups [highlights]
+  "Get highlight groups from the configuration"
+  (icollect [i hl (ipairs highlights)]
+    (when (= (type hl) :string)
+      (let [group-name (.. :Godbolt i)]
+        (if (= (string.sub hl 1 1) "#")
+            ;; if it's a hex value, set the highlight group
+            (api.nvim_set_hl 0 group-name {:guibg hl})
+            (not (vim.tbl_isempty (api.nvim_get_hl 0 {:name group-name})))
+            ;; if it's an existing highlight group, link it
+            (api.nvim_set_hl 0 group-name {:link hl})
+            group-name)))))
 
 ; Helper functions
 (fn prepare-buf [text name reuse? source-buf]
@@ -67,7 +80,8 @@
   "Update highlights: used when the cursor moves in the source buffer"
   (api.nvim_buf_clear_namespace source-buffer nsid 0 -1)
   (let [highlighted-source []
-        highlights (. (require :godbolt) :config :highlights)]
+        highlights (get-highlight-groups (. (require :godbolt) :config
+                                            :highlights))]
     (each [asm-buffer entry (pairs (. map source-buffer))]
       (api.nvim_buf_clear_namespace asm-buffer nsid 0 -1)
       (each [line _ (ipairs entry.asm)]

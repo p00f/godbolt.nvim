@@ -30,24 +30,3 @@
     ((. (require :godbolt.cmd) :godbolt) opts.line1 opts.line2 opts.bang
                                          (first opts.fargs)))
   {:bang true :nargs 1 : complete :range "%"})
-
-(fn setup-highlights [highlights]
-  "Setup highlight groups"
-  (icollect [i v (ipairs highlights)]
-    (if (= (type v) :string)
-        (let [group-name (.. :Godbolt i)]
-          (if (= (string.sub v 1 1) "#")
-              (vim.cmd.highlight group-name (.. :guibg= v))
-              (pcall vim.fn.execute (.. "highlight " v))
-              (vim.cmd.highlight group-name :link v))
-          group-name))))
-
-(when (not (= 1 vim.g.godbolt_loaded))
-  (set vim.g.godbolt_loaded 1)
-  (set _G.__godbolt_map {})
-  (set _G.__godbolt_exec_buf_map {})
-  (set _G.__godbolt_nsid (vim.api.nvim_create_namespace :godbolt))
-  (let [config (. (require :godbolt) :config)]
-    (when (and config.highlights (not (vim.tbl_isempty config.highlights))
-               (not= (. config.highlights 1) :Godbolt1))
-      (set config.highlights (setup-highlights config.highlights)))))
