@@ -22,6 +22,7 @@
 (var config {:languages {:cpp {:compiler :g132 :options {}}
                          :c {:compiler :cg132 :options {}}
                          :rust {:compiler :r1730 :options {}}}
+             :auto_cleanup true
              :highlights [
                 "#222222"
                 "#333333"

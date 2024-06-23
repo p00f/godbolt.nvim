@@ -88,7 +88,7 @@
 (fn remove-source [source-buffer]
   (api.nvim_buf_clear_namespace source-buffer nsid 0 -1)
   (api.nvim_del_augroup_by_name :godbolt)
-  (if (->> source-buffer (. map) (not= nil))
+  (if (->> source-buffer (. map) (not= nil) (and (. (require :godbolt) :config :auto_cleanup)))
         (each [asm-buffer _ (pairs (. map source-buffer))]
           (api.nvim_buf_delete asm-buffer {})))
         (tset map source-buffer nil))
@@ -107,7 +107,7 @@
   (let [asm-buffer (or (?. options :buf) (fun.bufnr))
         source-buffer (find-source asm-buffer)]
     (remove-asm source-buffer asm-buffer)
-    (when (->> source-buffer (. map) (vim.tbl_count) (= 0))
+    (when (->> source-buffer (. map) (vim.tbl_count) (= 0) (and (. (require :godbolt) :config :auto_cleanup)))
       (remove-source source-buffer))))
 
 (fn setup-aucmd [source-buf asm-buf]
