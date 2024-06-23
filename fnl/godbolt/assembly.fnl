@@ -63,7 +63,7 @@
         group (if (= source-line cursor-line)
                 "Visual"
                 (cyclic-lookup highlights source-line))]
-    (vim.highlight.range buffer nsid group [(dec line) 0] [(dec line) 100] :linewise true)))
+    (api.nvim_buf_add_highlight buffer nsid group (dec line) 0 -1)))
 
 (fn update-hl [source-buffer source-line]
   "Update highlights: used when the cursor moves in the source buffer"
