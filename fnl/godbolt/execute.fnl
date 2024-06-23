@@ -19,7 +19,7 @@
 (local api vim.api)
 (local wo-set api.nvim_win_set_option)
 (import-macros {: m> : dec} :godbolt.macros)
-(var exec-buf-map _G.__godbolt_exec_buf_map)
+(var exec-buf-map {})
 
 (fn prepare-buf [lines source-buf reuse?]
   "Prepare the output buffer: set buffer options and add text"

@@ -1,17 +1,17 @@
 local function build_cmd(compiler, text, options, exec_asm_3f)
   local json = vim.json.encode({source = text, options = options})
-  local config = (require("godbolt")).config
+  local config = require("godbolt").config
   local file = io.open(string.format("godbolt_request_%s.json", exec_asm_3f), "w")
   file:write(json)
   io.close(file)
   return string.format(("curl %s/api/compiler/\"%s\"/compile" .. " --data-binary @godbolt_request_%s.json" .. " --header \"Accept: application/json\"" .. " --header \"Content-Type: application/json\"" .. " --output godbolt_response_%s.json"), config.url, compiler, exec_asm_3f, exec_asm_3f)
 end
 local function godbolt(begin, _end, reuse_3f, compiler)
-  local pre_display = (require("godbolt.assembly"))["pre-display"]
-  local execute = (require("godbolt.execute")).execute
-  local fuzzy = (require("godbolt.fuzzy")).fuzzy
+  local pre_display = require("godbolt.assembly")["pre-display"]
+  local execute = require("godbolt.execute").execute
+  local fuzzy = require("godbolt.fuzzy").fuzzy
   local ft = vim.bo.filetype
-  local config = (require("godbolt")).config
+  local config = require("godbolt").config
   local compiler0 = (compiler or config.languages[ft].compiler)
   local options
   if config.languages[ft] then
@@ -20,7 +20,7 @@ local function godbolt(begin, _end, reuse_3f, compiler)
     options = {}
   end
   local flags = vim.fn.input({prompt = "Flags: ", default = (options.userArguments or "")})
-  do end (options)["userArguments"] = flags
+  options["userArguments"] = flags
   local fuzzy_3f
   do
     local matches = false
