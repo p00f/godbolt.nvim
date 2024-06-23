@@ -1,8 +1,8 @@
 local fun = vim.fn
-local pre_display = (require("godbolt.assembly"))["pre-display"]
-local execute = (require("godbolt.execute")).execute
+local pre_display = require("godbolt.assembly")["pre-display"]
+local execute = require("godbolt.execute").execute
 local function transform(entry)
-  return {value = (vim.split(entry, " "))[1], display = entry, ordinal = entry}
+  return {value = vim.split(entry, " ")[1], display = entry, ordinal = entry}
 end
 local function fzf(entries, begin, _end, options, exec, reuse_3f)
   local maxlen
@@ -20,7 +20,7 @@ local function fzf(entries, begin, _end, options, exec, reuse_3f)
   end
   local width = ((maxlen / vim.o.columns) + 0.05)
   local function _2_(choice)
-    local compiler = (vim.split(choice, " "))[1]
+    local compiler = vim.split(choice, " ")[1]
     pre_display(begin, _end, compiler, options, reuse_3f)
     if exec then
       return execute(begin, _end, compiler, options)
@@ -46,7 +46,7 @@ local function skim(entries, begin, _end, options, exec, reuse_3f)
   end
   local width = ((maxlen / vim.o.columns) + 0.05)
   local function _5_(choice)
-    local compiler = (vim.split(choice, " "))[1]
+    local compiler = vim.split(choice, " ")[1]
     pre_display(begin, _end, compiler, options, reuse_3f)
     if exec then
       return execute(begin, _end, compiler, options)
@@ -59,7 +59,7 @@ end
 local function telescope(entries, begin, _end, options, exec, reuse_3f)
   local pickers = require("telescope.pickers")
   local finders = require("telescope.finders")
-  local conf = (require("telescope.config")).values
+  local conf = require("telescope.config").values
   local actions = require("telescope.actions")
   local actions_state = require("telescope.actions.state")
   local function _7_(prompt_bufnr, _map)
@@ -82,7 +82,7 @@ local function fzy(entries, begin, _end, options, exec, reuse_3f)
     return text
   end
   local function _11_(choice)
-    local compiler = (vim.split(choice, " "))[1]
+    local compiler = vim.split(choice, " ")[1]
     pre_display(begin, _end, compiler, options, reuse_3f)
     if exec then
       return execute(begin, _end, compiler, options)
@@ -90,7 +90,7 @@ local function fzy(entries, begin, _end, options, exec, reuse_3f)
       return nil
     end
   end
-  return (require("fzy")).pick_one(entries, "Choose compiler: ", _10_, _11_)
+  return require("fzy").pick_one(entries, "Choose compiler: ", _10_, _11_)
 end
 local function fuzzy(picker, ft, begin, _end, options, exec, reuse_3f)
   local ft0
@@ -102,7 +102,7 @@ local function fuzzy(picker, ft, begin, _end, options, exec, reuse_3f)
   else
     ft0 = nil
   end
-  local url = (require("godbolt")).config.url
+  local url = require("godbolt").config.url
   local cmd = string.format("curl %s/api/compilers/%s", url, ft0)
   local output = {}
   local function _14_(_, data, _0)
@@ -111,22 +111,22 @@ local function fuzzy(picker, ft, begin, _end, options, exec, reuse_3f)
   local function _15_(_, _0, _1)
     local entries
     do
-      local tbl_17_auto = {}
-      local i_18_auto = #tbl_17_auto
+      local tbl_19_auto = {}
+      local i_20_auto = 0
       for k, v in ipairs(output) do
-        local val_19_auto
+        local val_21_auto
         if (k ~= 1) then
-          val_19_auto = v
+          val_21_auto = v
         else
-          val_19_auto = nil
+          val_21_auto = nil
         end
-        if (nil ~= val_19_auto) then
-          i_18_auto = (i_18_auto + 1)
-          do end (tbl_17_auto)[i_18_auto] = val_19_auto
+        if (nil ~= val_21_auto) then
+          i_20_auto = (i_20_auto + 1)
+          do end (tbl_19_auto)[i_20_auto] = val_21_auto
         else
         end
       end
-      entries = tbl_17_auto
+      entries = tbl_19_auto
     end
     local _18_
     if (picker == "fzf") then

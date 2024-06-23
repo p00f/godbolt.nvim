@@ -21,31 +21,31 @@ end
 local function display_output(response, source_buf, reuse_3f)
   local stderr
   do
-    local tbl_17_auto = {}
-    local i_18_auto = #tbl_17_auto
+    local tbl_19_auto = {}
+    local i_20_auto = 0
     for k, v in pairs(response.stderr) do
-      local val_19_auto = v.text
-      if (nil ~= val_19_auto) then
-        i_18_auto = (i_18_auto + 1)
-        do end (tbl_17_auto)[i_18_auto] = val_19_auto
+      local val_21_auto = v.text
+      if (nil ~= val_21_auto) then
+        i_20_auto = (i_20_auto + 1)
+        do end (tbl_19_auto)[i_20_auto] = val_21_auto
       else
       end
     end
-    stderr = tbl_17_auto
+    stderr = tbl_19_auto
   end
   local stdout
   do
-    local tbl_17_auto = {}
-    local i_18_auto = #tbl_17_auto
+    local tbl_19_auto = {}
+    local i_20_auto = 0
     for k, v in pairs(response.stdout) do
-      local val_19_auto = v.text
-      if (nil ~= val_19_auto) then
-        i_18_auto = (i_18_auto + 1)
-        do end (tbl_17_auto)[i_18_auto] = val_19_auto
+      local val_21_auto = v.text
+      if (nil ~= val_21_auto) then
+        i_20_auto = (i_20_auto + 1)
+        do end (tbl_19_auto)[i_20_auto] = val_21_auto
       else
       end
     end
-    stdout = tbl_17_auto
+    stdout = tbl_19_auto
   end
   local lines = {("exit code: " .. response.code)}
   table.insert(lines, "stdout:")
@@ -71,7 +71,7 @@ local function execute(begin, _end, compiler, options, reuse_3f)
   local text = fun.join(lines, "\n")
   local source_buf = fun.bufnr()
   do end (options)["compilerOptions"] = {executorRequest = true}
-  local cmd = (require("godbolt.cmd"))["build-cmd"](compiler, text, options, "exec")
+  local cmd = require("godbolt.cmd")["build-cmd"](compiler, text, options, "exec")
   local function _5_(_, _0, _1)
     local file = io.open("godbolt_response_exec.json", "r")
     local response = file:read("*all")

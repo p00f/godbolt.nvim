@@ -9,7 +9,7 @@ local map = _G.__godbolt_map
 local nsid = _G.__godbolt_nsid
 local function prepare_buf(text, name, reuse_3f, source_buf)
   local buf
-  local function _2_()
+  local function _2_(...)
     return (type(map[source_buf]) == "table")
   end
   if (reuse_3f and _2_()) then
@@ -30,10 +30,10 @@ local function setup_aucmd(source_buf, asm_buf)
 end
 local function make_qflist(err, bufnr)
   if next(err) then
-    local tbl_17_auto = {}
-    local i_18_auto = #tbl_17_auto
+    local tbl_19_auto = {}
+    local i_20_auto = 0
     for _, v in ipairs(err) do
-      local val_19_auto
+      local val_21_auto
       do
         local entry = {text = string.gsub(v.text, term_escapes, ""), bufnr = bufnr}
         if v.tag then
@@ -41,15 +41,15 @@ local function make_qflist(err, bufnr)
           entry["lnum"] = v.tag.line
         else
         end
-        val_19_auto = entry
+        val_21_auto = entry
       end
-      if (nil ~= val_19_auto) then
-        i_18_auto = (i_18_auto + 1)
-        do end (tbl_17_auto)[i_18_auto] = val_19_auto
+      if (nil ~= val_21_auto) then
+        i_20_auto = (i_20_auto + 1)
+        do end (tbl_19_auto)[i_20_auto] = val_21_auto
       else
       end
     end
-    return tbl_17_auto
+    return tbl_19_auto
   else
     return nil
   end
@@ -92,7 +92,7 @@ local function display(response, begin, name, reuse_3f)
     end
     asm = str
   end
-  local config = (require("godbolt")).config
+  local config = require("godbolt").config
   local source_winid = fun.win_getid()
   local source_buf = fun.bufnr()
   local qflist = make_qflist(response.stderr, source_buf)
@@ -145,7 +145,7 @@ end
 local function pre_display(begin, _end, compiler, options, reuse_3f)
   local lines = api.nvim_buf_get_lines(0, (begin - 1), _end, true)
   local text = fun.join(lines, "\n")
-  local curl_cmd = (require("godbolt.cmd"))["build-cmd"](compiler, text, options, "asm")
+  local curl_cmd = require("godbolt.cmd")["build-cmd"](compiler, text, options, "asm")
   local time = os.date("*t")
   local hour = time.hour
   local min = time.min
