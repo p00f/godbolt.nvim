@@ -127,7 +127,7 @@ local function remove_asm(source_buffer, asm_buffer)
 end
 local function remove_source(source_buffer)
   api.nvim_buf_clear_namespace(source_buffer, nsid, 0, -1)
-  api.nvim_del_augroup_by_name("godbolt")
+  api.nvim_del_augroup_by_name("Godbolt")
   if (require("godbolt").config.auto_cleanup and (nil ~= map[source_buffer])) then
     for asm_buffer, _ in pairs(map[source_buffer]) do
       api.nvim_buf_delete(asm_buffer, {})
@@ -184,14 +184,12 @@ local function clear_asm(options)
   end
 end
 local function setup_aucmd(source_buf, asm_buf)
-  do
-    local group = api.nvim_create_augroup("godbolt", {clear = false})
-    api.nvim_create_autocmd({"CursorMoved", "BufEnter"}, {callback = update_source, buffer = source_buf, group = group})
-    api.nvim_create_autocmd({"CursorMoved", "BufEnter"}, {callback = update_asm, buffer = asm_buf, group = group})
-    api.nvim_create_autocmd("BufUnload", {callback = clear_source, buffer = source_buf, group = group})
-    api.nvim_create_autocmd("BufUnload", {callback = clear_asm, buffer = asm_buf, group = group})
-  end
-  return nil
+  cmd("augroup Godbolt")
+  cmd(fmt("autocmd CursorMoved,BufEnter <buffer=%s> lua require('godbolt.assembly')['update-source']()", source_buf))
+  cmd(fmt("autocmd CursorMoved,BufEnter <buffer=%s> lua require('godbolt.assembly')['update-asm']()", asm_buf))
+  cmd(fmt("autocmd BufUnload <buffer=%s> lua require('godbolt.assembly')['clear-source']()", source_buf))
+  cmd(fmt("autocmd BufUnload <buffer=%s> lua require('godbolt.assembly')['clear-asm']()", asm_buf))
+  return cmd("augroup END")
 end
 local function make_qflist(err, bufnr)
   if next(err) then
@@ -311,4 +309,4 @@ local function pre_display(begin, _end, compiler, options, reuse_3f)
   end
   return fun.jobstart(curl_cmd, {on_exit = _44_})
 end
-return {map = map, nsid = nsid, ["pre-display"] = pre_display, ["update-hl"] = update_hl, clear = clear}
+return {map = map, nsid = nsid, ["pre-display"] = pre_display, ["update-hl"] = update_hl, ["update-source"] = update_source, ["update-asm"] = update_asm, ["clear-source"] = clear_source, ["clear-asm"] = clear_asm, clear = clear}
