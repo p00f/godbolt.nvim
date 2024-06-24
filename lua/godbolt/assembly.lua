@@ -59,7 +59,7 @@ local function count_source_line(entry, asm_line)
     end
     source = t_6_
   end
-  if ((source ~= nil) and (type(source) == "table") and (source.file == vim.NIL)) then
+  if (source and (type(source) == "table") and (source.file == vim.NIL)) then
     return (source.line + (entry.offset - 1))
   else
     return nil
@@ -92,7 +92,7 @@ local function update_hl(source_buffer, cursor_line)
     api.nvim_buf_clear_namespace(asm_buffer, nsid, 0, -1)
     for line, _ in ipairs(entry.asm) do
       local source_line = count_source_line(entry, line)
-      if (source_line ~= nil) then
+      if source_line then
         local group
         if (cursor_line == source_line) then
           group = "Visual"

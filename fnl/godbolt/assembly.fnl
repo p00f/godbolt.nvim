@@ -54,7 +54,7 @@
 
 (fn count-source-line [entry asm-line]
   (let [source (?. entry :asm asm-line :source)]
-    (if (and (not= source nil) (= (type source) :table) (= source.file vim.NIL))
+    (if (and source (= (type source) :table) (= source.file vim.NIL))
         (+ source.line (dec entry.offset)))))
 
 (fn get-source-line [source-buffer asm-buffer asm-line]
@@ -72,7 +72,7 @@
       (api.nvim_buf_clear_namespace asm-buffer nsid 0 -1)
       (each [line _ (ipairs entry.asm)]
         (let [source-line (count-source-line entry line)]
-          (when (not= source-line nil)
+          (when source-line
             (let [group (if (= cursor-line source-line) :Visual
                             (cyclic-lookup highlights source-line))]
               (api.nvim_buf_add_highlight asm-buffer nsid group (dec line) 0 -1)
