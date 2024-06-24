@@ -88,7 +88,7 @@
 
 (fn remove-source [source-buffer]
   (api.nvim_buf_clear_namespace source-buffer nsid 0 -1)
-  (api.nvim_del_augroup_by_name :godbolt)
+  (api.nvim_del_augroup_by_name :Godbolt)
   (if (->> source-buffer (. map) (not= nil) (and (. (require :godbolt) :config :auto_cleanup)))
         (each [asm-buffer _ (pairs (. map source-buffer))]
           (api.nvim_buf_delete asm-buffer {})))
@@ -113,12 +113,12 @@
 
 (fn setup-aucmd [source-buf asm-buf]
   "Setup autocommands for updating highlights"
-  (let [group (api.nvim_create_augroup :godbolt { :clear false })]
-    (api.nvim_create_autocmd [ :CursorMoved :BufEnter ] { :callback update-source :buffer source-buf :group group })
-    (api.nvim_create_autocmd [ :CursorMoved :BufEnter ] { :callback update-asm :buffer asm-buf :group group })
-    (api.nvim_create_autocmd :BufUnload { :callback clear-source :buffer source-buf :group group })
-    (api.nvim_create_autocmd :BufUnload { :callback clear-asm :buffer asm-buf :group group }))
-  nil)
+  (cmd "augroup Godbolt")
+  (cmd (fmt "autocmd CursorMoved,BufEnter <buffer=%s> lua require('godbolt.assembly')['update-source']()" source-buf))
+  (cmd (fmt "autocmd CursorMoved,BufEnter <buffer=%s> lua require('godbolt.assembly')['update-asm']()" asm-buf))
+  (cmd (fmt "autocmd BufUnload <buffer=%s> lua require('godbolt.assembly')['clear-source']()" source-buf))
+  (cmd (fmt "autocmd BufUnload <buffer=%s> lua require('godbolt.assembly')['clear-asm']()" asm-buf))
+  (cmd "augroup END"))
 
 ;; https://stackoverflow.com/a/49209650
 (fn make-qflist [err bufnr]
@@ -212,4 +212,4 @@
                                               min sec)
                                          reuse?)))})))
 
-{: map : nsid : pre-display : update-hl : clear}
+{: map : nsid : pre-display : update-hl : update-source : update-asm : clear-source : clear-asm : clear}
