@@ -61,7 +61,7 @@
   (count-source-line (?. map source-buffer asm-buffer) asm-line))
 
 (fn cyclic-lookup [array index]
-  (. array (+ 1 (% index (length array)))))
+  (->> array (length) (% index) (+ 1) (. array)))
 
 (fn update-hl [source-buffer cursor-line]
   "Update highlights: used when the cursor moves in the source buffer"
