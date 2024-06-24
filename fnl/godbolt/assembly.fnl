@@ -33,11 +33,13 @@
                                 (= :table)))
                 (table.maxn (. map source-buf))
                 (api.nvim_create_buf false true))]
-    (api.nvim_buf_set_option buf :filetype :asm)
-    (tset (. vim.bo buf) :bufhidden :unload)
     (api.nvim_buf_set_lines buf 0 -1 true
                             (vim.split text "\n" {:trimempty true}))
     (api.nvim_buf_set_name buf name)
+    (doto (. vim.bo buf)
+      (tset :filetype :asm)
+      (tset :bufhidden :unload)
+      (tset :modifiable false))
     buf))
 
 (fn get-current-line []
