@@ -23,14 +23,12 @@
                          :c {:compiler :cg132 :options {}}
                          :rust {:compiler :r1730 :options {}}}
              :auto_cleanup true
-             :highlights [
-                "#222222"
-                "#333333"
-                "#444444"
-                "#555555"
-                "#444444"
-                "#333333"
-                ]
+             :highlights ["#222222"
+                          "#333333"
+                          "#444444"
+                          "#555555"
+                          "#444444"
+                          "#333333"]
              :quickfix {:enable false :auto_open false}
              :url "https://godbolt.org"})
 
@@ -38,18 +36,18 @@
   "Setup highlight groups"
   (icollect [i v (ipairs highlights)]
     (if (= (type v) :string)
-           (let [group-name (.. "Godbolt" i)]
-             (if (= (string.sub v 1 1) :#)
-                   (vim.cmd.highlight group-name (.. "guibg=" v))
-                 (pcall fun.execute (.. "highlight " v))
-                   (vim.cmd.highlight group-name :link v))
-             group-name))))
+        (let [group-name (.. :Godbolt i)]
+          (if (= (string.sub v 1 1) "#")
+              (vim.cmd.highlight group-name (.. :guibg= v))
+              (pcall fun.execute (.. "highlight " v))
+              (vim.cmd.highlight group-name :link v))
+          group-name))))
 
 (fn setup [cfg]
   (if (= 1 (fun.has :nvim-0.6))
-         (do
-           (vim.tbl_extend :force config cfg)
-           (set config.highlights (setup-highlights config.highlights)))
+      (do
+        (vim.tbl_extend :force config cfg)
+        (set config.highlights (setup-highlights config.highlights)))
       (api.nvim_err_writeln "neovim 0.6+ is required")))
 
 {: config : setup}

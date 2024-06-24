@@ -31,13 +31,15 @@ local function get_current_line()
   return fun.getcurpos()[2]
 end
 local function find_source(asm_buffer)
+  local source_buffer_ret = nil
   for source_buffer, asm_buffers in pairs(map) do
-    if (nil ~= asm_buffers[asm_buffer]) then
-      return source_buffer
+    if source_buffer_ret then break end
+    if asm_buffers[asm_buffer] then
+      source_buffer_ret = source_buffer
     else
     end
   end
-  return nil
+  return source_buffer_ret
 end
 local function count_source_line(entry, asm_line)
   local source

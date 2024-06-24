@@ -55,7 +55,7 @@
 (fn count-source-line [entry asm-line]
   (let [source (?. entry :asm asm-line :source)]
     (if (and (not= source nil) (= (type source) :table) (= source.file vim.NIL))
-          (+ source.line (dec entry.offset)))))
+        (+ source.line (dec entry.offset)))))
 
 (fn get-source-line [source-buffer asm-buffer asm-line]
   (count-source-line (?. map source-buffer asm-buffer) asm-line))
@@ -73,12 +73,12 @@
       (each [line _ (ipairs entry.asm)]
         (let [source-line (count-source-line entry line)]
           (when (not= source-line nil)
-            (let [group (if (= cursor-line source-line)
-                      "Visual"
-                      (cyclic-lookup highlights source-line))]
+            (let [group (if (= cursor-line source-line) :Visual
+                            (cyclic-lookup highlights source-line))]
               (api.nvim_buf_add_highlight asm-buffer nsid group (dec line) 0 -1)
               (when (not (vim.tbl_contains highlighted-source source-line))
-                (api.nvim_buf_add_highlight source-buffer nsid group (dec source-line) 0 -1)
+                (api.nvim_buf_add_highlight source-buffer nsid group
+                                            (dec source-line) 0 -1)
                 (table.insert highlighted-source source-line)))))))))
 
 (fn update-source [options]
@@ -91,10 +91,11 @@
 (fn remove-source [source-buffer]
   (api.nvim_buf_clear_namespace source-buffer nsid 0 -1)
   (api.nvim_del_augroup_by_name :Godbolt)
-  (if (->> source-buffer (. map) (not= nil) (and (. (require :godbolt) :config :auto_cleanup)))
-        (each [asm-buffer _ (pairs (. map source-buffer))]
-          (api.nvim_buf_delete asm-buffer {})))
-        (tset map source-buffer nil))
+  (if (->> source-buffer (. map) (not= nil)
+           (and (. (require :godbolt) :config :auto_cleanup)))
+      (each [asm-buffer _ (pairs (. map source-buffer))]
+        (api.nvim_buf_delete asm-buffer {})))
+  (tset map source-buffer nil))
 
 (fn clear-source [options]
   (remove-source (or (?. options :buf) (fun.bufnr))))
@@ -110,16 +111,21 @@
   (let [asm-buffer (or (?. options :buf) (fun.bufnr))
         source-buffer (find-source asm-buffer)]
     (remove-asm source-buffer asm-buffer)
-    (when (->> source-buffer (. map) (vim.tbl_count) (= 0) (and (. (require :godbolt) :config :auto_cleanup)))
+    (when (->> source-buffer (. map) (vim.tbl_count) (= 0)
+               (and (. (require :godbolt) :config :auto_cleanup)))
       (remove-source source-buffer))))
 
 (fn setup-aucmd [source-buf asm-buf]
   "Setup autocommands for updating highlights"
   (cmd "augroup Godbolt")
-  (cmd (fmt "autocmd CursorMoved,BufEnter <buffer=%s> lua require('godbolt.assembly')['update-source']()" source-buf))
-  (cmd (fmt "autocmd CursorMoved,BufEnter <buffer=%s> lua require('godbolt.assembly')['update-asm']()" asm-buf))
-  (cmd (fmt "autocmd BufUnload <buffer=%s> lua require('godbolt.assembly')['clear-source']()" source-buf))
-  (cmd (fmt "autocmd BufUnload <buffer=%s> lua require('godbolt.assembly')['clear-asm']()" asm-buf))
+  (cmd (fmt "autocmd CursorMoved,BufEnter <buffer=%s> lua require('godbolt.assembly')['update-source']()"
+            source-buf))
+  (cmd (fmt "autocmd CursorMoved,BufEnter <buffer=%s> lua require('godbolt.assembly')['update-asm']()"
+            asm-buf))
+  (cmd (fmt "autocmd BufUnload <buffer=%s> lua require('godbolt.assembly')['clear-source']()"
+            source-buf))
+  (cmd (fmt "autocmd BufUnload <buffer=%s> lua require('godbolt.assembly')['clear-asm']()"
+            asm-buf))
   (cmd "augroup END"))
 
 ;; https://stackoverflow.com/a/49209650
@@ -137,7 +143,7 @@
 (fn clear [source-buf]
   "Clear highlights: used when leaving the source buffer"
   (api.nvim_buf_clear_namespace source-buf nsid 0 -1)
-  (api.nvim_del_augroup_by_name "Godbolt")
+  (api.nvim_del_augroup_by_name :Godbolt)
   (each [asm-buf _ (pairs (. map source-buf))]
     (api.nvim_buf_clear_namespace asm-buf nsid 0 -1))
   (tset map source-buf nil))
@@ -214,4 +220,12 @@
                                               min sec)
                                          reuse?)))})))
 
-{: map : nsid : pre-display : update-hl : update-source : update-asm : clear-source : clear-asm : clear}
+{: map
+ : nsid
+ : pre-display
+ : update-hl
+ : update-source
+ : update-asm
+ : clear-source
+ : clear-asm
+ : clear}
