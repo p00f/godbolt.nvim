@@ -130,7 +130,7 @@ end
 local function remove_source(source_buffer)
   api.nvim_buf_clear_namespace(source_buffer, nsid, 0, -1)
   api.nvim_del_augroup_by_name("Godbolt")
-  if (require("godbolt").config.auto_cleanup and (nil ~= map[source_buffer])) then
+  if (require("godbolt").config.auto_cleanup and map[source_buffer]) then
     for asm_buffer, _ in pairs(map[source_buffer]) do
       api.nvim_buf_delete(asm_buffer, {})
     end
@@ -179,7 +179,10 @@ local function clear_asm(options)
   asm_buffer = (_28_() or fun.bufnr())
   local source_buffer = find_source(asm_buffer)
   remove_asm(source_buffer, asm_buffer)
-  if (require("godbolt").config.auto_cleanup and (0 == vim.tbl_count(map[source_buffer]))) then
+  local function _31_(...)
+    return (0 == vim.tbl_count(map[source_buffer]))
+  end
+  if (require("godbolt").config.auto_cleanup and _31_()) then
     return remove_source(source_buffer)
   else
     return nil
@@ -301,7 +304,7 @@ local function pre_display(begin, _end, compiler, options, reuse_3f)
   local hour = time.hour
   local min = time.min
   local sec = time.sec
-  local function _44_(_, _0, _1)
+  local function _45_(_, _0, _1)
     local file = io.open("godbolt_response_asm.json", "r")
     local response = file:read("*all")
     file:close()
@@ -309,6 +312,6 @@ local function pre_display(begin, _end, compiler, options, reuse_3f)
     os.remove("godbolt_response_asm.json")
     return display(vim.json.decode(response), begin, fmt("%s %02d:%02d:%02d", compiler, hour, min, sec), reuse_3f)
   end
-  return fun.jobstart(curl_cmd, {on_exit = _44_})
+  return fun.jobstart(curl_cmd, {on_exit = _45_})
 end
 return {map = map, nsid = nsid, ["pre-display"] = pre_display, ["update-hl"] = update_hl, ["update-source"] = update_source, ["update-asm"] = update_asm, ["clear-source"] = clear_source, ["clear-asm"] = clear_asm, clear = clear}
