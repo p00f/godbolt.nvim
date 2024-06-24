@@ -48,35 +48,34 @@
     (when (->> asm-buffer (. asm-buffers) (not= nil))
       (lua "return source_buffer"))))
 
+(fn count-source-line [entry asm-line]
+  (let [source (?. entry :asm asm-line :source)]
+    (if (and (not= source nil) (= (type source) :table) (= source.file vim.NIL))
+          (+ source.line (dec entry.offset)))))
+
 (fn get-source-line [source-buffer asm-buffer asm-line]
-  (let [source (?. map source-buffer asm-buffer :asm asm-line :source)]
-  (if (= (type source) :table)
-        source.line
-        0)))
+  (count-source-line (?. map source-buffer asm-buffer) asm-line))
 
 (fn cyclic-lookup [array index]
   (. array (+ 1 (% index (length array)))))
 
-(fn highlight-line [buffer line offset source-line cursor-line]
-  (let [highlights (. (require :godbolt) :config :highlights)
-        offset-line (- source-line (dec offset))
-        group (if (= source-line cursor-line)
-                "Visual"
-                (cyclic-lookup highlights source-line))]
-    (api.nvim_buf_add_highlight buffer nsid group (dec line) 0 -1)))
-
-(fn update-hl [source-buffer source-line]
+(fn update-hl [source-buffer cursor-line]
   "Update highlights: used when the cursor moves in the source buffer"
   (api.nvim_buf_clear_namespace source-buffer nsid 0 -1)
-  (let [highlighted-source []]
+  (let [highlighted-source []
+        highlights (. (require :godbolt) :config :highlights)]
     (each [asm-buffer entry (pairs (. map source-buffer))]
       (api.nvim_buf_clear_namespace asm-buffer nsid 0 -1)
-      (each [line v (ipairs entry.asm)]
-        (when (and (= (type v.source) :table) (= v.source.file vim.NIL))
-          (highlight-line asm-buffer line entry.offset v.source.line source-line)
-          (when (not (vim.tbl_contains highlighted-source v.source.line))
-            (highlight-line source-buffer v.source.line entry.offset v.source.line source-line)
-            (table.insert highlighted-source v.source.line)))))))
+      (each [line _ (ipairs entry.asm)]
+        (let [source-line (count-source-line entry line)]
+          (when (not= source-line nil)
+            (let [group (if (= cursor-line source-line)
+                      "Visual"
+                      (cyclic-lookup highlights source-line))]
+              (api.nvim_buf_add_highlight asm-buffer nsid group (dec line) 0 -1)
+              (when (not (vim.tbl_contains highlighted-source source-line))
+                (api.nvim_buf_add_highlight source-buffer nsid group (dec source-line) 0 -1)
+                (table.insert highlighted-source source-line)))))))))
 
 (fn update-source [options]
   (update-hl (or (?. options :buf) (fun.bufnr)) (get-current-line)))
