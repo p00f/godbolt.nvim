@@ -46,9 +46,11 @@
   (second (fun.getcurpos)))
 
 (fn find-source [asm-buffer]
-  (each [source-buffer asm-buffers (pairs map)]
-    (when (->> asm-buffer (. asm-buffers) (not= nil))
-      (lua "return source_buffer"))))
+  (var source-buffer-ret nil)
+  (each [source-buffer asm-buffers (pairs map) &until source-buffer-ret]
+    (when (. asm-buffers asm-buffer)
+      (set source-buffer-ret source-buffer)))
+  source-buffer-ret)
 
 (fn count-source-line [entry asm-line]
   (let [source (?. entry :asm asm-line :source)]
