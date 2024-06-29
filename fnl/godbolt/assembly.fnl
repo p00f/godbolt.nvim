@@ -130,16 +130,19 @@
 
 (fn setup-aucmd [source-buf asm-buf]
   "Setup autocommands for updating highlights"
-  (cmd "augroup Godbolt")
-  (cmd (fmt "autocmd CursorMoved,BufEnter <buffer=%s> lua require('godbolt.assembly')['update-source']()"
-            source-buf))
-  (cmd (fmt "autocmd CursorMoved,BufEnter <buffer=%s> lua require('godbolt.assembly')['update-asm']()"
-            asm-buf))
-  (cmd (fmt "autocmd BufUnload <buffer=%s> lua require('godbolt.assembly')['clear-source']()"
-            source-buf))
-  (cmd (fmt "autocmd BufUnload <buffer=%s> lua require('godbolt.assembly')['clear-asm']()"
-            asm-buf))
-  (cmd "augroup END"))
+  (let [group (api.nvim_create_augroup :Godbolt {})]
+    (api.nvim_create_autocmd [:CursorMoved :BufEnter]
+      {: group
+       :callback (fn []
+                   (update-source source-buf)
+                   (update-asm asm-buf))
+       :buffer source-buf})
+    (api.nvim_create_autocmd [:BufUnload]
+      {: group
+       :callback (fn []
+                   (clear-source source-buf)
+                   (clear-asm asm-buf))
+       :buffer source-buf})))
 
 ;; https://stackoverflow.com/a/49209650
 (fn make-qflist [err bufnr]
