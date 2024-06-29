@@ -14,7 +14,7 @@ local function get_highlight_groups(highlights)
     if (type(hl) == "string") then
       local group_name = ("Godbolt" .. i)
       if (string.sub(hl, 1, 1) == "#") then
-        val_23_auto = api.nvim_set_hl(0, group_name, {guibg = hl})
+        val_23_auto = api.nvim_set_hl(0, group_name, {bg = hl})
       elseif not vim.tbl_isempty(api.nvim_get_hl(0, {name = group_name})) then
         val_23_auto = api.nvim_set_hl(0, group_name, {link = hl})
       else
@@ -53,7 +53,7 @@ local function prepare_buf(text, name, reuse_3f, source_buf)
   return buf
 end
 local function get_current_line()
-  return fun.getcurpos()[2]
+  return api.nvim_win_get_cursor(0)[1]
 end
 local function find_source(asm_buffer)
   local source_buffer_ret = nil
@@ -136,17 +136,8 @@ local function update_hl(source_buffer, cursor_line)
   end
   return nil
 end
-local function update_source(options)
-  local _20_
-  do
-    local t_19_ = options
-    if (nil ~= t_19_) then
-      t_19_ = t_19_.buf
-    else
-    end
-    _20_ = t_19_
-  end
-  return update_hl((_20_ or fun.bufnr()), get_current_line())
+local function update_source(buf)
+  return update_hl(buf, get_current_line())
 end
 local function remove_asm(source_buffer, asm_buffer)
   api.nvim_buf_clear_namespace(asm_buffer, nsid, 0, -1)
@@ -165,66 +156,37 @@ local function remove_source(source_buffer)
   map[source_buffer] = nil
   return nil
 end
-local function clear_source(options)
-  local _24_
-  do
-    local t_23_ = options
-    if (nil ~= t_23_) then
-      t_23_ = t_23_.buf
-    else
-    end
-    _24_ = t_23_
-  end
-  return remove_source((_24_ or fun.bufnr()))
-end
-local function update_asm(options)
-  local asm_buffer
-  local _27_
-  do
-    local t_26_ = options
-    if (nil ~= t_26_) then
-      t_26_ = t_26_.buf
-    else
-    end
-    _27_ = t_26_
-  end
-  asm_buffer = (_27_ or fun.bufnr())
+local function update_asm(asm_buffer)
   local source_buffer = find_source(asm_buffer)
   local asm_line = get_current_line()
   local source_line = get_source_line(source_buffer, asm_buffer, asm_line)
   return update_hl(source_buffer, source_line)
 end
-local function clear_asm(options)
-  local asm_buffer
-  local _30_
-  do
-    local t_29_ = options
-    if (nil ~= t_29_) then
-      t_29_ = t_29_.buf
-    else
-    end
-    _30_ = t_29_
-  end
-  asm_buffer = (_30_ or fun.bufnr())
+local function clear_asm(asm_buffer)
   local source_buffer = find_source(asm_buffer)
   remove_asm(source_buffer, asm_buffer)
-  local and_32_ = require("godbolt").config.auto_cleanup
-  if and_32_ then
-    and_32_ = (0 == vim.tbl_count(map[source_buffer]))
+  local and_20_ = require("godbolt").config.auto_cleanup
+  if and_20_ then
+    and_20_ = (0 == vim.tbl_count(map[source_buffer]))
   end
-  if and_32_ then
+  if and_20_ then
     return remove_source(source_buffer)
   else
     return nil
   end
 end
 local function setup_aucmd(source_buf, asm_buf)
-  cmd("augroup Godbolt")
-  cmd(fmt("autocmd CursorMoved,BufEnter <buffer=%s> lua require('godbolt.assembly')['update-source']()", source_buf))
-  cmd(fmt("autocmd CursorMoved,BufEnter <buffer=%s> lua require('godbolt.assembly')['update-asm']()", asm_buf))
-  cmd(fmt("autocmd BufUnload <buffer=%s> lua require('godbolt.assembly')['clear-source']()", source_buf))
-  cmd(fmt("autocmd BufUnload <buffer=%s> lua require('godbolt.assembly')['clear-asm']()", asm_buf))
-  return cmd("augroup END")
+  local group = api.nvim_create_augroup("Godbolt", {})
+  local function _22_()
+    update_source(source_buf)
+    return update_asm(asm_buf)
+  end
+  api.nvim_create_autocmd({"CursorMoved", "BufEnter"}, {group = group, callback = _22_, buffer = source_buf})
+  local function _23_()
+    remove_source(source_buf)
+    return clear_asm(asm_buf)
+  end
+  return api.nvim_create_autocmd({"BufUnload"}, {group = group, callback = _23_, buffer = source_buf})
 end
 local function make_qflist(err, bufnr)
   if next(err) then
@@ -334,7 +296,7 @@ local function pre_display(begin, _end, compiler, options, reuse_3f)
   local hour = time.hour
   local min = time.min
   local sec = time.sec
-  local function _46_(_, _0, _1)
+  local function _36_(_, _0, _1)
     local file = io.open("godbolt_response_asm.json", "r")
     local response = file:read("*all")
     file:close()
@@ -342,6 +304,6 @@ local function pre_display(begin, _end, compiler, options, reuse_3f)
     os.remove("godbolt_response_asm.json")
     return display(vim.json.decode(response), begin, fmt("%s %02d:%02d:%02d", compiler, hour, min, sec), reuse_3f)
   end
-  return fun.jobstart(curl_cmd, {on_exit = _46_})
+  return fun.jobstart(curl_cmd, {on_exit = _36_})
 end
-return {map = map, nsid = nsid, ["pre-display"] = pre_display, ["update-hl"] = update_hl, ["update-source"] = update_source, ["update-asm"] = update_asm, ["clear-source"] = clear_source, ["clear-asm"] = clear_asm, clear = clear}
+return {map = map, nsid = nsid, ["pre-display"] = pre_display, clear = clear}

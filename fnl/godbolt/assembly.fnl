@@ -15,7 +15,7 @@
 ;  You should have received a copy of the GNU General Public License
 ;  along with godbolt.nvim.  If not, see <https://www.gnu.org/licenses/>.
 
-(import-macros {: m> : dec : second : inc} :godbolt.macros)
+(import-macros {: m> : dec : second : inc : first} :godbolt.macros)
 (local {: api : cmd} vim)
 (local fun vim.fn)
 (local fmt string.format)
@@ -31,7 +31,7 @@
       (let [group-name (.. :Godbolt i)]
         (if (= (string.sub hl 1 1) "#")
             ;; if it's a hex value, set the highlight group
-            (api.nvim_set_hl 0 group-name {:guibg hl})
+            (api.nvim_set_hl 0 group-name {:bg hl})
             (not (vim.tbl_isempty (api.nvim_get_hl 0 {:name group-name})))
             ;; if it's an existing highlight group, link it
             (api.nvim_set_hl 0 group-name {:link hl})
@@ -56,7 +56,7 @@
     buf))
 
 (fn get-current-line []
-  (second (fun.getcurpos)))
+  (first (api.nvim_win_get_cursor 0)))
 
 (fn find-source [asm-buffer]
   (var source-buffer-ret nil)
@@ -95,8 +95,8 @@
                                             (dec source-line) 0 -1)
                 (table.insert highlighted-source source-line)))))))))
 
-(fn update-source [options]
-  (update-hl (or (?. options :buf) (fun.bufnr)) (get-current-line)))
+(fn update-source [buf]
+  (update-hl buf (get-current-line)))
 
 (fn remove-asm [source-buffer asm-buffer]
   (api.nvim_buf_clear_namespace asm-buffer nsid 0 -1)
@@ -110,19 +110,14 @@
       (api.nvim_buf_delete asm-buffer {})))
   (tset map source-buffer nil))
 
-(fn clear-source [options]
-  (remove-source (or (?. options :buf) (fun.bufnr))))
-
-(fn update-asm [options]
-  (let [asm-buffer (or (?. options :buf) (fun.bufnr))
-        source-buffer (find-source asm-buffer)
+(fn update-asm [asm-buffer]
+  (let [source-buffer (find-source asm-buffer)
         asm-line (get-current-line)
         source-line (get-source-line source-buffer asm-buffer asm-line)]
     (update-hl source-buffer source-line)))
 
-(fn clear-asm [options]
-  (let [asm-buffer (or (?. options :buf) (fun.bufnr))
-        source-buffer (find-source asm-buffer)]
+(fn clear-asm [asm-buffer]
+  (let [source-buffer (find-source asm-buffer)]
     (remove-asm source-buffer asm-buffer)
     (when (and (. (require :godbolt) :config :auto_cleanup)
                (->> source-buffer (. map) (vim.tbl_count) (= 0)))
@@ -132,17 +127,17 @@
   "Setup autocommands for updating highlights"
   (let [group (api.nvim_create_augroup :Godbolt {})]
     (api.nvim_create_autocmd [:CursorMoved :BufEnter]
-      {: group
-       :callback (fn []
-                   (update-source source-buf)
-                   (update-asm asm-buf))
-       :buffer source-buf})
+                             {: group
+                              :callback (fn []
+                                          (update-source source-buf)
+                                          (update-asm asm-buf))
+                              :buffer source-buf})
     (api.nvim_create_autocmd [:BufUnload]
-      {: group
-       :callback (fn []
-                   (clear-source source-buf)
-                   (clear-asm asm-buf))
-       :buffer source-buf})))
+                             {: group
+                              :callback (fn []
+                                          (remove-source source-buf)
+                                          (clear-asm asm-buf))
+                              :buffer source-buf})))
 
 ;; https://stackoverflow.com/a/49209650
 (fn make-qflist [err bufnr]
@@ -236,12 +231,4 @@
                                               min sec)
                                          reuse?)))})))
 
-{: map
- : nsid
- : pre-display
- : update-hl
- : update-source
- : update-asm
- : clear-source
- : clear-asm
- : clear}
+{: map : nsid : pre-display : clear}
