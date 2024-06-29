@@ -34,8 +34,8 @@
             (api.nvim_set_hl 0 group-name {:bg hl})
             (not (vim.tbl_isempty (api.nvim_get_hl 0 {:name group-name})))
             ;; if it's an existing highlight group, link it
-            (api.nvim_set_hl 0 group-name {:link hl})
-            group-name)))))
+            (api.nvim_set_hl 0 group-name {:link hl}))
+        group-name))))
 
 ; Helper functions
 (fn prepare-buf [text name reuse? source-buf]
@@ -128,16 +128,20 @@
   (let [group (api.nvim_create_augroup :Godbolt {})]
     (api.nvim_create_autocmd [:CursorMoved :BufEnter]
                              {: group
-                              :callback (fn []
-                                          (update-source source-buf)
-                                          (update-asm asm-buf))
+                              :callback #(update-source source-buf)
+                              :buffer source-buf})
+    (api.nvim_create_autocmd [:CursorMoved :BufEnter]
+                             {: group
+                              :callback #(update-asm asm-buf)
+                              :buffer asm-buf})
+    (api.nvim_create_autocmd [:BufUnload]
+                             {: group
+                              :callback #(remove-source source-buf)
                               :buffer source-buf})
     (api.nvim_create_autocmd [:BufUnload]
                              {: group
-                              :callback (fn []
-                                          (remove-source source-buf)
-                                          (clear-asm asm-buf))
-                              :buffer source-buf})))
+                              :callback #(clear-asm asm-buf)
+                              :buffer asm-buf})))
 
 ;; https://stackoverflow.com/a/49209650
 (fn make-qflist [err bufnr]

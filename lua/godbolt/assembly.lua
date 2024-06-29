@@ -14,12 +14,12 @@ local function get_highlight_groups(highlights)
     if (type(hl) == "string") then
       local group_name = ("Godbolt" .. i)
       if (string.sub(hl, 1, 1) == "#") then
-        val_23_auto = api.nvim_set_hl(0, group_name, {bg = hl})
+        api.nvim_set_hl(0, group_name, {bg = hl})
       elseif not vim.tbl_isempty(api.nvim_get_hl(0, {name = group_name})) then
-        val_23_auto = api.nvim_set_hl(0, group_name, {link = hl})
+        api.nvim_set_hl(0, group_name, {link = hl})
       else
-        val_23_auto = group_name
       end
+      val_23_auto = group_name
     else
       val_23_auto = nil
     end
@@ -178,15 +178,21 @@ end
 local function setup_aucmd(source_buf, asm_buf)
   local group = api.nvim_create_augroup("Godbolt", {})
   local function _22_()
-    update_source(source_buf)
-    return update_asm(asm_buf)
+    return update_source(source_buf)
   end
   api.nvim_create_autocmd({"CursorMoved", "BufEnter"}, {group = group, callback = _22_, buffer = source_buf})
   local function _23_()
-    remove_source(source_buf)
+    return update_asm(asm_buf)
+  end
+  api.nvim_create_autocmd({"CursorMoved", "BufEnter"}, {group = group, callback = _23_, buffer = asm_buf})
+  local function _24_()
+    return remove_source(source_buf)
+  end
+  api.nvim_create_autocmd({"BufUnload"}, {group = group, callback = _24_, buffer = source_buf})
+  local function _25_()
     return clear_asm(asm_buf)
   end
-  return api.nvim_create_autocmd({"BufUnload"}, {group = group, callback = _23_, buffer = source_buf})
+  return api.nvim_create_autocmd({"BufUnload"}, {group = group, callback = _25_, buffer = asm_buf})
 end
 local function make_qflist(err, bufnr)
   if next(err) then
@@ -296,7 +302,7 @@ local function pre_display(begin, _end, compiler, options, reuse_3f)
   local hour = time.hour
   local min = time.min
   local sec = time.sec
-  local function _36_(_, _0, _1)
+  local function _38_(_, _0, _1)
     local file = io.open("godbolt_response_asm.json", "r")
     local response = file:read("*all")
     file:close()
@@ -304,6 +310,6 @@ local function pre_display(begin, _end, compiler, options, reuse_3f)
     os.remove("godbolt_response_asm.json")
     return display(vim.json.decode(response), begin, fmt("%s %02d:%02d:%02d", compiler, hour, min, sec), reuse_3f)
   end
-  return fun.jobstart(curl_cmd, {on_exit = _36_})
+  return fun.jobstart(curl_cmd, {on_exit = _38_})
 end
 return {map = map, nsid = nsid, ["pre-display"] = pre_display, clear = clear}
