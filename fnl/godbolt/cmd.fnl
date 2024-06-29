@@ -31,6 +31,17 @@
                        " --output godbolt_response_%s.json")
                    config.url compiler exec-asm? exec-asm?)))
 
+(fn setup-highlights [highlights]
+  "Setup highlight groups"
+  (icollect [i v (ipairs highlights)]
+    (if (= (type v) :string)
+        (let [group-name (.. :Godbolt i)]
+          (if (= (string.sub v 1 1) "#")
+              (vim.cmd.highlight group-name (.. :guibg= v))
+              (pcall vim.fn.execute (.. "highlight " v))
+              (vim.cmd.highlight group-name :link v))
+          group-name))))
+
 (fn godbolt [begin end reuse? compiler]
   (let [pre-display (. (require :godbolt.assembly) :pre-display)
         execute (. (require :godbolt.execute) :execute)
@@ -41,6 +52,9 @@
     (var options (if (. config.languages ft)
                      (vim.deepcopy (. config.languages ft :options))
                      {}))
+    (when (and config.highlights (not (vim.tbl_isempty config.highlights))
+               (not= (. config.highlights 1) :Godbolt1))
+      (set config.highlights (setup-highlights config.highlights)))
     (let [flags (vim.fn.input {:prompt "Flags: "
                                :default (or options.userArguments "")})]
       (tset options :userArguments flags)

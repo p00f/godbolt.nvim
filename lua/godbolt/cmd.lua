@@ -6,6 +6,31 @@ local function build_cmd(compiler, text, options, exec_asm_3f)
   io.close(file)
   return string.format(("curl %s/api/compiler/\"%s\"/compile" .. " --data-binary @godbolt_request_%s.json" .. " --header \"Accept: application/json\"" .. " --header \"Content-Type: application/json\"" .. " --output godbolt_response_%s.json"), config.url, compiler, exec_asm_3f, exec_asm_3f)
 end
+local function setup_highlights(highlights)
+  local tbl_19_auto = {}
+  local i_20_auto = 0
+  for i, v in ipairs(highlights) do
+    local val_21_auto
+    if (type(v) == "string") then
+      local group_name = ("Godbolt" .. i)
+      if (string.sub(v, 1, 1) == "#") then
+        vim.cmd.highlight(group_name, ("guibg=" .. v))
+      elseif pcall(vim.fn.execute, ("highlight " .. v)) then
+        vim.cmd.highlight(group_name, "link", v)
+      else
+      end
+      val_21_auto = group_name
+    else
+      val_21_auto = nil
+    end
+    if (nil ~= val_21_auto) then
+      i_20_auto = (i_20_auto + 1)
+      do end (tbl_19_auto)[i_20_auto] = val_21_auto
+    else
+    end
+  end
+  return tbl_19_auto
+end
 local function godbolt(begin, _end, reuse_3f, compiler)
   local pre_display = require("godbolt.assembly")["pre-display"]
   local execute = require("godbolt.execute").execute
@@ -18,6 +43,11 @@ local function godbolt(begin, _end, reuse_3f, compiler)
     options = vim.deepcopy(config.languages[ft].options)
   else
     options = {}
+  end
+  if (config.highlights and not vim.tbl_isempty(config.highlights) and (config.highlights[1] ~= "Godbolt1")) then
+    print("SETUP HIGHLIGHTS")
+    config.highlights = setup_highlights(config.highlights)
+  else
   end
   local flags = vim.fn.input({prompt = "Flags: ", default = (options.userArguments or "")})
   do end (options)["userArguments"] = flags

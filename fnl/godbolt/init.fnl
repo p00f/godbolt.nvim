@@ -32,22 +32,9 @@
              :quickfix {:enable false :auto_open false}
              :url "https://godbolt.org"})
 
-(fn setup-highlights [highlights]
-  "Setup highlight groups"
-  (icollect [i v (ipairs highlights)]
-    (if (= (type v) :string)
-        (let [group-name (.. :Godbolt i)]
-          (if (= (string.sub v 1 1) "#")
-              (vim.cmd.highlight group-name (.. :guibg= v))
-              (pcall fun.execute (.. "highlight " v))
-              (vim.cmd.highlight group-name :link v))
-          group-name))))
-
 (fn setup [cfg]
   (if (= 1 (fun.has :nvim-0.6))
-      (do
-        (vim.tbl_extend :force config cfg)
-        (set config.highlights (setup-highlights config.highlights)))
+      (vim.tbl_extend :force config cfg)
       (api.nvim_err_writeln "neovim 0.6+ is required")))
 
 {: config : setup}
