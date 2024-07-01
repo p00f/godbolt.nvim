@@ -24,7 +24,7 @@ local function godbolt(begin, _end, reuse_3f, compiler)
   local fuzzy_3f
   do
     local matches = false
-    for k, v in pairs({"telescope", "fzf", "skim", "fzy"}) do
+    for _, v in pairs({"telescope", "fzf", "skim", "fzy"}) do
       if (v == compiler0) then
         matches = true
       else
