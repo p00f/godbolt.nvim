@@ -22,7 +22,7 @@
 (local term-escapes "[\027\155][][()#;?%d]*[A-PRZcf-ntqry=><~]")
 (local wo-set api.nvim_win_set_option)
 (var map {})
-(var nsid (vim.api.nvim_create_namespace :godbolt))
+(local nsid (vim.api.nvim_create_namespace :godbolt_cursor))
 
 (fn get-highlight-groups [highlights]
   "Get highlight groups from the configuration"
@@ -40,10 +40,7 @@
 ; Helper functions
 (fn prepare-buf [text name reuse? source-buf]
   "Prepare the assembly buffer: set buffer options and add text"
-  (let [buf (if (and reuse? (-> map
-                                (. source-buf)
-                                (type)
-                                (= :table)))
+  (let [buf (if (and reuse? (= :table (type (. map source-buf))))
                 (table.maxn (. map source-buf))
                 (api.nvim_create_buf false true))]
     (api.nvim_buf_set_lines buf 0 -1 true
@@ -58,20 +55,15 @@
 (fn get-current-line []
   (first (api.nvim_win_get_cursor 0)))
 
-(fn find-source [asm-buffer]
-  (var source-buffer-ret nil)
-  (each [source-buffer asm-buffers (pairs map) &until source-buffer-ret]
-    (when (. asm-buffers asm-buffer)
-      (set source-buffer-ret source-buffer)))
-  source-buffer-ret)
-
-(fn count-source-line [entry asm-line]
+(fn get-entry-source-line [entry asm-line]
+  "Get the source line from an entry"
   (let [source (?. entry :asm asm-line :source)]
-    (if (and source (= (type source) :table) (= source.file vim.NIL))
-        (+ source.line (dec entry.offset)))))
+    (when (and source (= (type source) :table) (= source.file vim.NIL))
+      (+ source.line (dec entry.offset)))))
 
 (fn get-source-line [source-buffer asm-buffer asm-line]
-  (count-source-line (?. map source-buffer asm-buffer) asm-line))
+  "Get the source line from a source-asm buffer pair"
+  (get-entry-source-line (?. map source-buffer asm-buffer) asm-line))
 
 (fn cyclic-lookup [array index]
   (. array (->> array (length) (% index) (+ 1))))
@@ -84,12 +76,13 @@
                                             :highlights))]
     (each [asm-buffer entry (pairs (. map source-buffer))]
       (api.nvim_buf_clear_namespace asm-buffer nsid 0 -1)
-      (each [line _ (ipairs entry.asm)]
-        (let [source-line (count-source-line entry line)]
+      (each [asm-line _ (ipairs entry.asm)]
+        (let [source-line (get-entry-source-line entry asm-line)]
           (when source-line
             (let [group (if (= cursor-line source-line) :Visual
                             (cyclic-lookup highlights source-line))]
-              (api.nvim_buf_add_highlight asm-buffer nsid group (dec line) 0 -1)
+              (api.nvim_buf_add_highlight asm-buffer nsid group (dec asm-line)
+                                          0 -1)
               (when (not (vim.tbl_contains highlighted-source source-line))
                 (api.nvim_buf_add_highlight source-buffer nsid group
                                             (dec source-line) 0 -1)
@@ -97,10 +90,6 @@
 
 (fn update-source [buf]
   (update-hl buf (get-current-line)))
-
-(fn remove-asm [source-buffer asm-buffer]
-  (api.nvim_buf_clear_namespace asm-buffer nsid 0 -1)
-  (tset (. map source-buffer) asm-buffer nil))
 
 (fn remove-source [source-buffer]
   (api.nvim_buf_clear_namespace source-buffer nsid 0 -1)
@@ -110,18 +99,20 @@
       (api.nvim_buf_delete asm-buffer {})))
   (tset map source-buffer nil))
 
-(fn update-asm [asm-buffer]
-  (let [source-buffer (find-source asm-buffer)
-        asm-line (get-current-line)
+(fn remove-asm [source-buffer asm-buffer]
+  (api.nvim_buf_clear_namespace asm-buffer nsid 0 -1)
+  (tset (. map source-buffer) asm-buffer nil))
+
+(fn update-asm [source-buffer asm-buffer]
+  (let [asm-line (get-current-line)
         source-line (get-source-line source-buffer asm-buffer asm-line)]
     (update-hl source-buffer source-line)))
 
-(fn clear-asm [asm-buffer]
-  (let [source-buffer (find-source asm-buffer)]
-    (remove-asm source-buffer asm-buffer)
-    (when (and (. (require :godbolt) :config :auto_cleanup)
-               (->> source-buffer (. map) (vim.tbl_count) (= 0)))
-      (remove-source source-buffer))))
+(fn clear-asm [source-buffer asm-buffer]
+  (remove-asm source-buffer asm-buffer)
+  (when (and (. (require :godbolt) :config :auto_cleanup)
+             (= 0 (vim.tbl_count (. map source-buffer))))
+    (remove-source source-buffer)))
 
 (fn setup-aucmd [source-buf asm-buf]
   "Setup autocommands for updating highlights"
@@ -132,7 +123,7 @@
                               :buffer source-buf})
     (api.nvim_create_autocmd [:CursorMoved :BufEnter]
                              {: group
-                              :callback #(update-asm asm-buf)
+                              :callback #(update-asm source-buf asm-buf)
                               :buffer asm-buf})
     (api.nvim_create_autocmd [:BufUnload]
                              {: group
@@ -140,7 +131,7 @@
                               :buffer source-buf})
     (api.nvim_create_autocmd [:BufUnload]
                              {: group
-                              :callback #(clear-asm asm-buf)
+                              :callback #(clear-asm source-buf asm-buf)
                               :buffer asm-buf})))
 
 ;; https://stackoverflow.com/a/49209650
@@ -153,15 +144,6 @@
           (tset entry :col v.tag.column)
           (tset entry :lnum v.tag.line))
         entry))))
-
-; Highlighting
-(fn clear [source-buf]
-  "Clear highlights: used when leaving the source buffer"
-  (api.nvim_buf_clear_namespace source-buf nsid 0 -1)
-  (api.nvim_del_augroup_by_name :Godbolt)
-  (each [asm-buf _ (pairs (. map source-buf))]
-    (api.nvim_buf_clear_namespace asm-buf nsid 0 -1))
-  (tset map source-buf nil))
 
 ; Main
 (fn display [response begin name reuse?]
@@ -211,7 +193,7 @@
           (tset map source-buf asm-buf
                 {:asm response.asm :offset begin :winid asm-winid})
           (when (not (vim.tbl_isempty response.asm))
-            (update-hl source-buf)
+            (update-hl source-buf (get-current-line))
             (setup-aucmd source-buf asm-buf))))))
 
 (fn pre-display [begin end compiler options reuse?]
@@ -235,4 +217,4 @@
                                               min sec)
                                          reuse?)))})))
 
-{: map : nsid : pre-display : clear}
+{: pre-display}
