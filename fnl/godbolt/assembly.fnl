@@ -98,8 +98,8 @@
 (fn update-source [source-buf]
   (update-cursor source-buf (get-current-line)))
 
-(fn update-hl [source-buffer asm-buffer]
-  "Update highlights: used when creating new assembly buffer"
+(fn init-highlight [source-buffer asm-buffer]
+  "Initial multi-coloured highlighting"
   (api.nvim_buf_clear_namespace asm-buffer nsid-static 0 -1)
   (let [source-highlights (get-source-highlights source-buffer nsid-static)
         highlights (get-highlight-groups (. (require :godbolt) :config
@@ -221,7 +221,7 @@
           (tset map source-buf asm-buf
                 {:asm response.asm :offset begin :winid asm-winid})
           (when (not (vim.tbl_isempty response.asm))
-            (update-hl source-buf asm-buf)
+            (init-highlight source-buf asm-buf)
             (setup-aucmd source-buf asm-buf))))))
 
 (fn pre-display [begin end compiler options reuse?]
