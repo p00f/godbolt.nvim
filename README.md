@@ -18,6 +18,16 @@ require("godbolt").setup({
         rust = { compiler = "r1650", options = {} },
         -- any_additional_filetype = { compiler = ..., options = ... },
     },
+    auto_cleanup = true, -- remove highlights and autocommands on buffer close
+    highlight = {
+        -- parameters in this table could be either:
+        -- 1. existing group
+        -- 2. hex color as string starting with #
+        -- 3. false to disable
+        cursor = "Visual", -- cursor = false, -- to disable
+        lines = { "#222222", "#333333", "#444444", "#555555", "#444444", "#333333" },
+    },
+    -- highlight = false, -- to disable highlights
     quickfix = {
         enable = false, -- whether to populate the quickfix list in case of errors
         auto_open = false -- whether to open the quickfix list in case of errors
