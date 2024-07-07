@@ -23,18 +23,21 @@
                          :c {:compiler :cg132 :options {}}
                          :rust {:compiler :r1730 :options {}}}
              :auto_cleanup true
-             :highlights ["#222222"
-                          "#333333"
-                          "#444444"
-                          "#555555"
-                          "#444444"
-                          "#333333"]
+             :highlight {:cursor :Visual
+                         :lines ["#222222"
+                                 "#333333"
+                                 "#444444"
+                                 "#555555"
+                                 "#444444"
+                                 "#333333"]}
              :quickfix {:enable false :auto_open false}
              :url "https://godbolt.org"})
 
 (fn setup [cfg]
   (if (= 1 (fun.has :nvim-0.6))
-      (vim.tbl_extend :force config cfg)
+      (when cfg
+        (each [k v (pairs (vim.tbl_deep_extend :force config cfg))]
+          (tset config k v)))
       (api.nvim_err_writeln "neovim 0.6+ is required")))
 
 {: config : setup}
