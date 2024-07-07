@@ -70,40 +70,56 @@
 (fn cyclic-lookup [array index]
   (. array (->> array (length) (% index) (+ 1))))
 
-(fn update-hl [source-buffer cursor-line full]
-  "Update highlights: used when the cursor moves in the source buffer"
+(fn get-source-highlights [source-buffer namespace-id]
+  (let [extmarks (api.nvim_buf_get_extmarks source-buffer namespace-id 0 -1
+                                            {:details false
+                                             :hl_name false
+                                             :overlap false
+                                             :type :highlight})]
+    (icollect [_ [_ line _] (ipairs extmarks)]
+      line)))
+
+(fn update-cursor [source-buffer cursor-line]
+  "Update cursor highlights: used when the cursor moves in the source buffer"
   (api.nvim_buf_clear_namespace source-buffer nsid 0 -1)
-  (when full
-    (api.nvim_buf_clear_namespace source-buffer nsid-static 0 -1))
-  (let [highlighted-source []
-        highlights (get-highlight-groups (. (require :godbolt) :config
-                                            :highlights))]
+  (let [source-highlights (get-source-highlights source-buffer nsid)]
     (each [asm-buffer entry (pairs (. map source-buffer))]
       (api.nvim_buf_clear_namespace asm-buffer nsid 0 -1)
-      (when full
-        (api.nvim_buf_clear_namespace asm-buffer nsid-static 0 -1))
       (each [asm-line _ (ipairs entry.asm)]
         (let [source-line (get-entry-source-line entry asm-line)]
-          (when source-line
-            (let [[group ns] (if (= cursor-line source-line)
-                                 [:Visual nsid]
-                                 [(cyclic-lookup highlights source-line)
-                                  nsid-static])]
-              (when (or (= ns nsid) full)
-                (api.nvim_buf_add_highlight asm-buffer ns group (dec asm-line)
-                                            0 -1)
-                (when (not (vim.tbl_contains highlighted-source source-line))
-                  (api.nvim_buf_add_highlight source-buffer ns group
-                                              (dec source-line) 0 -1)
-                  (table.insert highlighted-source source-line))))))))))
+          (when (and source-line (= cursor-line source-line))
+            (api.nvim_buf_add_highlight asm-buffer nsid :Visual (dec asm-line)
+                                        0 -1)
+            (when (not (vim.tbl_contains source-highlights (dec source-line)))
+              (api.nvim_buf_add_highlight source-buffer nsid :Visual
+                                          (dec source-line) 0 -1)
+              (table.insert source-highlights (dec source-line)))))))))
 
-(fn update-source [buf]
-  (update-hl buf (get-current-line)))
+(fn update-source [source-buf]
+  (update-cursor source-buf (get-current-line)))
+
+(fn update-hl [source-buffer asm-buffer]
+  "Update highlights: used when creating new assembly buffer"
+  (api.nvim_buf_clear_namespace asm-buffer nsid-static 0 -1)
+  (let [source-highlights (get-source-highlights source-buffer nsid-static)
+        highlights (get-highlight-groups (. (require :godbolt) :config
+                                            :highlights))
+        entry (. map source-buffer asm-buffer)]
+    (each [asm-line _ (ipairs entry.asm)]
+      (let [source-line (get-entry-source-line entry asm-line)]
+        (when source-line
+          (let [group (cyclic-lookup highlights source-line)]
+            (api.nvim_buf_add_highlight asm-buffer nsid-static group
+                                        (dec asm-line) 0 -1)
+            (when (not (vim.tbl_contains source-highlights (dec source-line)))
+              (api.nvim_buf_add_highlight source-buffer nsid-static group
+                                          (dec source-line) 0 -1)
+              (table.insert source-highlights (dec source-line)))))))))
 
 (fn remove-source [source-buffer]
   (api.nvim_buf_clear_namespace source-buffer nsid-static 0 -1)
   (api.nvim_buf_clear_namespace source-buffer nsid 0 -1)
-  (api.nvim_del_augroup_by_name :Godbolt)
+  (api.nvim_clear_autocmds {:group :Godbolt :buffer source-buffer})
   (when (and (. (require :godbolt) :config :auto_cleanup) (. map source-buffer))
     (each [asm-buffer _ (pairs (. map source-buffer))]
       (api.nvim_buf_delete asm-buffer {})))
@@ -117,7 +133,7 @@
 (fn update-asm [source-buffer asm-buffer]
   (let [asm-line (get-current-line)
         source-line (get-source-line source-buffer asm-buffer asm-line)]
-    (update-hl source-buffer source-line)))
+    (update-cursor source-buffer source-line)))
 
 (fn clear-asm [source-buffer asm-buffer]
   (remove-asm source-buffer asm-buffer)
@@ -127,19 +143,20 @@
 
 (fn setup-aucmd [source-buf asm-buf]
   "Setup autocommands for updating highlights"
-  (let [group (api.nvim_create_augroup :Godbolt {})]
-    (api.nvim_create_autocmd [:CursorMoved :BufEnter]
-                             {: group
-                              :callback #(update-source source-buf)
-                              :buffer source-buf})
+  (let [group (api.nvim_create_augroup :Godbolt {:clear false})]
+    (when (= 0 (length (api.nvim_get_autocmds {: group :buffer source-buf})))
+      (api.nvim_create_autocmd [:CursorMoved :BufEnter]
+                               {: group
+                                :callback #(update-source source-buf)
+                                :buffer source-buf})
+      (api.nvim_create_autocmd [:BufUnload]
+                               {: group
+                                :callback #(remove-source source-buf)
+                                :buffer source-buf}))
     (api.nvim_create_autocmd [:CursorMoved :BufEnter]
                              {: group
                               :callback #(update-asm source-buf asm-buf)
                               :buffer asm-buf})
-    (api.nvim_create_autocmd [:BufUnload]
-                             {: group
-                              :callback #(remove-source source-buf)
-                              :buffer source-buf})
     (api.nvim_create_autocmd [:BufUnload]
                              {: group
                               :callback #(clear-asm source-buf asm-buf)
@@ -204,7 +221,7 @@
           (tset map source-buf asm-buf
                 {:asm response.asm :offset begin :winid asm-winid})
           (when (not (vim.tbl_isempty response.asm))
-            (update-hl source-buf (get-current-line) true)
+            (update-hl source-buf asm-buf)
             (setup-aucmd source-buf asm-buf))))))
 
 (fn pre-display [begin end compiler options reuse?]
