@@ -20,7 +20,7 @@ local function godbolt(begin, _end, reuse_3f, compiler)
     options = {}
   end
   local flags = vim.fn.input({prompt = "Flags: ", default = (options.userArguments or "")})
-  options["userArguments"] = flags
+  do end (options)["userArguments"] = flags
   local fuzzy_3f
   do
     local matches = false

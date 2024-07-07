@@ -73,7 +73,7 @@ local function telescope(entries, begin, _end, options, exec, reuse_3f)
         return nil
       end
     end
-    return actions.select_default:replace(_8_)
+    return (actions.select_default):replace(_8_)
   end
   return pickers.new({}, {prompt_title = "Choose compiler", finder = finders.new_table({results = entries, entry_maker = transform}), sorter = conf.generic_sorter(nil), attach_mappings = _7_}):find()
 end
@@ -111,22 +111,22 @@ local function fuzzy(picker, ft, begin, _end, options, exec, reuse_3f)
   local function _15_(_, _0, _1)
     local entries
     do
-      local tbl_21_auto = {}
-      local i_22_auto = 0
+      local tbl_19_auto = {}
+      local i_20_auto = 0
       for k, v in ipairs(output) do
-        local val_23_auto
+        local val_21_auto
         if (k ~= 1) then
-          val_23_auto = v
+          val_21_auto = v
         else
-          val_23_auto = nil
+          val_21_auto = nil
         end
-        if (nil ~= val_23_auto) then
-          i_22_auto = (i_22_auto + 1)
-          tbl_21_auto[i_22_auto] = val_23_auto
+        if (nil ~= val_21_auto) then
+          i_20_auto = (i_20_auto + 1)
+          do end (tbl_19_auto)[i_20_auto] = val_21_auto
         else
         end
       end
-      entries = tbl_21_auto
+      entries = tbl_19_auto
     end
     local _18_
     if (picker == "fzf") then
