@@ -44,6 +44,7 @@
   (let [buf (if (and reuse? (= :table (type (. map source-buf))))
                 (table.maxn (. map source-buf))
                 (api.nvim_create_buf false true))]
+    (tset vim.bo buf :modifiable true)
     (api.nvim_buf_set_lines buf 0 -1 true
                             (vim.split text "\n" {:trimempty true}))
     (api.nvim_buf_set_name buf name)
