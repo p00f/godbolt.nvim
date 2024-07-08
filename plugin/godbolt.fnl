@@ -1,4 +1,4 @@
-;  Copyright (C) 2023 Chinmay Dalal
+;  Copyright (C) 2023-2024 Chinmay Dalal
 ;
 ;  This file is part of godbolt.nvim.
 ;
