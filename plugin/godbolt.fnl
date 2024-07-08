@@ -30,9 +30,3 @@
     ((. (require :godbolt.cmd) :godbolt) opts.line1 opts.line2 opts.bang
                                          (first opts.fargs)))
   {:bang true :nargs 1 : complete :range "%"})
-
-(when (not (= 1 vim.g.godbolt_loaded))
-  (set vim.g.godbolt_loaded 1)
-  (set _G.__godbolt_map {})
-  (set _G.__godbolt_exec_buf_map {})
-  (set _G.__godbolt_nsid (vim.api.nvim_create_namespace :godbolt)))

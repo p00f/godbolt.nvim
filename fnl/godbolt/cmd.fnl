@@ -44,7 +44,7 @@
     (let [flags (vim.fn.input {:prompt "Flags: "
                                :default (or options.userArguments "")})]
       (tset options :userArguments flags)
-      (let [fuzzy? (accumulate [matches false k v (pairs [:telescope
+      (let [fuzzy? (accumulate [matches false _ v (pairs [:telescope
                                                           :fzf
                                                           :skim
                                                           :fzy])]

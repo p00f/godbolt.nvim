@@ -22,15 +22,20 @@
 (var config {:languages {:cpp {:compiler :g132 :options {}}
                          :c {:compiler :cg132 :options {}}
                          :rust {:compiler :r1730 :options {}}}
+             :auto_cleanup true
+             :highlight {:cursor :Visual
+                         :static ["#222222"
+                                  "#333333"
+                                  "#444444"
+                                  "#555555"
+                                  "#444444"
+                                  "#333333"]}
              :quickfix {:enable false :auto_open false}
              :url "https://godbolt.org"})
 
-(fn setup [cfg]
-  (if (= 1 (fun.has :nvim-0.6)
-         (do
-           (when cfg
-             (each [k v (pairs cfg)]
-               (tset config k v)))))
+(fn setup [user-config]
+  (if (= 1 (fun.has :nvim-0.6))
+      (set config (vim.tbl_deep_extend :force config user-config))
       (api.nvim_err_writeln "neovim 0.6+ is required")))
 
 {: config : setup}

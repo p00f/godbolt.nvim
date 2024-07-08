@@ -15,38 +15,165 @@
 ;  You should have received a copy of the GNU General Public License
 ;  along with godbolt.nvim.  If not, see <https://www.gnu.org/licenses/>.
 
-(import-macros {: m> : dec : second : inc} :godbolt.macros)
+(import-macros {: m> : dec : second : inc : first} :godbolt.macros)
 (local {: api : cmd} vim)
 (local fun vim.fn)
 (local fmt string.format)
 (local term-escapes "[\027\155][][()#;?%d]*[A-PRZcf-ntqry=><~]")
 (local wo-set api.nvim_win_set_option)
-(var map _G.__godbolt_map)
-(var nsid _G.__godbolt_nsid)
+(var map {})
+(local nsid-static (vim.api.nvim_create_namespace :godbolt_highlight))
+(local nsid (vim.api.nvim_create_namespace :godbolt_cursor))
+
+(fn get-highlight [field]
+  (let [highlight (. (require :godbolt) :config :highlight)]
+    (when (= (type highlight) :table) (. highlight field))))
+
+(fn set-highlight-group [group-name highlight]
+  (if (not= (type highlight) :string)
+      nil
+      (= (string.sub highlight 1 1) "#")
+      ;; if it's a hex value, set the highlight group
+      (do
+        (api.nvim_set_hl 0 group-name {:bg highlight})
+        group-name)
+      (not (vim.tbl_isempty (api.nvim_get_hl 0 {:name highlight})))
+      ;; if it's an existing highlight group, link it
+      (do
+        (api.nvim_set_hl 0 group-name {:link highlight})
+        group-name)))
+
+(fn get-highlight-groups [highlights]
+  "Get highlight groups from the configuration"
+  (icollect [i hl (ipairs highlights)]
+    (set-highlight-group (.. :Godbolt i) hl)))
 
 ; Helper functions
 (fn prepare-buf [text name reuse? source-buf]
   "Prepare the assembly buffer: set buffer options and add text"
-  (let [buf (if (and reuse? (-> map
-                                (. source-buf)
-                                (type)
-                                (= :table)))
+  (let [buf (if (and reuse? (= :table (type (. map source-buf))))
                 (table.maxn (. map source-buf))
                 (api.nvim_create_buf false true))]
-    (api.nvim_buf_set_option buf :filetype :asm)
+    (tset vim.bo buf :modifiable true)
     (api.nvim_buf_set_lines buf 0 -1 true
                             (vim.split text "\n" {:trimempty true}))
     (api.nvim_buf_set_name buf name)
+    (doto (. vim.bo buf)
+      (tset :filetype :asm)
+      (tset :bufhidden :unload)
+      (tset :modifiable false))
     buf))
+
+(fn get-current-line []
+  (first (api.nvim_win_get_cursor 0)))
+
+(fn get-entry-source-line [entry asm-line]
+  "Get the source line from an entry"
+  (let [source (?. entry :asm asm-line :source)]
+    (when (and source (= (type source) :table) (= source.file vim.NIL))
+      (+ source.line (dec entry.offset)))))
+
+(fn get-source-line [source-buffer asm-buffer asm-line]
+  "Get the source line from a source-asm buffer pair"
+  (get-entry-source-line (?. map source-buffer asm-buffer) asm-line))
+
+(fn cyclic-lookup [array index]
+  (. array (->> array (length) (% index) (+ 1))))
+
+(fn get-source-highlights [source-buffer namespace-id]
+  (let [extmarks (api.nvim_buf_get_extmarks source-buffer namespace-id 0 -1
+                                            {:details false
+                                             :hl_name false
+                                             :overlap false
+                                             :type :highlight})]
+    (icollect [_ [_ line _] (ipairs extmarks)]
+      line)))
+
+(fn update-cursor [source-buffer cursor-line]
+  "Update cursor highlights: used when the cursor moves in the source buffer"
+  (api.nvim_buf_clear_namespace source-buffer nsid 0 -1)
+  (let [source-highlights (get-source-highlights source-buffer nsid)
+        group (set-highlight-group :GodboltCursor (get-highlight :cursor))]
+    (each [asm-buffer entry (pairs (. map source-buffer))]
+      (api.nvim_buf_clear_namespace asm-buffer nsid 0 -1)
+      (each [asm-line _ (ipairs entry.asm)]
+        (let [source-line (get-entry-source-line entry asm-line)]
+          (when (and source-line (= cursor-line source-line))
+            (api.nvim_buf_add_highlight asm-buffer nsid group (dec asm-line) 0
+                                        -1)
+            (when (not (vim.tbl_contains source-highlights (dec source-line)))
+              (api.nvim_buf_add_highlight source-buffer nsid group
+                                          (dec source-line) 0 -1)
+              (table.insert source-highlights (dec source-line)))))))))
+
+(fn update-source [source-buf]
+  (update-cursor source-buf (get-current-line)))
+
+(fn init-highlight [source-buffer asm-buffer]
+  "Initial multi-coloured highlighting"
+  (api.nvim_buf_clear_namespace asm-buffer nsid-static 0 -1)
+  (let [source-highlights (get-source-highlights source-buffer nsid-static)
+        highlights (get-highlight-groups (get-highlight :static))
+        entry (. map source-buffer asm-buffer)]
+    (each [asm-line _ (ipairs entry.asm)]
+      (let [source-line (get-entry-source-line entry asm-line)]
+        (when source-line
+          (let [group (cyclic-lookup highlights source-line)]
+            (api.nvim_buf_add_highlight asm-buffer nsid-static group
+                                        (dec asm-line) 0 -1)
+            (when (not (vim.tbl_contains source-highlights (dec source-line)))
+              (api.nvim_buf_add_highlight source-buffer nsid-static group
+                                          (dec source-line) 0 -1)
+              (table.insert source-highlights (dec source-line)))))))))
+
+(fn remove-source [source-buffer]
+  (api.nvim_buf_clear_namespace source-buffer nsid-static 0 -1)
+  (api.nvim_buf_clear_namespace source-buffer nsid 0 -1)
+  (api.nvim_clear_autocmds {:group :Godbolt :buffer source-buffer})
+  (when (and (. (require :godbolt) :config :auto_cleanup) (. map source-buffer))
+    (each [asm-buffer _ (pairs (. map source-buffer))]
+      (api.nvim_buf_delete asm-buffer {})))
+  (tset map source-buffer nil))
+
+(fn remove-asm [source-buffer asm-buffer]
+  (api.nvim_buf_clear_namespace asm-buffer nsid-static 0 -1)
+  (api.nvim_buf_clear_namespace asm-buffer nsid 0 -1)
+  (tset (. map source-buffer) asm-buffer nil))
+
+(fn update-asm [source-buffer asm-buffer]
+  (let [asm-line (get-current-line)
+        source-line (get-source-line source-buffer asm-buffer asm-line)]
+    (update-cursor source-buffer source-line)))
+
+(fn clear-asm [source-buffer asm-buffer]
+  (remove-asm source-buffer asm-buffer)
+  (when (and (. (require :godbolt) :config :auto_cleanup)
+             (= 0 (vim.tbl_count (. map source-buffer))))
+    (remove-source source-buffer)))
 
 (fn setup-aucmd [source-buf asm-buf]
   "Setup autocommands for updating highlights"
-  (cmd "augroup Godbolt")
-  (cmd (fmt "autocmd CursorMoved <buffer=%s> lua require('godbolt.assembly')['update-hl'](%s, %s)"
-            source-buf source-buf asm-buf))
-  (cmd (fmt "autocmd BufLeave <buffer=%s> lua require('godbolt.assembly').clear(%s)"
-            source-buf source-buf))
-  (cmd "augroup END"))
+  (let [group (api.nvim_create_augroup :Godbolt {:clear false})
+        cursor (set-highlight-group :GodboltCursor (get-highlight :cursor))]
+    (when (= 0 (length (api.nvim_get_autocmds {: group :buffer source-buf})))
+      (when cursor
+        (api.nvim_create_autocmd [:CursorMoved :BufEnter]
+                                 {: group
+                                  :callback #(update-source source-buf)
+                                  :buffer source-buf}))
+      (api.nvim_create_autocmd [:BufUnload]
+                               {: group
+                                :callback #(remove-source source-buf)
+                                :buffer source-buf}))
+    (when cursor
+      (api.nvim_create_autocmd [:CursorMoved :BufEnter]
+                               {: group
+                                :callback #(update-asm source-buf asm-buf)
+                                :buffer asm-buf}))
+    (api.nvim_create_autocmd [:BufUnload]
+                             {: group
+                              :callback #(clear-asm source-buf asm-buf)
+                              :buffer asm-buf})))
 
 ;; https://stackoverflow.com/a/49209650
 (fn make-qflist [err bufnr]
@@ -58,29 +185,6 @@
           (tset entry :col v.tag.column)
           (tset entry :lnum v.tag.line))
         entry))))
-
-; Highlighting
-(fn clear [source-buf]
-  "Clear highlights: used when leaving the source buffer"
-  (each [asm-buf _ (pairs (. map source-buf))]
-    (api.nvim_buf_clear_namespace asm-buf nsid 0 -1)))
-
-(fn update-hl [source-buf asm-buf]
-  "Update highlights: used when the cursor moves in the source buffer"
-  (api.nvim_buf_clear_namespace asm-buf nsid 0 -1)
-  (let [entry (. map source-buf asm-buf)
-        offset entry.offset
-        asm-table entry.asm
-        linenum (-> (fun.getcurpos)
-                    (second)
-                    (- offset)
-                    (inc))]
-    (each [k v (pairs asm-table)]
-      (when (= (type v.source) :table)
-        (when (= linenum v.source.line)
-          (vim.highlight.range asm-buf nsid :Visual
-                               ;; [start-row start-col] [end-row end-col]
-                               [(dec k) 0] [(dec k) 100] :linewise true))))))
 
 ; Main
 (fn display [response begin name reuse?]
@@ -130,7 +234,8 @@
           (tset map source-buf asm-buf
                 {:asm response.asm :offset begin :winid asm-winid})
           (when (not (vim.tbl_isempty response.asm))
-            (update-hl source-buf asm-buf)
+            (when (get-highlight :static)
+              (init-highlight source-buf asm-buf))
             (setup-aucmd source-buf asm-buf))))))
 
 (fn pre-display [begin end compiler options reuse?]
@@ -154,4 +259,4 @@
                                               min sec)
                                          reuse?)))})))
 
-{: map : nsid : pre-display : update-hl : clear}
+{: pre-display}
