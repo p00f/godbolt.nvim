@@ -113,7 +113,7 @@
   "Initial multi-coloured highlighting"
   (api.nvim_buf_clear_namespace asm-buffer nsid-static 0 -1)
   (let [source-highlights (get-source-highlights source-buffer nsid-static)
-        highlights (get-highlight-groups (get-highlight :lines))
+        highlights (get-highlight-groups (get-highlight :static))
         entry (. map source-buffer asm-buffer)]
     (each [asm-line _ (ipairs entry.asm)]
       (let [source-line (get-entry-source-line entry asm-line)]
@@ -234,7 +234,7 @@
           (tset map source-buf asm-buf
                 {:asm response.asm :offset begin :winid asm-winid})
           (when (not (vim.tbl_isempty response.asm))
-            (when (get-highlight :lines)
+            (when (get-highlight :static)
               (init-highlight source-buf asm-buf))
             (setup-aucmd source-buf asm-buf))))))
 

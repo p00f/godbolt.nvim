@@ -20,14 +20,14 @@ require("godbolt").setup({
     },
     auto_cleanup = true, -- remove highlights and autocommands on buffer close
     highlight = {
-        -- parameters in this table could be either:
-        -- 1. existing group
-        -- 2. hex color as string starting with #
-        -- 3. false to disable
-        cursor = "Visual", -- cursor = false, -- to disable
-        lines = { "#222222", "#333333", "#444444", "#555555", "#444444", "#333333" },
+        cursor = "Visual", -- `cursor = false` to disable
+        -- values in this table can be:
+        -- 1. existing highlight group
+        -- 2. hex color string starting with #
+        static = { "#222222", "#333333", "#444444", "#555555", "#444444", "#333333" },
+        -- `static = false` to disable
     },
-    -- highlight = false, -- to disable highlights
+    -- `highlight = false` to disable highlights
     quickfix = {
         enable = false, -- whether to populate the quickfix list in case of errors
         auto_open = false -- whether to open the quickfix list in case of errors

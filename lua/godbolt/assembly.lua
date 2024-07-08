@@ -1,6 +1,5 @@
-local _local_1_ = vim
-local api = _local_1_["api"]
-local cmd = _local_1_["cmd"]
+local api = vim["api"]
+local cmd = vim["cmd"]
 local fun = vim.fn
 local fmt = string.format
 local term_escapes = "[\27\155][][()#;?%d]*[A-PRZcf-ntqry=><~]"
@@ -30,17 +29,17 @@ local function set_highlight_group(group_name, highlight)
   end
 end
 local function get_highlight_groups(highlights)
-  local tbl_19_auto = {}
-  local i_20_auto = 0
+  local tbl_21_auto = {}
+  local i_22_auto = 0
   for i, hl in ipairs(highlights) do
-    local val_21_auto = set_highlight_group(("Godbolt" .. i), hl)
-    if (nil ~= val_21_auto) then
-      i_20_auto = (i_20_auto + 1)
-      do end (tbl_19_auto)[i_20_auto] = val_21_auto
+    local val_23_auto = set_highlight_group(("Godbolt" .. i), hl)
+    if (nil ~= val_23_auto) then
+      i_22_auto = (i_22_auto + 1)
+      tbl_21_auto[i_22_auto] = val_23_auto
     else
     end
   end
-  return tbl_19_auto
+  return tbl_21_auto
 end
 local function prepare_buf(text, name, reuse_3f, source_buf)
   local buf
@@ -53,10 +52,10 @@ local function prepare_buf(text, name, reuse_3f, source_buf)
   api.nvim_buf_set_lines(buf, 0, -1, true, vim.split(text, "\n", {trimempty = true}))
   api.nvim_buf_set_name(buf, name)
   do
-    local _6_ = vim.bo[buf]
-    _6_["filetype"] = "asm"
-    _6_["bufhidden"] = "unload"
-    _6_["modifiable"] = false
+    local tmp_9_auto = vim.bo[buf]
+    tmp_9_auto["filetype"] = "asm"
+    tmp_9_auto["bufhidden"] = "unload"
+    tmp_9_auto["modifiable"] = false
   end
   return buf
 end
@@ -66,20 +65,20 @@ end
 local function get_entry_source_line(entry, asm_line)
   local source
   do
-    local t_7_ = entry
-    if (nil ~= t_7_) then
-      t_7_ = t_7_.asm
+    local t_5_ = entry
+    if (nil ~= t_5_) then
+      t_5_ = t_5_.asm
     else
     end
-    if (nil ~= t_7_) then
-      t_7_ = t_7_[asm_line]
+    if (nil ~= t_5_) then
+      t_5_ = t_5_[asm_line]
     else
     end
-    if (nil ~= t_7_) then
-      t_7_ = t_7_.source
+    if (nil ~= t_5_) then
+      t_5_ = t_5_.source
     else
     end
-    source = t_7_
+    source = t_5_
   end
   if (source and (type(source) == "table") and (source.file == vim.NIL)) then
     return (source.line + (entry.offset - 1))
@@ -88,41 +87,40 @@ local function get_entry_source_line(entry, asm_line)
   end
 end
 local function get_source_line(source_buffer, asm_buffer, asm_line)
-  local _13_
+  local _11_
   do
-    local t_12_ = map
-    if (nil ~= t_12_) then
-      t_12_ = t_12_[source_buffer]
+    local t_10_ = map
+    if (nil ~= t_10_) then
+      t_10_ = t_10_[source_buffer]
     else
     end
-    if (nil ~= t_12_) then
-      t_12_ = t_12_[asm_buffer]
+    if (nil ~= t_10_) then
+      t_10_ = t_10_[asm_buffer]
     else
     end
-    _13_ = t_12_
+    _11_ = t_10_
   end
-  return get_entry_source_line(_13_, asm_line)
+  return get_entry_source_line(_11_, asm_line)
 end
 local function cyclic_lookup(array, index)
   return array[(1 + (index % #array))]
 end
 local function get_source_highlights(source_buffer, namespace_id)
   local extmarks = api.nvim_buf_get_extmarks(source_buffer, namespace_id, 0, -1, {type = "highlight", details = false, hl_name = false, overlap = false})
-  local tbl_19_auto = {}
-  local i_20_auto = 0
-  for _, _16_ in ipairs(extmarks) do
-    local _each_17_ = _16_
-    local _0 = _each_17_[1]
-    local line = _each_17_[2]
-    local _1 = _each_17_[3]
-    local val_21_auto = line
-    if (nil ~= val_21_auto) then
-      i_20_auto = (i_20_auto + 1)
-      do end (tbl_19_auto)[i_20_auto] = val_21_auto
+  local tbl_21_auto = {}
+  local i_22_auto = 0
+  for _, _14_ in ipairs(extmarks) do
+    local _0 = _14_[1]
+    local line = _14_[2]
+    local _1 = _14_[3]
+    local val_23_auto = line
+    if (nil ~= val_23_auto) then
+      i_22_auto = (i_22_auto + 1)
+      tbl_21_auto[i_22_auto] = val_23_auto
     else
     end
   end
-  return tbl_19_auto
+  return tbl_21_auto
 end
 local function update_cursor(source_buffer, cursor_line)
   api.nvim_buf_clear_namespace(source_buffer, nsid, 0, -1)
@@ -151,7 +149,7 @@ end
 local function init_highlight(source_buffer, asm_buffer)
   api.nvim_buf_clear_namespace(asm_buffer, nsid_static, 0, -1)
   local source_highlights = get_source_highlights(source_buffer, nsid_static)
-  local highlights = get_highlight_groups(get_highlight("lines"))
+  local highlights = get_highlight_groups(get_highlight("static"))
   local entry = map[source_buffer][asm_buffer]
   for asm_line, _ in ipairs(entry.asm) do
     local source_line = get_entry_source_line(entry, asm_line)
@@ -184,7 +182,7 @@ end
 local function remove_asm(source_buffer, asm_buffer)
   api.nvim_buf_clear_namespace(asm_buffer, nsid_static, 0, -1)
   api.nvim_buf_clear_namespace(asm_buffer, nsid, 0, -1)
-  do end (map[source_buffer])[asm_buffer] = nil
+  map[source_buffer][asm_buffer] = nil
   return nil
 end
 local function update_asm(source_buffer, asm_buffer)
@@ -205,36 +203,36 @@ local function setup_aucmd(source_buf, asm_buf)
   local cursor = set_highlight_group("GodboltCursor", get_highlight("cursor"))
   if (0 == #api.nvim_get_autocmds({group = group, buffer = source_buf})) then
     if cursor then
-      local function _25_()
+      local function _22_()
         return update_source(source_buf)
       end
-      api.nvim_create_autocmd({"CursorMoved", "BufEnter"}, {group = group, callback = _25_, buffer = source_buf})
+      api.nvim_create_autocmd({"CursorMoved", "BufEnter"}, {group = group, callback = _22_, buffer = source_buf})
     else
     end
-    local function _27_()
+    local function _24_()
       return remove_source(source_buf)
     end
-    api.nvim_create_autocmd({"BufUnload"}, {group = group, callback = _27_, buffer = source_buf})
+    api.nvim_create_autocmd({"BufUnload"}, {group = group, callback = _24_, buffer = source_buf})
   else
   end
   if cursor then
-    local function _29_()
+    local function _26_()
       return update_asm(source_buf, asm_buf)
     end
-    api.nvim_create_autocmd({"CursorMoved", "BufEnter"}, {group = group, callback = _29_, buffer = asm_buf})
+    api.nvim_create_autocmd({"CursorMoved", "BufEnter"}, {group = group, callback = _26_, buffer = asm_buf})
   else
   end
-  local function _31_()
+  local function _28_()
     return clear_asm(source_buf, asm_buf)
   end
-  return api.nvim_create_autocmd({"BufUnload"}, {group = group, callback = _31_, buffer = asm_buf})
+  return api.nvim_create_autocmd({"BufUnload"}, {group = group, callback = _28_, buffer = asm_buf})
 end
 local function make_qflist(err, bufnr)
   if next(err) then
-    local tbl_19_auto = {}
-    local i_20_auto = 0
+    local tbl_21_auto = {}
+    local i_22_auto = 0
     for _, v in ipairs(err) do
-      local val_21_auto
+      local val_23_auto
       do
         local entry = {text = string.gsub(v.text, term_escapes, ""), bufnr = bufnr}
         if v.tag then
@@ -242,15 +240,15 @@ local function make_qflist(err, bufnr)
           entry["lnum"] = v.tag.line
         else
         end
-        val_21_auto = entry
+        val_23_auto = entry
       end
-      if (nil ~= val_21_auto) then
-        i_20_auto = (i_20_auto + 1)
-        do end (tbl_19_auto)[i_20_auto] = val_21_auto
+      if (nil ~= val_23_auto) then
+        i_22_auto = (i_22_auto + 1)
+        tbl_21_auto[i_22_auto] = val_23_auto
       else
       end
     end
-    return tbl_19_auto
+    return tbl_21_auto
   else
     return nil
   end
@@ -313,7 +311,7 @@ local function display(response, begin, name, reuse_3f)
     end
     map[source_buf][asm_buf] = {asm = response.asm, offset = begin, winid = asm_winid}
     if not vim.tbl_isempty(response.asm) then
-      if get_highlight("lines") then
+      if get_highlight("static") then
         init_highlight(source_buf, asm_buf)
       else
       end
@@ -331,7 +329,7 @@ local function pre_display(begin, _end, compiler, options, reuse_3f)
   local hour = time.hour
   local min = time.min
   local sec = time.sec
-  local function _45_(_, _0, _1)
+  local function _42_(_, _0, _1)
     local file = io.open("godbolt_response_asm.json", "r")
     local response = file:read("*all")
     file:close()
@@ -339,6 +337,6 @@ local function pre_display(begin, _end, compiler, options, reuse_3f)
     os.remove("godbolt_response_asm.json")
     return display(vim.json.decode(response), begin, fmt("%s %02d:%02d:%02d", compiler, hour, min, sec), reuse_3f)
   end
-  return fun.jobstart(curl_cmd, {on_exit = _45_})
+  return fun.jobstart(curl_cmd, {on_exit = _42_})
 end
 return {["pre-display"] = pre_display}
