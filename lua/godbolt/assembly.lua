@@ -53,7 +53,7 @@ local function prepare_buf(text, name, reuse_3f, source_buf)
   api.nvim_buf_set_name(buf, name)
   do
     local tmp_9_auto = vim.bo[buf]
-    tmp_9_auto["filetype"] = "asm"
+    tmp_9_auto["filetype"] = (vim.b.asmsyntax or vim.g.asmsyntax or "asm")
     tmp_9_auto["bufhidden"] = "unload"
     tmp_9_auto["modifiable"] = false
   end

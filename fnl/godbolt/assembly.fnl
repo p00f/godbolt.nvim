@@ -59,7 +59,9 @@
                             (vim.split text "\n" {:trimempty true}))
     (api.nvim_buf_set_name buf name)
     (doto (. vim.bo buf)
-      (tset :filetype :asm)
+      (tset :filetype (or vim.b.asmsyntax
+                          vim.g.asmsyntax
+                          "asm"))
       (tset :bufhidden :unload)
       (tset :modifiable false))
     buf))
