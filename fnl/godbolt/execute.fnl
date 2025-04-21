@@ -17,8 +17,7 @@
 
 (local fun vim.fn)
 (local api vim.api)
-(local wo-set api.nvim_win_set_option)
-(import-macros {: m> : dec} :godbolt.macros)
+(import-macros {: m> : dec : wo-set} :godbolt.macros)
 (var exec-buf-map {})
 
 (fn prepare-buf [lines source-buf reuse?]

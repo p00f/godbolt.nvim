@@ -1,3 +1,4 @@
+;; fennel-ls: macro-file
 (fn m> [mod fun ...]
   `((. (require ,mod) ,fun) ,...))
 
@@ -17,4 +18,10 @@
 (fn defcmd [from to opts]
   `(vim.api.nvim_create_user_command ,from ,to ,(or opts {})))
 
-{: m> : first : second : dec : inc : defcmd}
+(fn wo-set [window option value]
+  `(vim.api.nvim_set_option_value ,option ,value {:win ,window}))
+
+(fn bo-set [buffer option value]
+  `(vim.api.nvim_set_option_value ,option ,value {:buf ,buffer}))
+
+{: m> : first : second : dec : inc : defcmd : wo-set : bo-set}

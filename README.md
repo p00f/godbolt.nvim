@@ -5,7 +5,7 @@
 
 Display assembly for the current buffer or visual selection from https://godbolt.org (or any godbolt instance)
 
-Requires neovim 0.6 and curl
+Requires neovim 0.7 and curl
 
 ## Setup
 You can call the setup function in your config to override these default values:

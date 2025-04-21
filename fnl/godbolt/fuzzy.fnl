@@ -87,7 +87,7 @@
 
 ;; fnlfmt: skip
 (fn fuzzy [picker ft begin end options exec reuse?]
-  (let [ft (match ft
+  (let [ft (case ft
              :cpp :c++
              x x)
         url (. (require :godbolt) :config :url)
@@ -99,7 +99,7 @@
        :on_exit (fn [_ _ _]
                   (let [entries (icollect [k v (ipairs output)]
                                   (when (not= k 1) v))]
-                    ((match picker
+                    ((case picker
                        :fzf fzf
                        :skim skim
                        :telescope telescope

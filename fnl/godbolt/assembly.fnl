@@ -15,12 +15,11 @@
 ;  You should have received a copy of the GNU General Public License
 ;  along with godbolt.nvim.  If not, see <https://www.gnu.org/licenses/>.
 
-(import-macros {: m> : dec : second : inc : first} :godbolt.macros)
+(import-macros {: m> : dec : second : inc : first : wo-set : bo-set} :godbolt.macros)
 (local {: api : cmd} vim)
 (local fun vim.fn)
 (local fmt string.format)
 (local term-escapes "[\027\155][][()#;?%d]*[A-PRZcf-ntqry=><~]")
-(local wo-set api.nvim_win_set_option)
 (var map {})
 (local nsid-static (vim.api.nvim_create_namespace :godbolt_highlight))
 (local nsid (vim.api.nvim_create_namespace :godbolt_cursor))
@@ -54,7 +53,7 @@
   (let [buf (if (and reuse? (= :table (type (. map source-buf))))
                 (table.maxn (. map source-buf))
                 (api.nvim_create_buf false true))]
-    (tset vim.bo buf :modifiable true)
+    (bo-set buf :modifiable true)
     (api.nvim_buf_set_lines buf 0 -1 true
                             (vim.split text "\n" {:trimempty true}))
     (api.nvim_buf_set_name buf name)

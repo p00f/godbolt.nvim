@@ -1,6 +1,5 @@
 local fun = vim.fn
 local api = vim.api
-local wo_set = api.nvim_win_set_option
 local exec_buf_map = {}
 local function prepare_buf(lines, source_buf, reuse_3f)
   local time = os.date("*t")
@@ -58,10 +57,10 @@ local function display_output(response, source_buf, reuse_3f)
   if not (reuse_3f and exists) then
     vim.cmd("split")
     vim.cmd(("buffer " .. output_buf))
-    wo_set(0, "number", false)
-    wo_set(0, "relativenumber", false)
-    wo_set(0, "spell", false)
-    wo_set(0, "cursorline", false)
+    vim.api.nvim_set_option_value("number", false, {win = 0})
+    vim.api.nvim_set_option_value("relativenumber", false, {win = 0})
+    vim.api.nvim_set_option_value("spell", false, {win = 0})
+    vim.api.nvim_set_option_value("cursorline", false, {win = 0})
   else
   end
   return api.nvim_set_current_win(old_winid)

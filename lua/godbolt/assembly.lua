@@ -3,7 +3,6 @@ local cmd = vim["cmd"]
 local fun = vim.fn
 local fmt = string.format
 local term_escapes = "[\27\155][][()#;?%d]*[A-PRZcf-ntqry=><~]"
-local wo_set = api.nvim_win_set_option
 local map = {}
 local nsid_static = vim.api.nvim_create_namespace("godbolt_highlight")
 local nsid = vim.api.nvim_create_namespace("godbolt_cursor")
@@ -48,7 +47,7 @@ local function prepare_buf(text, name, reuse_3f, source_buf)
   else
     buf = api.nvim_create_buf(false, true)
   end
-  vim.bo[buf]["modifiable"] = true
+  vim.api.nvim_set_option_value("modifiable", true, {buf = buf})
   api.nvim_buf_set_lines(buf, 0, -1, true, vim.split(text, "\n", {trimempty = true}))
   api.nvim_buf_set_name(buf, name)
   do
@@ -296,10 +295,10 @@ local function display(response, begin, name, reuse_3f)
     end
     api.nvim_set_current_win(asm_winid)
     api.nvim_win_set_buf(asm_winid, asm_buf)
-    wo_set(asm_winid, "number", false)
-    wo_set(asm_winid, "relativenumber", false)
-    wo_set(asm_winid, "spell", false)
-    wo_set(asm_winid, "cursorline", false)
+    vim.api.nvim_set_option_value("number", false, {win = asm_winid})
+    vim.api.nvim_set_option_value("relativenumber", false, {win = asm_winid})
+    vim.api.nvim_set_option_value("spell", false, {win = asm_winid})
+    vim.api.nvim_set_option_value("cursorline", false, {win = asm_winid})
     if qf_winid then
       api.nvim_set_current_win(qf_winid)
     else
