@@ -184,8 +184,8 @@
     (icollect [_ v (ipairs err)]
       (let [entry {:text (string.gsub v.text term-escapes "") : bufnr}]
         (when v.tag
-          (tset entry :col v.tag.column)
-          (tset entry :lnum v.tag.line))
+          (set entry.col v.tag.column)
+          (set entry.lnum v.tag.line))
         entry))))
 
 ; Main

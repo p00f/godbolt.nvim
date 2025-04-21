@@ -21,31 +21,31 @@ end
 local function display_output(response, source_buf, reuse_3f)
   local stderr
   do
-    local tbl_21_auto = {}
-    local i_22_auto = 0
-    for k, v in pairs(response.stderr) do
-      local val_23_auto = v.text
-      if (nil ~= val_23_auto) then
-        i_22_auto = (i_22_auto + 1)
-        tbl_21_auto[i_22_auto] = val_23_auto
+    local tbl_21_ = {}
+    local i_22_ = 0
+    for _, v in pairs(response.stderr) do
+      local val_23_ = v.text
+      if (nil ~= val_23_) then
+        i_22_ = (i_22_ + 1)
+        tbl_21_[i_22_] = val_23_
       else
       end
     end
-    stderr = tbl_21_auto
+    stderr = tbl_21_
   end
   local stdout
   do
-    local tbl_21_auto = {}
-    local i_22_auto = 0
-    for k, v in pairs(response.stdout) do
-      local val_23_auto = v.text
-      if (nil ~= val_23_auto) then
-        i_22_auto = (i_22_auto + 1)
-        tbl_21_auto[i_22_auto] = val_23_auto
+    local tbl_21_ = {}
+    local i_22_ = 0
+    for _, v in pairs(response.stdout) do
+      local val_23_ = v.text
+      if (nil ~= val_23_) then
+        i_22_ = (i_22_ + 1)
+        tbl_21_[i_22_] = val_23_
       else
       end
     end
-    stdout = tbl_21_auto
+    stdout = tbl_21_
   end
   local lines = {("exit code: " .. response.code)}
   table.insert(lines, "stdout:")
@@ -70,7 +70,7 @@ local function execute(begin, _end, compiler, options, reuse_3f)
   local lines = api.nvim_buf_get_lines(0, (begin - 1), _end, true)
   local text = fun.join(lines, "\n")
   local source_buf = fun.bufnr()
-  options["compilerOptions"] = {executorRequest = true}
+  options.compilerOptions = {executorRequest = true}
   local cmd = require("godbolt.cmd")["build-cmd"](compiler, text, options, "exec")
   local function _5_(_, _0, _1)
     local file = io.open("godbolt_response_exec.json", "r")

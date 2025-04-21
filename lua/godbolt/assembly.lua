@@ -29,17 +29,17 @@ local function set_highlight_group(group_name, highlight)
   end
 end
 local function get_highlight_groups(highlights)
-  local tbl_21_auto = {}
-  local i_22_auto = 0
+  local tbl_21_ = {}
+  local i_22_ = 0
   for i, hl in ipairs(highlights) do
-    local val_23_auto = set_highlight_group(("Godbolt" .. i), hl)
-    if (nil ~= val_23_auto) then
-      i_22_auto = (i_22_auto + 1)
-      tbl_21_auto[i_22_auto] = val_23_auto
+    local val_23_ = set_highlight_group(("Godbolt" .. i), hl)
+    if (nil ~= val_23_) then
+      i_22_ = (i_22_ + 1)
+      tbl_21_[i_22_] = val_23_
     else
     end
   end
-  return tbl_21_auto
+  return tbl_21_
 end
 local function prepare_buf(text, name, reuse_3f, source_buf)
   local buf
@@ -52,10 +52,10 @@ local function prepare_buf(text, name, reuse_3f, source_buf)
   api.nvim_buf_set_lines(buf, 0, -1, true, vim.split(text, "\n", {trimempty = true}))
   api.nvim_buf_set_name(buf, name)
   do
-    local tmp_9_auto = vim.bo[buf]
-    tmp_9_auto["filetype"] = (vim.b.asmsyntax or vim.g.asmsyntax or "asm")
-    tmp_9_auto["bufhidden"] = "unload"
-    tmp_9_auto["modifiable"] = false
+    local tmp_9_ = vim.bo[buf]
+    tmp_9_["filetype"] = (vim.b.asmsyntax or vim.g.asmsyntax or "asm")
+    tmp_9_["bufhidden"] = "unload"
+    tmp_9_["modifiable"] = false
   end
   return buf
 end
@@ -107,20 +107,20 @@ local function cyclic_lookup(array, index)
 end
 local function get_source_highlights(source_buffer, namespace_id)
   local extmarks = api.nvim_buf_get_extmarks(source_buffer, namespace_id, 0, -1, {type = "highlight", details = false, hl_name = false, overlap = false})
-  local tbl_21_auto = {}
-  local i_22_auto = 0
+  local tbl_21_ = {}
+  local i_22_ = 0
   for _, _14_ in ipairs(extmarks) do
     local _0 = _14_[1]
     local line = _14_[2]
     local _1 = _14_[3]
-    local val_23_auto = line
-    if (nil ~= val_23_auto) then
-      i_22_auto = (i_22_auto + 1)
-      tbl_21_auto[i_22_auto] = val_23_auto
+    local val_23_ = line
+    if (nil ~= val_23_) then
+      i_22_ = (i_22_ + 1)
+      tbl_21_[i_22_] = val_23_
     else
     end
   end
-  return tbl_21_auto
+  return tbl_21_
 end
 local function update_cursor(source_buffer, cursor_line)
   api.nvim_buf_clear_namespace(source_buffer, nsid, 0, -1)
@@ -229,26 +229,26 @@ local function setup_aucmd(source_buf, asm_buf)
 end
 local function make_qflist(err, bufnr)
   if next(err) then
-    local tbl_21_auto = {}
-    local i_22_auto = 0
+    local tbl_21_ = {}
+    local i_22_ = 0
     for _, v in ipairs(err) do
-      local val_23_auto
+      local val_23_
       do
         local entry = {text = string.gsub(v.text, term_escapes, ""), bufnr = bufnr}
         if v.tag then
-          entry["col"] = v.tag.column
-          entry["lnum"] = v.tag.line
+          entry.col = v.tag.column
+          entry.lnum = v.tag.line
         else
         end
-        val_23_auto = entry
+        val_23_ = entry
       end
-      if (nil ~= val_23_auto) then
-        i_22_auto = (i_22_auto + 1)
-        tbl_21_auto[i_22_auto] = val_23_auto
+      if (nil ~= val_23_) then
+        i_22_ = (i_22_ + 1)
+        tbl_21_[i_22_] = val_23_
       else
       end
     end
-    return tbl_21_auto
+    return tbl_21_
   else
     return nil
   end

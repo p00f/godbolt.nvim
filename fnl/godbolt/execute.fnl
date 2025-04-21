@@ -37,8 +37,8 @@
 
 (fn display-output [response source-buf reuse?]
   "Display the program output in a split"
-  (let [stderr (icollect [k v (pairs response.stderr)] v.text)
-        stdout (icollect [k v (pairs response.stdout)]
+  (let [stderr (icollect [_ v (pairs response.stderr)] v.text)
+        stdout (icollect [_ v (pairs response.stdout)]
                  v.text)
         lines [(.. "exit code: " response.code)]]
     ;; fill output buffer
@@ -64,7 +64,7 @@
   (let [lines (api.nvim_buf_get_lines 0 (dec begin) end true)
         text (fun.join lines "\n")
         source-buf (fun.bufnr)]
-    (tset options :compilerOptions {:executorRequest true})
+    (set options.compilerOptions {:executorRequest true})
     (let [cmd (m> :godbolt.cmd :build-cmd compiler text options :exec)]
       (fun.jobstart cmd
                     {:on_exit (fn [_ _ _]
