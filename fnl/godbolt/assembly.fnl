@@ -15,7 +15,7 @@
 ;  You should have received a copy of the GNU General Public License
 ;  along with godbolt.nvim.  If not, see <https://www.gnu.org/licenses/>.
 
-(import-macros {: m> : dec : second : inc : first : wo-set : bo-set} :godbolt.macros)
+(import-macros {: dec : second : inc : first : wo-set : bo-set} :godbolt.macros)
 (local {: api : cmd} vim)
 (local fun vim.fn)
 (local fmt string.format)
@@ -243,7 +243,7 @@
   "Prepare text for displaying and call display"
   (let [lines (api.nvim_buf_get_lines 0 (dec begin) end true)
         text (fun.join lines "\n")
-        curl-cmd (m> :godbolt.cmd :build-cmd compiler text options :asm)
+        curl-cmd ((. (require :godbolt.cmd) :build-cmd) compiler text options :asm)
         time (os.date :*t)
         hour time.hour
         min time.min

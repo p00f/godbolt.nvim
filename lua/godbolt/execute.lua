@@ -20,31 +20,31 @@ end
 local function display_output(response, source_buf, reuse_3f)
   local stderr
   do
-    local tbl_21_ = {}
-    local i_22_ = 0
+    local tbl_26_ = {}
+    local i_27_ = 0
     for _, v in pairs(response.stderr) do
-      local val_23_ = v.text
-      if (nil ~= val_23_) then
-        i_22_ = (i_22_ + 1)
-        tbl_21_[i_22_] = val_23_
+      local val_28_ = v.text
+      if (nil ~= val_28_) then
+        i_27_ = (i_27_ + 1)
+        tbl_26_[i_27_] = val_28_
       else
       end
     end
-    stderr = tbl_21_
+    stderr = tbl_26_
   end
   local stdout
   do
-    local tbl_21_ = {}
-    local i_22_ = 0
+    local tbl_26_ = {}
+    local i_27_ = 0
     for _, v in pairs(response.stdout) do
-      local val_23_ = v.text
-      if (nil ~= val_23_) then
-        i_22_ = (i_22_ + 1)
-        tbl_21_[i_22_] = val_23_
+      local val_28_ = v.text
+      if (nil ~= val_28_) then
+        i_27_ = (i_27_ + 1)
+        tbl_26_[i_27_] = val_28_
       else
       end
     end
-    stdout = tbl_21_
+    stdout = tbl_26_
   end
   local lines = {("exit code: " .. response.code)}
   table.insert(lines, "stdout:")

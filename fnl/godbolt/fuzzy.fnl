@@ -15,7 +15,7 @@
 ;  You should have received a copy of the GNU General Public License
 ;  along with godbolt.nvim.  If not, see <https://www.gnu.org/licenses/>.
 
-(import-macros {: m> : first} :godbolt.macros)
+(import-macros {: first} :godbolt.macros)
 
 (local fun vim.fn)
 (local pre-display (. (require :godbolt.assembly) :pre-display))
@@ -78,12 +78,14 @@
        :find)))
 
 (fn fzy [entries begin end options exec reuse?]
-  (m> :fzy :pick_one entries "Choose compiler: " (fn [text] text)
-      (fn [choice]
-        (let [compiler (first (vim.split choice " "))]
-          (pre-display begin end compiler options reuse?)
-          (when exec
-            (execute begin end compiler options))))))
+  ((. (require :fzy) :pick_one)
+   entries "Choose compiler: "
+   (fn [text] text)
+   (fn [choice]
+     (let [compiler (first (vim.split choice " "))]
+       (pre-display begin end compiler options reuse?)
+       (when exec
+         (execute begin end compiler options))))))
 
 ;; fnlfmt: skip
 (fn fuzzy [picker ft begin end options exec reuse?]

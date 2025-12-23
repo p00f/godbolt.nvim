@@ -17,7 +17,7 @@
 
 (local fun vim.fn)
 (local api vim.api)
-(import-macros {: m> : dec : wo-set} :godbolt.macros)
+(import-macros {: dec : wo-set} :godbolt.macros)
 (var exec-buf-map {})
 
 (fn prepare-buf [lines source-buf reuse?]
@@ -64,7 +64,7 @@
         text (fun.join lines "\n")
         source-buf (fun.bufnr)]
     (set options.compilerOptions {:executorRequest true})
-    (let [cmd (m> :godbolt.cmd :build-cmd compiler text options :exec)]
+    (let [cmd ((. (require :godbolt.cmd) :build-cmd) compiler text options :exec)]
       (fun.jobstart cmd
                     {:on_exit (fn [_ _ _]
                                 (let [file (io.open :godbolt_response_exec.json

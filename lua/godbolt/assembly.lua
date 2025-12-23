@@ -1,5 +1,5 @@
-local api = vim["api"]
-local cmd = vim["cmd"]
+local api = vim.api
+local cmd = vim.cmd
 local fun = vim.fn
 local fmt = string.format
 local term_escapes = "[\27\155][][()#;?%d]*[A-PRZcf-ntqry=><~]"
@@ -28,17 +28,17 @@ local function set_highlight_group(group_name, highlight)
   end
 end
 local function get_highlight_groups(highlights)
-  local tbl_21_ = {}
-  local i_22_ = 0
+  local tbl_26_ = {}
+  local i_27_ = 0
   for i, hl in ipairs(highlights) do
-    local val_23_ = set_highlight_group(("Godbolt" .. i), hl)
-    if (nil ~= val_23_) then
-      i_22_ = (i_22_ + 1)
-      tbl_21_[i_22_] = val_23_
+    local val_28_ = set_highlight_group(("Godbolt" .. i), hl)
+    if (nil ~= val_28_) then
+      i_27_ = (i_27_ + 1)
+      tbl_26_[i_27_] = val_28_
     else
     end
   end
-  return tbl_21_
+  return tbl_26_
 end
 local function prepare_buf(text, name, reuse_3f, source_buf)
   local buf
@@ -106,20 +106,20 @@ local function cyclic_lookup(array, index)
 end
 local function get_source_highlights(source_buffer, namespace_id)
   local extmarks = api.nvim_buf_get_extmarks(source_buffer, namespace_id, 0, -1, {type = "highlight", details = false, hl_name = false, overlap = false})
-  local tbl_21_ = {}
-  local i_22_ = 0
+  local tbl_26_ = {}
+  local i_27_ = 0
   for _, _14_ in ipairs(extmarks) do
     local _0 = _14_[1]
     local line = _14_[2]
     local _1 = _14_[3]
-    local val_23_ = line
-    if (nil ~= val_23_) then
-      i_22_ = (i_22_ + 1)
-      tbl_21_[i_22_] = val_23_
+    local val_28_ = line
+    if (nil ~= val_28_) then
+      i_27_ = (i_27_ + 1)
+      tbl_26_[i_27_] = val_28_
     else
     end
   end
-  return tbl_21_
+  return tbl_26_
 end
 local function update_cursor(source_buffer, cursor_line)
   api.nvim_buf_clear_namespace(source_buffer, nsid, 0, -1)
@@ -228,10 +228,10 @@ local function setup_aucmd(source_buf, asm_buf)
 end
 local function make_qflist(err, bufnr)
   if next(err) then
-    local tbl_21_ = {}
-    local i_22_ = 0
+    local tbl_26_ = {}
+    local i_27_ = 0
     for _, v in ipairs(err) do
-      local val_23_
+      local val_28_
       do
         local entry = {text = string.gsub(v.text, term_escapes, ""), bufnr = bufnr}
         if v.tag then
@@ -239,15 +239,15 @@ local function make_qflist(err, bufnr)
           entry.lnum = v.tag.line
         else
         end
-        val_23_ = entry
+        val_28_ = entry
       end
-      if (nil ~= val_23_) then
-        i_22_ = (i_22_ + 1)
-        tbl_21_[i_22_] = val_23_
+      if (nil ~= val_28_) then
+        i_27_ = (i_27_ + 1)
+        tbl_26_[i_27_] = val_28_
       else
       end
     end
-    return tbl_21_
+    return tbl_26_
   else
     return nil
   end
